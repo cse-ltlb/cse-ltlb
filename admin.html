@@ -536,6 +536,7 @@ function updateStatistics() {
 
 // AFISAREA INTREBARILOR
 
+
 function displayQuestions() {
 
   const questionsList = document.getElementById("questionsList");
@@ -570,54 +571,134 @@ function displayQuestions() {
 
     const title = document.createElement("h3");
     title.textContent = question.category || "Fără categorie";
-    title.style.marginBottom = "12px";
 
     const text = document.createElement("p");
     text.textContent = question.question_text;
-    text.style.lineHeight = "1.6";
+    text.style.marginTop = "12px";
 
     const status = document.createElement("p");
     status.textContent = "Status: " + question.status;
-    status.style.cssText = `
-      margin-top: 12px;
-      color: #2677EF;
-      font-weight: bold;
-    `;
+    status.style.marginTop = "12px";
+    status.style.fontWeight = "bold";
 
     const visibility = document.createElement("p");
     visibility.textContent =
-      question.visibility === "private" ? "Întrebare privată" : "Întrebare publică";
-    visibility.style.marginTop = "8px";
+      question.visibility === "private"
+        ? "Întrebare privată"
+        : "Întrebare publică";
 
-    card.appendChild(title);
-    card.appendChild(text);
-    card.appendChild(status);
-    card.appendChild(visibility);
+    card.append(title, text, status, visibility);
 
     if (!question.is_anonymous && question.student_name) {
-
       const identity = document.createElement("p");
-
       identity.textContent =
         "Elev: " + question.student_name +
         (question.student_class ? " · " + question.student_class : "");
-
-      identity.style.marginTop = "8px";
-
       card.appendChild(identity);
-
     }
 
-    if (question.answer_text) {
+    const answerInput = document.createElement("textarea");
+    answerInput.placeholder = "Scrie răspunsul aici...";
+    answerInput.value = question.answer_text || "";
+    answerInput.style.cssText = `
+      width: 100%;
+      min-height: 100px;
+      margin-top: 15px;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font: inherit;
+    `;
 
-      const answer = document.createElement("p");
+    card.appendChild(answerInput);
 
-      answer.textContent = "Răspuns: " + question.answer_text;
-      answer.style.marginTop = "12px";
+    const publishButton = document.createElement("button");
+    publishButton.textContent = "Publică răspunsul";
+    publishButton.style.cssText = `
+      margin-top: 12px;
+      padding: 10px 16px;
+      background: #2677EF;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    `;
 
-      card.appendChild(answer);
+    publishButton.addEventListener("click", async () => {
 
-    }
+      const answer = answerInput.value.trim();
+
+      if (!answer) {
+        alert("Scrie un răspuns înainte de publicare.");
+        return;
+      }
+
+      publishButton.disabled = true;
+
+      const { error } = await supabaseClient
+        .from("questions")
+        .update({
+          answer_text: answer,
+          status: "published",
+          answered_by: currentUser.id,
+          answered_at: new Date().toISOString()
+        })
+        .eq("id", question.id);
+
+      if (error) {
+        alert("Eroare: " + error.message);
+        publishButton.disabled = false;
+        return;
+      }
+
+      alert("Răspuns publicat cu succes!");
+      await loadQuestions();
+
+    });
+
+    card.appendChild(publishButton);
+
+    const rejectButton = document.createElement("button");
+    rejectButton.textContent = "Respinge întrebarea";
+    rejectButton.style.cssText = `
+      margin-top: 12px;
+      margin-left: 10px;
+      padding: 10px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    `;
+
+    rejectButton.addEventListener("click", async () => {
+
+      if (!confirm("Sigur dorești să respingi această întrebare?")) {
+        return;
+      }
+
+      rejectButton.disabled = true;
+
+      const { error } = await supabaseClient
+        .from("questions")
+        .update({
+          status: "rejected"
+        })
+        .eq("id", question.id);
+
+      if (error) {
+        alert("Eroare: " + error.message);
+        rejectButton.disabled = false;
+        return;
+      }
+
+      alert("Întrebarea a fost respinsă.");
+      await loadQuestions();
+
+    });
+
+    card.appendChild(rejectButton);
 
     questionsList.appendChild(card);
 
