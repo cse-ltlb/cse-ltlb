@@ -424,6 +424,7 @@
       loginCard.style.display = "none";
       dashboard.style.display = "block";
       document.body.classList.add("dashboard-active");
+      await loadQuestions();
     }
 
     loginForm.addEventListener("submit", async function(event) {
