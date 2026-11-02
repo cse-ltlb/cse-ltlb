@@ -483,7 +483,165 @@
       message.className = "message";
 
     });
+// INCARCAREA INTREBARILOR
 
+let allQuestions = [];
+let currentFilter = "all";
+
+async function loadQuestions() {
+
+  const questionsList = document.getElementById("questionsList");
+
+  questionsList.innerHTML = "<p>Se încarcă întrebările...</p>";
+
+  const { data, error } = await supabaseClient
+    .from("questions")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    questionsList.textContent =
+      "Eroare la încărcarea întrebărilor: " + error.message;
+    return;
+  }
+
+  allQuestions = data || [];
+
+  updateStatistics();
+  displayQuestions();
+}
+
+
+// ACTUALIZAREA STATISTICILOR
+
+function updateStatistics() {
+
+  document.getElementById("totalCount").textContent =
+    allQuestions.length;
+
+  document.getElementById("pendingCount").textContent =
+    allQuestions.filter(q => q.status === "pending").length;
+
+  document.getElementById("publishedCount").textContent =
+    allQuestions.filter(q => q.status === "published").length;
+
+  document.getElementById("rejectedCount").textContent =
+    allQuestions.filter(q => q.status === "rejected").length;
+
+}
+
+
+// AFISAREA INTREBARILOR
+
+function displayQuestions() {
+
+  const questionsList = document.getElementById("questionsList");
+
+  let filteredQuestions = allQuestions;
+
+  if (currentFilter !== "all") {
+    filteredQuestions = allQuestions.filter(
+      q => q.status === currentFilter
+    );
+  }
+
+  if (filteredQuestions.length === 0) {
+    questionsList.innerHTML =
+      "<p>Nu există întrebări în această categorie.</p>";
+    return;
+  }
+
+  questionsList.innerHTML = "";
+
+  filteredQuestions.forEach(question => {
+
+    const card = document.createElement("div");
+
+    card.style.cssText = `
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+      background: #ffffff;
+    `;
+
+    const title = document.createElement("h3");
+    title.textContent = question.category || "Fără categorie";
+    title.style.marginBottom = "12px";
+
+    const text = document.createElement("p");
+    text.textContent = question.question_text;
+    text.style.lineHeight = "1.6";
+
+    const status = document.createElement("p");
+    status.textContent = "Status: " + question.status;
+    status.style.cssText = `
+      margin-top: 12px;
+      color: #2677EF;
+      font-weight: bold;
+    `;
+
+    const visibility = document.createElement("p");
+    visibility.textContent =
+      question.visibility === "private" ? "Întrebare privată" : "Întrebare publică";
+    visibility.style.marginTop = "8px";
+
+    card.appendChild(title);
+    card.appendChild(text);
+    card.appendChild(status);
+    card.appendChild(visibility);
+
+    if (!question.is_anonymous && question.student_name) {
+
+      const identity = document.createElement("p");
+
+      identity.textContent =
+        "Elev: " + question.student_name +
+        (question.student_class ? " · " + question.student_class : "");
+
+      identity.style.marginTop = "8px";
+
+      card.appendChild(identity);
+
+    }
+
+    if (question.answer_text) {
+
+      const answer = document.createElement("p");
+
+      answer.textContent = "Răspuns: " + question.answer_text;
+      answer.style.marginTop = "12px";
+
+      card.appendChild(answer);
+
+    }
+
+    questionsList.appendChild(card);
+
+  });
+
+}
+
+
+// FILTRELE
+
+document.querySelectorAll(".filter-button").forEach(button => {
+
+  button.addEventListener("click", function() {
+
+    document.querySelectorAll(".filter-button").forEach(btn => {
+      btn.classList.remove("active");
+    });
+
+    this.classList.add("active");
+
+    currentFilter = this.dataset.status;
+
+    displayQuestions();
+
+  });
+
+});
     // VERIFICARE SESIUNE EXISTENTĂ
 
     async function checkExistingSession() {
