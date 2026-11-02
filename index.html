@@ -1,12 +1,240 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CȘE – Vocea Elevilor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1b35">
+
+    <title>CȘE Blaga | Vocea Elevilor</title>
+
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <h1>Consiliul Școlar al Elevilor</h1>
-  <p>Bine ai venit pe platforma CȘE!</p>
+
+    <header class="header">
+        <a href="#" class="logo">
+            <span class="logo-icon">CȘE</span>
+            <span>BLAGA</span>
+        </a>
+
+        <nav class="navigation">
+            <a href="#acasa">Acasă</a>
+            <a href="#despre">Despre noi</a>
+            <a href="#autentificare">Autentificare</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section class="hero" id="acasa">
+
+            <div class="hero-content">
+
+                <span class="hero-label">
+                    CONSILIUL ȘCOLAR AL ELEVILOR
+                </span>
+
+                <h1>
+                    Vocea ta contează.
+                    <span>Schimbarea începe cu tine.</span>
+                </h1>
+
+                <p>
+                    Ideile elevilor merită ascultate.
+                    Descoperă, propune și contribuie la
+                    o comunitate școlară mai bună.
+                </p>
+
+                <a href="#autentificare" class="primary-button">
+                    Intră în comunitate →
+                </a>
+
+            </div>
+
+        </section>
+
+
+        <section class="features" id="despre">
+
+            <div class="section-heading">
+                <span>IMPLICĂ-TE</span>
+                <h2>Vocea elevilor contează!</h2>
+                <p>
+                    Ai idei? Ai întrebări? Vrei să schimbi ceva?
+                    Aici începe implicarea ta.
+                </p>
+            </div>
+
+            <div class="feature-grid">
+
+                <article class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Întrebări</h3>
+                    <p>
+                        Adresează întrebări Consiliului
+                        Școlar al Elevilor.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon">💡</div>
+                    <h3>Propuneri</h3>
+                    <p>
+                        Vino cu idei pentru îmbunătățirea
+                        vieții școlare.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon">🗳️</div>
+                    <h3>Voturi</h3>
+                    <p>
+                        Susține propunerile în care crezi
+                        și contribuie la schimbare.
+                    </p>
+                </article>
+
+            </div>
+
+        </section>
+
+
+        <section class="auth-section" id="autentificare">
+
+            <div class="auth-container">
+
+                <div class="auth-heading">
+                    <span>COMUNITATEA CȘE</span>
+                    <h2>Bine ai venit!</h2>
+                    <p>
+                        Conectează-te sau creează-ți
+                        un cont pentru a participa.
+                    </p>
+                </div>
+
+                <div class="auth-tabs">
+                    <button type="button" class="auth-tab active"
+                        id="loginTab">
+                        Autentificare
+                    </button>
+
+                    <button type="button" class="auth-tab"
+                        id="registerTab">
+                        Creează cont
+                    </button>
+                </div>
+
+                <form id="loginForm">
+
+                    <label for="loginEmail">Adresa de e-mail</label>
+                    <input
+                        type="email"
+                        id="loginEmail"
+                        placeholder="exemplu@email.com"
+                        required
+                    >
+
+                    <label for="loginPassword">Parola</label>
+                    <input
+                        type="password"
+                        id="loginPassword"
+                        placeholder="Introdu parola"
+                        required
+                    >
+
+                    <button type="submit" class="primary-button">
+                        Conectează-te
+                    </button>
+
+                </form>
+
+
+                <form id="registerForm" hidden>
+
+                    <label for="fullName">Nume și prenume</label>
+                    <input
+                        type="text"
+                        id="fullName"
+                        placeholder="Numele tău"
+                        required
+                    >
+
+                    <label for="className">Clasa</label>
+                    <select id="className" required>
+                        <option value="">Alege clasa</option>
+                        <option>9A</option>
+                        <option>9B</option>
+                        <option>9C</option>
+                        <option>9D</option>
+                        <option>9E</option>
+                        <option>9F</option>
+                        <option>9G</option>
+                        <option>9H</option>
+                        <option>10A</option>
+                        <option>10B</option>
+                        <option>10C</option>
+                        <option>10D</option>
+                        <option>10E</option>
+                        <option>10F</option>
+                        <option>10G</option>
+                        <option>10H</option>
+                        <option>11A</option>
+                        <option>11B</option>
+                        <option>11C</option>
+                        <option>11D</option>
+                        <option>11E</option>
+                        <option>11F</option>
+                        <option>11G</option>
+                        <option>11H</option>
+                        <option>12A</option>
+                        <option>12B</option>
+                        <option>12C</option>
+                        <option>12D</option>
+                        <option>12E</option>
+                        <option>12F</option>
+                        <option>12H</option>
+                    </select>
+
+                    <label for="registerEmail">Adresa de e-mail</label>
+                    <input
+                        type="email"
+                        id="registerEmail"
+                        placeholder="exemplu@email.com"
+                        required
+                    >
+
+                    <label for="registerPassword">Parola</label>
+                    <input
+                        type="password"
+                        id="registerPassword"
+                        placeholder="Alege o parolă"
+                        minlength="6"
+                        required
+                    >
+
+                    <button type="submit" class="primary-button">
+                        Creează cont
+                    </button>
+
+                </form>
+
+                <p id="authMessage" role="status"></p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+        <p>© 2026 Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga”</p>
+        <p>Vocea ta. Ideile tale. Schimbarea noastră.</p>
+    </footer>
+
+
+    <script src="script.js"></script>
+
 </body>
 </html>
