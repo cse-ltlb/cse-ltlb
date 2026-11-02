@@ -425,6 +425,7 @@
       dashboard.style.display = "block";
       document.body.classList.add("dashboard-active");
       await loadQuestions();
+      console.log("QUESTIONS LOADED AUTOMATICALLY");
     }
 
     loginForm.addEventListener("submit", async function(event) {
