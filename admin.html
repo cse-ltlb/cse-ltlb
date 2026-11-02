@@ -668,7 +668,9 @@ document.querySelectorAll(".filter-button").forEach(button => {
 
     }
 
-    checkExistingSession();
+   window.addEventListener("load", async () => {
+  await checkExistingSession();
+});
 
   </script>
 
