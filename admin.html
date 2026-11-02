@@ -556,6 +556,7 @@ function updateStatistics() {
 // AFISAREA INTREBARILOR
 
 
+
 function displayQuestions() {
 
   const questionsList = document.getElementById("questionsList");
@@ -616,6 +617,54 @@ function displayQuestions() {
       card.appendChild(identity);
     }
 
+    // ISTORICUL ÎNTREBĂRII
+
+    const history = document.createElement("div");
+
+    history.style.cssText = `
+      margin-top: 15px;
+      padding: 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.8;
+    `;
+
+    const submittedDate = question.created_at
+      ? new Date(question.created_at).toLocaleString("ro-RO")
+      : "Necunoscută";
+
+    const processedDate = question.answered_at
+      ? new Date(question.answered_at).toLocaleString("ro-RO")
+      : "Neprocesată";
+
+    const adminName = question.answered_by
+      ? adminNames[question.answered_by] || "Administrator necunoscut"
+      : "Nespecificat";
+
+    const historyTitle = document.createElement("strong");
+    historyTitle.textContent = "Istoric";
+
+    const submittedInfo = document.createElement("p");
+    submittedInfo.textContent = "Trimisă la: " + submittedDate;
+
+    const processedInfo = document.createElement("p");
+    processedInfo.textContent = "Procesată la: " + processedDate;
+
+    const adminInfo = document.createElement("p");
+    adminInfo.textContent = "Procesată de: " + adminName;
+
+    history.append(
+      historyTitle,
+      submittedInfo,
+      processedInfo,
+      adminInfo
+    );
+
+    card.appendChild(history);
+
+    // CÂMPUL PENTRU RĂSPUNS
+
     const answerInput = document.createElement("textarea");
     answerInput.placeholder = "Scrie răspunsul aici...";
     answerInput.value = question.answer_text || "";
@@ -631,6 +680,8 @@ function displayQuestions() {
     `;
 
     card.appendChild(answerInput);
+
+    // BUTON PUBLICARE
 
     const publishButton = document.createElement("button");
     publishButton.textContent = "Publică răspunsul";
@@ -677,6 +728,8 @@ function displayQuestions() {
     });
 
     card.appendChild(publishButton);
+
+    // BUTON RESPINGERE
 
     const rejectButton = document.createElement("button");
     rejectButton.textContent = "Respinge întrebarea";
