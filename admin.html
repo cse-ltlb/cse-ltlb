@@ -525,10 +525,12 @@ async function loadQuestions() {
     return;
   }
 
-  allQuestions = data || [];
+allQuestions = data || [];
 
-  updateStatistics();
-  displayQuestions();
+await loadAdminNames();
+
+updateStatistics();
+displayQuestions();
 }
 
 
