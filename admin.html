@@ -490,7 +490,24 @@
 let allQuestions = [];
     console.log("DASHBOARD SCRIPT LOADED");
 let currentFilter = "all";
+let adminNames = {};
 
+async function loadAdminNames() {
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("id, display_name");
+
+  if (error) {
+    console.error("Eroare la încărcarea administratorilor:", error);
+    return;
+  }
+
+  adminNames = {};
+
+  data.forEach(profile => {
+    adminNames[profile.id] = profile.display_name;
+  });
+}
 async function loadQuestions() {
 
   const questionsList = document.getElementById("questionsList");
