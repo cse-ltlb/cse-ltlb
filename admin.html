@@ -881,7 +881,10 @@ function displayQuestions() {
         return;
       }
 
-      alert("Răspuns publicat cu succes!");
+      await showSuccessDialog(
+  "Răspuns publicat!",
+  "Răspunsul a fost publicat cu succes și este acum disponibil conform setărilor întrebării."
+);
       await loadQuestions();
     });
 
@@ -934,7 +937,10 @@ function displayQuestions() {
           throw new Error("Întrebarea nu a fost actualizată.");
         }
 
-        alert("Întrebarea a fost respinsă cu succes!");
+      await showSuccessDialog(
+  "Întrebare respinsă!",
+  "Întrebarea a fost respinsă și a fost înregistrată în istoric."
+);
         await loadQuestions();
 
       } catch (error) {
