@@ -744,36 +744,46 @@ function displayQuestions() {
       cursor: pointer;
     `;
 
-    rejectButton.addEventListener("click", async () => {
-      if (!confirm("Sigur dorești să respingi această întrebare?")) {
-        return;
-      }
+    
+rejectButton.addEventListener("click", async () => {
 
-      rejectButton.disabled = true;
+  if (!confirm("Sigur dorești să respingi această întrebare?")) {
+    return;
+  }
 
-      const { error } = await supabaseClient
-        .from("questions")
-        .update({
-          status: "rejected",
-          answered_by: currentUser.id,
-          answered_at: new Date().toISOString()
-        })
-        .eq("id", question.id);
+  rejectButton.disabled = true;
+  rejectButton.textContent = "Se procesează...";
 
-      if (error) {
-        alert("Eroare: " + error.message);
-        rejectButton.disabled = false;
-        return;
-      }
+  try {
+    const { data, error } = await supabaseClient
+      .from("questions")
+      .update({
+        status: "rejected",
+        answered_by: currentUser.id,
+        answered_at: new Date().toISOString()
+      })
+      .eq("id", question.id)
+      .select();
 
-      alert("Întrebarea a fost respinsă.");
-      await loadQuestions();
-    });
+    if (error) throw error;
 
-    card.appendChild(rejectButton);
-    questionsList.appendChild(card);
-  });
-}
+    if (!data || data.length === 0) {
+      throw new Error("Întrebarea nu a fost actualizată.");
+    }
+
+    alert("Întrebarea a fost respinsă cu succes!");
+    await loadQuestions();
+
+  } catch (error) {
+    console.error("Eroare la respingere:", error);
+    alert("Eroare: " + error.message);
+
+    rejectButton.disabled = false;
+    rejectButton.textContent = "Respinge întrebarea";
+  }
+
+});
+
 
 
 // FILTRELE
