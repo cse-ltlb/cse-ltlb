@@ -703,6 +703,17 @@ function showConfirmDialog({
   });
 }
 
+function showSuccessDialog(title, message) {
+  return createCustomDialog({
+    title: title,
+    message: message,
+    confirmText: "Am înțeles",
+    confirmColor: "#16a34a",
+    icon: "✓",
+    type: "success"
+  });
+}
+
 
 function displayQuestions() {
   const questionsList = document.getElementById("questionsList");
@@ -938,11 +949,12 @@ await loadQuestions();
           throw new Error("Întrebarea nu a fost actualizată.");
         }
 
-      await showSuccessDialog(
+     await showSuccessDialog(
   "Întrebare respinsă!",
-  "Întrebarea a fost respinsă și a fost înregistrată în istoric."
+  "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
 );
-        await loadQuestions();
+
+await loadQuestions();
 
       } catch (error) {
         console.error("Eroare la respingere:", error);
