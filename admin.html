@@ -703,16 +703,7 @@ function showConfirmDialog({
   });
 }
 
-function showSuccessDialog(title, message) {
-  return createCustomDialog({
-    title: title,
-    message: message,
-    confirmText: "Am înțeles",
-    confirmColor: "#16a34a",
-    icon: "✓",
-    type: "success"
-  });
-}
+
 function showSuccessDialog(title, message) {
   return new Promise(resolve => {
     const overlay = document.createElement("div");
