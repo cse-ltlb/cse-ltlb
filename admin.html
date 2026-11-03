@@ -428,7 +428,7 @@
       font-size:12px;
     }
 
-    /* FERETRE DE CONFIRMARE */
+    /* FERESTRE DE CONFIRMARE */
 
     .dialog-overlay {
       position:fixed;
@@ -504,6 +504,11 @@
     .dialog-confirm {
       border:0;
       color:white;
+    }
+
+    .dialog-buttons button:disabled {
+      opacity:.6;
+      cursor:not-allowed;
     }
 
     @media(max-width:650px) {
@@ -737,13 +742,17 @@
 const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
 const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 let currentUser = null;
 let currentProfile = null;
 let currentIsAdmin = false;
 let currentIsApproved = false;
 let myVotes = new Set();
+let activeDialog = false;
 
 const $ = id => document.getElementById(id);
 
@@ -761,6 +770,8 @@ const progressNames = {
   in_implementation:"În implementare",
   implemented:"Implementată"
 };
+
+/* MESAJE */
 
 function showMessage(id,text,type="info") {
   const element = $(id);
@@ -824,27 +835,49 @@ function progressLabel(value) {
   return progressNames[value] || "În analiză";
 }
 
+function normalizeApprovalStatus(account) {
+  const status = String(account?.approval_status || "").toLowerCase();
+
+  if (status === "approved" && account.is_verified !== false)
+    return "approved";
+
+  if (status === "rejected")
+    return "rejected";
+
+  if (status === "approved" && account.is_verified === false)
+    return "rejected";
+
+  return "pending";
+}
+
 function approvalLabel(value) {
   if (value === "approved") return "Aprobat";
   if (value === "rejected") return "Respins";
   return "În așteptare";
 }
 
-/* DIALOGURI - MODEL Q&A */
+/* DIALOGURI INTERACTIVE */
 
 function showConfirmDialog({
   title,
   message,
-  confirmText,
+  confirmText="Confirmă",
   confirmColor="#2677EF",
   icon="✓"
 }) {
+  if (activeDialog) return Promise.resolve(false);
+
+  activeDialog = true;
+
   return new Promise(resolve => {
     const overlay = document.createElement("div");
     overlay.className = "dialog-overlay";
 
     const modal = document.createElement("div");
     modal.className = "dialog-modal";
+    modal.setAttribute("role","dialog");
+    modal.setAttribute("aria-modal","true");
+    modal.setAttribute("aria-labelledby","dialogTitle");
 
     const iconElement = document.createElement("div");
     iconElement.className = "dialog-icon";
@@ -853,6 +886,7 @@ function showConfirmDialog({
     iconElement.style.color = confirmColor;
 
     const heading = document.createElement("h2");
+    heading.id = "dialogTitle";
     heading.textContent = title;
 
     const description = document.createElement("p");
@@ -870,9 +904,19 @@ function showConfirmDialog({
     confirmButton.textContent = confirmText;
     confirmButton.style.background = confirmColor;
 
+    let finished = false;
+
     function close(result) {
+      if (finished) return;
+      finished = true;
+      activeDialog = false;
+      document.removeEventListener("keydown",handleKey);
       overlay.remove();
       resolve(result);
+    }
+
+    function handleKey(event) {
+      if (event.key === "Escape") close(false);
     }
 
     cancelButton.addEventListener("click",() => close(false));
@@ -882,20 +926,30 @@ function showConfirmDialog({
       if (event.target === overlay) close(false);
     });
 
+    document.addEventListener("keydown",handleKey);
+
     buttons.append(cancelButton,confirmButton);
     modal.append(iconElement,heading,description,buttons);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
+
+    cancelButton.focus();
   });
 }
 
 function showSuccessDialog(title,message) {
+  if (activeDialog) return Promise.resolve(false);
+
+  activeDialog = true;
+
   return new Promise(resolve => {
     const overlay = document.createElement("div");
     overlay.className = "dialog-overlay";
 
     const modal = document.createElement("div");
     modal.className = "dialog-modal";
+    modal.setAttribute("role","dialog");
+    modal.setAttribute("aria-modal","true");
 
     const icon = document.createElement("div");
     icon.className = "dialog-icon";
@@ -913,14 +967,31 @@ function showSuccessDialog(title,message) {
     button.className = "btn btn-green full";
     button.textContent = "Am înțeles";
 
-    button.addEventListener("click",() => {
+    function close() {
+      activeDialog = false;
+      document.removeEventListener("keydown",handleKey);
       overlay.remove();
       resolve(true);
+    }
+
+    function handleKey(event) {
+      if (event.key === "Escape" || event.key === "Enter")
+        close();
+    }
+
+    button.addEventListener("click",close);
+
+    overlay.addEventListener("click",event => {
+      if (event.target === overlay) close();
     });
+
+    document.addEventListener("keydown",handleKey);
 
     modal.append(icon,heading,description,button);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
+
+    button.focus();
   });
 }
 
@@ -1039,19 +1110,46 @@ $("loginBtn").addEventListener("click",async () => {
 /* DECONECTARE */
 
 $("logoutBtn").addEventListener("click",async () => {
-  await supabaseClient.auth.signOut();
+  const confirmed = await showConfirmDialog({
+    title:"Te deconectezi?",
+    message:"Vei fi deconectat de la contul tău.",
+    confirmText:"Deconectare",
+    confirmColor:"#2677ef",
+    icon:"↪"
+  });
+
+  if (!confirmed) return;
+
+  const {error} = await supabaseClient.auth.signOut();
+
+  if (error) {
+    showMessage("authMessage","Nu am putut realiza deconectarea.","error");
+    return;
+  }
+
   currentUser = null;
   currentProfile = null;
   currentIsAdmin = false;
   currentIsApproved = false;
   myVotes.clear();
+
   await updateInterface();
 });
 
 /* ÎNCĂRCARE CONT */
 
 async function loadAccount() {
-  const {data:userData} = await supabaseClient.auth.getUser();
+  const {data:userData,error:userError} = await supabaseClient.auth.getUser();
+
+  if (userError) {
+    currentUser = null;
+    currentProfile = null;
+    currentIsAdmin = false;
+    currentIsApproved = false;
+    await updateInterface();
+    return;
+  }
+
   currentUser = userData?.user || null;
 
   if (!currentUser) {
@@ -1068,12 +1166,17 @@ async function loadAccount() {
     .eq("id",currentUser.id)
     .single();
 
-  if (error) {
-    showMessage("authMessage","Nu am putut încărca profilul.","error");
+  if (error || !profile) {
+    currentProfile = null;
+    currentIsAdmin = false;
+    currentIsApproved = false;
+    showMessage("authMessage","Nu am putut încărca profilul. Verifică dacă profilul există în baza de date.","error");
+    await updateInterface();
     return;
   }
 
   currentProfile = profile;
+
   currentIsAdmin = ["president","vice_president","admin"].includes(profile.role);
 
   currentIsApproved =
@@ -1095,10 +1198,14 @@ async function updateInterface() {
   if (loggedIn && currentProfile) {
     let statusText = "Cont în așteptarea aprobării";
 
-    if (!currentUser.email_confirmed_at) statusText = "Confirmă adresa de e-mail";
-    else if (currentIsAdmin) statusText = "Administrator CȘE";
-    else if (currentIsApproved) statusText = "Cont aprobat";
-    else if (currentProfile.approval_status === "rejected") statusText = "Acces invalidat / cont respins";
+    if (!currentUser.email_confirmed_at)
+      statusText = "Confirmă adresa de e-mail";
+    else if (currentIsAdmin)
+      statusText = "Administrator CȘE";
+    else if (currentIsApproved)
+      statusText = "Cont aprobat";
+    else if (currentProfile.approval_status === "rejected" || currentProfile.is_verified === false && currentProfile.approval_status === "approved")
+      statusText = "Acces invalidat / cont respins";
 
     $("accountInfo").innerHTML = `
       <strong>${escapeHTML(currentProfile.display_name)}</strong><br>
@@ -1108,6 +1215,7 @@ async function updateInterface() {
   }
 
   const canSubmit = currentIsApproved || currentIsAdmin;
+
   $("suggestionForm").classList.toggle("hidden",!canSubmit);
 
   if (canSubmit) {
@@ -1119,14 +1227,17 @@ async function updateInterface() {
       $("submitAccessMessage").textContent = "Autentifică-te cu un cont aprobat pentru a trimite o sugestie.";
     else if (!currentUser.email_confirmed_at)
       $("submitAccessMessage").textContent = "Trebuie să confirmi adresa de e-mail înainte de a trimite sugestii.";
-    else if (currentProfile?.approval_status === "rejected")
+    else if (currentProfile?.approval_status === "rejected" || (currentProfile?.is_verified === false && currentProfile?.approval_status === "approved"))
       $("submitAccessMessage").textContent = "Accesul contului tău a fost invalidat. Contactează administratorii CȘE.";
     else
       $("submitAccessMessage").textContent = "Contul tău așteaptă aprobarea administratorilor CȘE.";
   }
 
-  if (canSubmit) await loadMySuggestions();
-  else $("mySuggestions").innerHTML = '<div class="empty">Autentifică-te cu un cont aprobat pentru a vedea sugestiile tale.</div>';
+  if (canSubmit) {
+    await loadMySuggestions();
+  } else {
+    $("mySuggestions").innerHTML = '<div class="empty">Autentifică-te cu un cont aprobat pentru a vedea sugestiile tale.</div>';
+  }
 
   $("adminPanel").classList.toggle("hidden",!currentIsAdmin);
   $("adminAccountsCard").classList.toggle("hidden",!currentIsAdmin);
@@ -1156,6 +1267,16 @@ $("suggestionForm").addEventListener("submit",async event => {
   if (!title || !description || !category)
     return showMessage("suggestionMessage","Completează toate câmpurile.","error");
 
+  const confirmed = await showConfirmDialog({
+    title:"Trimiți sugestia?",
+    message:"După trimitere, sugestia va ajunge la administratorii CȘE pentru moderare.",
+    confirmText:"Da, trimite",
+    confirmColor:"#2677ef",
+    icon:"✉"
+  });
+
+  if (!confirmed) return;
+
   const button = $("submitSuggestionBtn");
   button.disabled = true;
   button.textContent = "Se trimite...";
@@ -1181,7 +1302,9 @@ $("suggestionForm").addEventListener("submit",async event => {
 
     $("suggestionForm").reset();
     await loadMySuggestions();
+
     if (currentIsAdmin) await loadAdminSuggestions();
+
   } catch(error) {
     showMessage("suggestionMessage","Nu am putut trimite sugestia: " + error.message,"error");
   } finally {
@@ -1239,7 +1362,9 @@ async function loadOwnVotes() {
     .select("suggestion_id")
     .eq("user_id",currentUser.id);
 
-  if (!error && data) data.forEach(vote => myVotes.add(vote.suggestion_id));
+  if (!error && data) {
+    data.forEach(vote => myVotes.add(vote.suggestion_id));
+  }
 }
 
 /* SUGESTII PUBLICE */
@@ -1314,20 +1439,32 @@ async function voteSuggestion(suggestionId) {
     return;
   }
 
+  const confirmed = await showConfirmDialog({
+    title:"Confirmi votul?",
+    message:"Vrei să votezi această sugestie? Verifică alegerea înainte de confirmare.",
+    confirmText:"Da, votează",
+    confirmColor:"#19a875",
+    icon:"♥"
+  });
+
+  if (!confirmed) return;
+
   const {error} = await supabaseClient.from("suggestion_votes").insert({
     suggestion_id:suggestionId,
     user_id:currentUser.id
   });
 
   if (error) {
-    if (error.code === "23505")
+    if (error.code === "23505") {
       await showSuccessDialog("Vot deja înregistrat","Ai votat deja această sugestie.");
-    else
+    } else {
       showMessage("voteAccessMessage","Nu am putut înregistra votul: " + error.message,"error");
+    }
     return;
   }
 
   myVotes.add(suggestionId);
+
   await showSuccessDialog("Vot înregistrat!","Votul tău a fost înregistrat cu succes.");
   await loadPublicSuggestions();
 }
@@ -1501,7 +1638,7 @@ async function deleteSuggestion(id) {
 
   const confirmed = await showConfirmDialog({
     title:"Ștergere definitivă?",
-    message:"Această sugestie va fi eliminată definitiv. Acțiunea nu poate fi anulată. Dacă există voturi asociate, baza de date trebuie să permită ștergerea lor în cascadă.",
+    message:"Această sugestie va fi eliminată definitiv. Acțiunea nu poate fi anulată. Voturile asociate trebuie să fie șterse în cascadă sau eliminate separat.",
     confirmText:"Șterge definitiv",
     confirmColor:"#dc3545",
     icon:"!"
@@ -1516,7 +1653,7 @@ async function deleteSuggestion(id) {
 
   if (error) {
     showMessage("adminMessage",
-      "Nu am putut șterge sugestia. Verifică permisiunile de ștergere și relația cu tabelul voturilor din Supabase. Detalii: " + error.message,
+      "Nu am putut șterge sugestia. Verifică permisiunile și relația cu tabelul voturilor din Supabase. Detalii: " + error.message,
       "error");
     return;
   }
@@ -1586,7 +1723,11 @@ async function loadStudentAccounts() {
   const {data,error} = await supabaseClient.rpc("admin_get_student_accounts");
 
   if (error) {
-    container.innerHTML = `<div class="empty">Nu am putut încărca lista conturilor: ${escapeHTML(error.message)}</div>`;
+    container.innerHTML = `
+      <div class="empty">
+        Nu am putut încărca lista conturilor:
+        ${escapeHTML(error.message)}
+      </div>`;
     return;
   }
 
@@ -1610,13 +1751,24 @@ async function loadStudentAccounts() {
         </thead>
         <tbody>
           ${data.map(account => {
-            const status = account.approval_status;
-            let statusText = approvalLabel(status);
-            let statusClass = status === "approved" ? "pill-green" : status === "rejected" ? "pill-red" : "pill-orange";
+            const status = normalizeApprovalStatus(account);
+            const emailConfirmed = account.email_confirmed === true;
+
+            const statusClass =
+              status === "approved" ? "pill-green" :
+              status === "rejected" ? "pill-red" :
+              "pill-orange";
 
             let actions = "";
 
-            if (status === "pending" && account.email_confirmed) {
+            if (status === "approved") {
+              actions = `
+                <button class="btn btn-warning btn-small"
+                  onclick="setStudentApproval('${account.user_id}',false)">
+                  Invalidează accesul
+                </button>
+              `;
+            } else if (status === "pending" && emailConfirmed) {
               actions = `
                 <button class="btn btn-green btn-small"
                   onclick="setStudentApproval('${account.user_id}',true)">
@@ -1628,13 +1780,8 @@ async function loadStudentAccounts() {
                 </button>
               `;
             } else if (status === "pending") {
-              actions = `<span class="muted">Așteaptă confirmarea e-mailului</span>`;
-            } else if (status === "approved") {
               actions = `
-                <button class="btn btn-warning btn-small"
-                  onclick="setStudentApproval('${account.user_id}',false)">
-                  Invalidează accesul
-                </button>
+                <span class="muted">Așteaptă confirmarea e-mailului</span>
               `;
             } else {
               actions = `
@@ -1647,11 +1794,15 @@ async function loadStudentAccounts() {
 
             return `
               <tr>
-                <td>${escapeHTML(account.display_name)}</td>
+                <td>${escapeHTML(account.display_name || "Nume indisponibil")}</td>
                 <td>${escapeHTML(account.class_name || "-")}</td>
-                <td>${escapeHTML(account.email)}</td>
-                <td>${account.email_confirmed ? "Da" : "Nu"}</td>
-                <td><span class="pill ${statusClass}">${escapeHTML(statusText)}</span></td>
+                <td>${escapeHTML(account.email || "-")}</td>
+                <td>${emailConfirmed ? "Da" : "Nu"}</td>
+                <td>
+                  <span class="pill ${statusClass}">
+                    ${escapeHTML(approvalLabel(status))}
+                  </span>
+                </td>
                 <td>
                   ${actions}
                   <button class="btn btn-danger btn-small"
@@ -1685,24 +1836,40 @@ async function setStudentApproval(userId,approved) {
 
   if (!confirmed) return;
 
-  const {error} = await supabaseClient.rpc("admin_set_student_approval",{
-    p_user_id:userId,
-    p_approved:approved
-  });
+  const buttons = document.querySelectorAll("#accountsList button");
+  buttons.forEach(button => button.disabled = true);
 
-  if (error) {
-    showMessage("accountsMessage","Nu am putut actualiza contul: " + error.message,"error");
-    return;
+  try {
+    const {data,error} = await supabaseClient.rpc("admin_set_student_approval",{
+      p_user_id:userId,
+      p_approved:approved
+    });
+
+    if (error) throw error;
+
+    if (data === false) {
+      throw new Error("Operațiunea nu a fost confirmată de baza de date.");
+    }
+
+    await showSuccessDialog(
+      approved ? "Cont aprobat!" : "Acces invalidat!",
+      approved
+        ? "Contul a fost aprobat/reactivat cu succes."
+        : "Accesul contului a fost invalidat. Datele utilizatorului au rămas păstrate."
+    );
+
+    hideMessage("accountsMessage");
+    await loadStudentAccounts();
+
+  } catch(error) {
+    showMessage(
+      "accountsMessage",
+      "Nu am putut actualiza contul: " + error.message,
+      "error"
+    );
+
+    await loadStudentAccounts();
   }
-
-  await showSuccessDialog(
-    approved ? "Cont aprobat!" : "Acces invalidat!",
-    approved
-      ? "Contul a fost aprobat/reactivat cu succes."
-      : "Accesul contului a fost invalidat. Datele utilizatorului au rămas păstrate."
-  );
-
-  await loadStudentAccounts();
 }
 
 /* ȘTERGERE DEFINITIVĂ CONT */
@@ -1712,7 +1879,7 @@ async function deleteStudentAccount(userId,displayName) {
 
   const confirmed = await showConfirmDialog({
     title:"Ștergere definitivă cont?",
-    message:`Ești sigur că vrei să ștergi definitiv contul ${displayName}? Operațiunea trebuie realizată printr-o funcție securizată pe server și nu poate fi executată direct din pagina publică.`,
+    message:`Ești sigur că vrei să ștergi definitiv contul ${displayName}? Operațiunea este ireversibilă și necesită o funcție securizată pe server.`,
     confirmText:"Continuă",
     confirmColor:"#dc3545",
     icon:"!"
@@ -1741,7 +1908,13 @@ window.deleteStudentAccount = deleteStudentAccount;
 /* INIȚIALIZARE */
 
 async function initialize() {
-  const {data} = await supabaseClient.auth.getSession();
+  const {data,error} = await supabaseClient.auth.getSession();
+
+  if (error) {
+    showMessage("authMessage","Nu am putut verifica sesiunea.","error");
+    return;
+  }
+
   currentUser = data?.session?.user || null;
 
   await loadAccount();
@@ -1749,7 +1922,12 @@ async function initialize() {
   supabaseClient.auth.onAuthStateChange(async (event,session) => {
     currentUser = session?.user || null;
 
-    if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+    if (
+      event === "SIGNED_IN" ||
+      event === "SIGNED_OUT" ||
+      event === "USER_UPDATED" ||
+      event === "TOKEN_REFRESHED"
+    ) {
       setTimeout(() => loadAccount(),0);
     }
   });
