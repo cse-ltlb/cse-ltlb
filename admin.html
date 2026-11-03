@@ -558,6 +558,152 @@ function updateStatistics() {
 
 
 
+
+function showConfirmDialog({
+  title,
+  message,
+  confirmText,
+  confirmColor = "#2677EF",
+  icon = "✓"
+}) {
+  return new Promise(resolve => {
+    const overlay = document.createElement("div");
+
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      padding: 20px;
+      backdrop-filter: blur(4px);
+    `;
+
+    const modal = document.createElement("div");
+
+    modal.style.cssText = `
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      padding: 28px;
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      text-align: center;
+      font-family: inherit;
+      animation: modalAppear 0.2s ease;
+    `;
+
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes modalAppear {
+        from {
+          opacity: 0;
+          transform: translateY(15px) scale(0.97);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+
+    const iconElement = document.createElement("div");
+    iconElement.textContent = icon;
+
+    iconElement.style.cssText = `
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: ${confirmColor}18;
+      color: ${confirmColor};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0 auto 18px;
+    `;
+
+    const heading = document.createElement("h2");
+    heading.textContent = title;
+
+    heading.style.cssText = `
+      margin: 0 0 10px;
+      color: #1e293b;
+      font-size: 21px;
+    `;
+
+    const description = document.createElement("p");
+    description.textContent = message;
+
+    description.style.cssText = `
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    `;
+
+    const buttons = document.createElement("div");
+
+    buttons.style.cssText = `
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    `;
+
+    const cancelButton = document.createElement("button");
+    cancelButton.textContent = "Anulează";
+
+    cancelButton.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 9px;
+      background: white;
+      color: #475569;
+      cursor: pointer;
+      font-weight: 600;
+    `;
+
+    const confirmButton = document.createElement("button");
+    confirmButton.textContent = confirmText;
+
+    confirmButton.style.cssText = `
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 9px;
+      background: ${confirmColor};
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    `;
+
+    function close(result) {
+      overlay.remove();
+      style.remove();
+      resolve(result);
+    }
+
+    cancelButton.addEventListener("click", () => close(false));
+    confirmButton.addEventListener("click", () => close(true));
+
+    overlay.addEventListener("click", event => {
+      if (event.target === overlay) close(false);
+    });
+
+    buttons.append(cancelButton, confirmButton);
+    modal.append(iconElement, heading, description, buttons);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+  });
+}
+
+
 function displayQuestions() {
   const questionsList = document.getElementById("questionsList");
 
@@ -613,6 +759,7 @@ function displayQuestions() {
       identity.textContent =
         "Elev: " + question.student_name +
         (question.student_class ? " · " + question.student_class : "");
+
       card.appendChild(identity);
     }
 
@@ -662,7 +809,7 @@ function displayQuestions() {
 
     card.appendChild(history);
 
-    // RĂSPUNS
+    // CÂMP RĂSPUNS
 
     const answerInput = document.createElement("textarea");
     answerInput.placeholder = "Scrie răspunsul aici...";
@@ -704,7 +851,18 @@ function displayQuestions() {
         return;
       }
 
+      const confirmed = await showConfirmDialog({
+        title: "Publică răspunsul?",
+        message: "Răspunsul va deveni vizibil elevilor pe pagina publică a CȘE.",
+        confirmText: "Da, publică",
+        confirmColor: "#2677EF",
+        icon: "✓"
+      });
+
+      if (!confirmed) return;
+
       publishButton.disabled = true;
+      publishButton.textContent = "Se publică...";
 
       const { error } = await supabaseClient
         .from("questions")
@@ -719,6 +877,7 @@ function displayQuestions() {
       if (error) {
         alert("Eroare: " + error.message);
         publishButton.disabled = false;
+        publishButton.textContent = "Publică răspunsul";
         return;
       }
 
@@ -744,45 +903,53 @@ function displayQuestions() {
       cursor: pointer;
     `;
 
-    
-rejectButton.addEventListener("click", async () => {
+    rejectButton.addEventListener("click", async () => {
+      const confirmed = await showConfirmDialog({
+        title: "Respinge întrebarea?",
+        message: "Întrebarea va fi marcată ca respinsă și nu va fi publicată.",
+        confirmText: "Da, respinge",
+        confirmColor: "#dc3545",
+        icon: "!"
+      });
 
-  if (!confirm("Sigur dorești să respingi această întrebare?")) {
-    return;
-  }
+      if (!confirmed) return;
 
-  rejectButton.disabled = true;
-  rejectButton.textContent = "Se procesează...";
+      rejectButton.disabled = true;
+      rejectButton.textContent = "Se procesează...";
 
-  try {
-    const { data, error } = await supabaseClient
-      .from("questions")
-      .update({
-        status: "rejected",
-        answered_by: currentUser.id,
-        answered_at: new Date().toISOString()
-      })
-      .eq("id", question.id)
-      .select();
+      try {
+        const { data, error } = await supabaseClient
+          .from("questions")
+          .update({
+            status: "rejected",
+            answered_by: currentUser.id,
+            answered_at: new Date().toISOString()
+          })
+          .eq("id", question.id)
+          .select();
 
-    if (error) throw error;
+        if (error) throw error;
 
-    if (!data || data.length === 0) {
-      throw new Error("Întrebarea nu a fost actualizată.");
-    }
+        if (!data || data.length === 0) {
+          throw new Error("Întrebarea nu a fost actualizată.");
+        }
 
-    alert("Întrebarea a fost respinsă cu succes!");
-    await loadQuestions();
+        alert("Întrebarea a fost respinsă cu succes!");
+        await loadQuestions();
 
-  } catch (error) {
-    console.error("Eroare la respingere:", error);
-    alert("Eroare: " + error.message);
+      } catch (error) {
+        console.error("Eroare la respingere:", error);
+        alert("Eroare: " + error.message);
 
-    rejectButton.disabled = false;
-    rejectButton.textContent = "Respinge întrebarea";
-  }
+        rejectButton.disabled = false;
+        rejectButton.textContent = "Respinge întrebarea";
+      }
+    });
 
-});
+    card.appendChild(rejectButton);
+    questionsList.appendChild(card);
+  });
+}
 
 
 
