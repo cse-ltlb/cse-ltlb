@@ -1,10 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sugestii | CȘE Blaga</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -34,7 +37,7 @@
       padding: 0;
       width: 100%;
       min-height: 100%;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: 'DM Sans', sans-serif;
       color: var(--text);
       background: var(--background);
     }
@@ -81,7 +84,9 @@
 
     .header h1 {
       margin: 10px 0;
+      font-family: 'Manrope', sans-serif;
       font-size: clamp(27px, 5vw, 38px);
+      letter-spacing: -.5px;
     }
 
     .header p {
@@ -144,6 +149,7 @@
     .card h2 {
       color: var(--navy);
       margin: 0 0 8px;
+      font-family: 'Manrope', sans-serif;
       font-size: 22px;
     }
 
@@ -186,6 +192,33 @@
       min-height: 120px;
     }
 
+    .password-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-wrap input {
+      padding-right: 85px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 9px;
+      border: 0;
+      background: var(--light-blue);
+      color: var(--navy);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      width: auto;
+    }
+
+    .password-toggle:hover {
+      background: #d6e8ff;
+    }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -223,7 +256,22 @@
 
     .btn-danger {
       background: #fff0f0;
-      color: var(--red);
+      color: #b42323;
+      border: 1px solid #ffd5d5;
+    }
+
+    .btn-danger:hover {
+      background: #ffe0e0;
+    }
+
+    .btn-warning {
+      background: #fff4e5;
+      color: #89530d;
+      border: 1px solid #ffe0b2;
+    }
+
+    .btn-warning:hover {
+      background: #ffebcc;
     }
 
     .btn-small {
@@ -322,6 +370,7 @@
     .suggestion h3 {
       margin: 0 0 9px;
       color: var(--navy);
+      font-family: 'Manrope', sans-serif;
       font-size: 19px;
     }
 
@@ -359,6 +408,11 @@
       color: #95601a;
     }
 
+    .pill-red {
+      background: #fff0f0;
+      color: #a52f2f;
+    }
+
     .vote-row {
       display: flex;
       align-items: center;
@@ -375,6 +429,19 @@
       font-weight: bold;
     }
 
+    .vote-button {
+      padding: 15px 30px;
+      font-size: 16px;
+      min-width: 145px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(25, 168, 117, .20);
+    }
+
+    .vote-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 16px rgba(25, 168, 117, .25);
+    }
+
     .admin-section {
       border-top: 4px solid var(--green);
     }
@@ -385,6 +452,7 @@
 
     .admin-item {
       border: 1px solid var(--border);
+      border-left: 4px solid var(--blue);
       border-radius: 12px;
       padding: 16px;
       margin: 12px 0;
@@ -394,6 +462,7 @@
     .admin-item h3 {
       margin: 0 0 8px;
       color: var(--navy);
+      font-family: 'Manrope', sans-serif;
     }
 
     .admin-actions {
@@ -480,6 +549,10 @@
         width: auto;
         flex: 1 1 100px;
       }
+
+      .vote-row .vote-button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -501,15 +574,9 @@
     <div class="container-inner">
 
       <nav class="tabs">
-        <button class="tab active" data-tab="account">
-          👤 Contul meu
-        </button>
-        <button class="tab" data-tab="submit">
-          ✍️ Trimite o sugestie
-        </button>
-        <button class="tab" data-tab="vote">
-          🗳️ Votează
-        </button>
+        <button class="tab active" data-tab="account">👤 Contul meu</button>
+        <button class="tab" data-tab="submit">✍️ Trimite o sugestie</button>
+        <button class="tab" data-tab="vote">🗳️ Votează</button>
       </nav>
 
       <!-- CONT -->
@@ -536,7 +603,11 @@
 
               <div class="form-group">
                 <label for="loginPassword">Parola</label>
-                <input id="loginPassword" type="password" placeholder="Parola contului">
+                <div class="password-wrap">
+                  <input id="loginPassword" type="password" placeholder="Parola contului">
+                  <button type="button" class="password-toggle"
+                    onclick="togglePassword('loginPassword', this)">Arată</button>
+                </div>
               </div>
 
               <button class="btn btn-primary full" id="loginBtn">
@@ -569,8 +640,12 @@
 
               <div class="form-group">
                 <label for="registerPassword">Parola</label>
-                <input id="registerPassword" type="password" minlength="8"
-                  placeholder="Minimum 8 caractere">
+                <div class="password-wrap">
+                  <input id="registerPassword" type="password" minlength="8"
+                    placeholder="Minimum 8 caractere">
+                  <button type="button" class="password-toggle"
+                    onclick="togglePassword('registerPassword', this)">Arată</button>
+                </div>
               </div>
 
               <button class="btn btn-green full" id="registerBtn">
@@ -703,9 +778,10 @@
         <div class="card admin-section">
           <h2>🛠️ Panou de administrare</h2>
           <p class="description">
-            Moderează sugestiile trimise de elevi și actualizează
-            stadiul propunerilor aprobate.
+            Moderează sugestiile, retrage propunerile de pe site,
+            republică sugestii și actualizează stadiul acestora.
           </p>
+
           <div id="adminMessage" class="message"></div>
           <div id="adminSuggestions"></div>
         </div>
@@ -764,6 +840,44 @@
       const element = $(id);
       element.textContent = "";
       element.className = "message";
+    }
+
+    function togglePassword(inputId, button) {
+      const input = $(inputId);
+      const showing = input.type === "text";
+
+      input.type = showing ? "password" : "text";
+      button.textContent = showing ? "Arată" : "Ascunde";
+    }
+
+    function friendlyAuthError(error) {
+      const message = (error?.message || "").toLowerCase();
+
+      if (message.includes("invalid login credentials")) {
+        return "Adresa de e-mail sau parola este incorectă. Verifică datele și încearcă din nou.";
+      }
+
+      if (message.includes("email not confirmed")) {
+        return "Trebuie să confirmi adresa de e-mail înainte de autentificare.";
+      }
+
+      if (message.includes("user already registered")) {
+        return "Există deja un cont cu această adresă de e-mail. Încearcă să te autentifici.";
+      }
+
+      if (message.includes("password") && message.includes("weak")) {
+        return "Parola este prea slabă. Alege o parolă mai sigură.";
+      }
+
+      if (message.includes("rate limit") || message.includes("too many requests")) {
+        return "Ai făcut prea multe încercări într-un interval scurt. Încearcă din nou mai târziu.";
+      }
+
+      if (message.includes("invalid email")) {
+        return "Adresa de e-mail nu este validă.";
+      }
+
+      return error?.message || "A apărut o eroare. Încearcă din nou.";
     }
 
     function escapeHTML(value) {
@@ -841,6 +955,10 @@
         return showMessage("authMessage", "Completează toate câmpurile.", "error");
       }
 
+      if (!$("registerEmail").checkValidity()) {
+        return showMessage("authMessage", "Introdu o adresă de e-mail validă.", "error");
+      }
+
       if (password.length < 8) {
         return showMessage("authMessage", "Parola trebuie să aibă minimum 8 caractere.", "error");
       }
@@ -880,7 +998,7 @@
         }
 
       } catch (error) {
-        showMessage("authMessage", error.message, "error");
+        showMessage("authMessage", friendlyAuthError(error), "error");
       } finally {
         button.disabled = false;
         button.textContent = "Creează contul";
@@ -894,6 +1012,10 @@
 
       if (!email || !password) {
         return showMessage("authMessage", "Introdu e-mailul și parola.", "error");
+      }
+
+      if (!$("loginEmail").checkValidity()) {
+        return showMessage("authMessage", "Introdu o adresă de e-mail validă.", "error");
       }
 
       const button = $("loginBtn");
@@ -912,7 +1034,7 @@
         await loadAccount();
 
       } catch (error) {
-        showMessage("authMessage", error.message, "error");
+        showMessage("authMessage", friendlyAuthError(error), "error");
       } finally {
         button.disabled = false;
         button.textContent = "Autentificare";
@@ -1149,96 +1271,90 @@
     }
 
     // SUGESTII PUBLICE
-   
-async function loadPublicSuggestions() {
-  const container = $("publicSuggestions");
-  container.innerHTML = '<div class="empty">Se încarcă topul sugestiilor...</div>';
+    async function loadPublicSuggestions() {
+      const container = $("publicSuggestions");
+      container.innerHTML = '<div class="empty">Se încarcă topul sugestiilor...</div>';
 
-  const { data, error } = await supabaseClient.rpc("get_public_suggestions");
+      const { data, error } = await supabaseClient.rpc("get_public_suggestions");
 
-  if (error) {
-    container.innerHTML =
-      '<div class="empty">Nu am putut încărca sugestiile. Încearcă din nou.</div>';
-    return;
-  }
+      if (error) {
+        container.innerHTML =
+          '<div class="empty">Nu am putut încărca sugestiile. Încearcă din nou.</div>';
+        return;
+      }
 
-  if (!data || data.length === 0) {
-    container.innerHTML =
-      '<div class="empty">Momentan nu există sugestii publicate. Fii primul care propune o idee!</div>';
-    return;
-  }
+      if (!data || data.length === 0) {
+        container.innerHTML =
+          '<div class="empty">Momentan nu există sugestii publicate. Fii primul care propune o idee!</div>';
+        return;
+      }
 
-  // SORTARE: cele mai multe voturi primele.
-  // La egalitate, sugestia mai recentă apare prima.
-  const sortedSuggestions = [...data].sort((a, b) => {
-    const votesDifference =
-      Number(b.vote_count || 0) - Number(a.vote_count || 0);
+      const sortedSuggestions = [...data].sort((a, b) => {
+        const votesDifference =
+          Number(b.vote_count || 0) - Number(a.vote_count || 0);
 
-    if (votesDifference !== 0) {
-      return votesDifference;
+        if (votesDifference !== 0) return votesDifference;
+
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      container.innerHTML = sortedSuggestions.map((item, index) => {
+        const alreadyVoted = myVotes.has(item.id);
+        const canVote = (currentIsApproved || currentIsAdmin) && !alreadyVoted;
+
+        const rank =
+          index === 0 ? "🥇" :
+          index === 1 ? "🥈" :
+          index === 2 ? "🥉" :
+          `#${index + 1}`;
+
+        return `
+          <article class="suggestion">
+            <div class="suggestion-meta">
+              <span class="pill pill-green">${rank} Locul ${index + 1}</span>
+            </div>
+
+            <h3>${escapeHTML(item.title)}</h3>
+            <p>${escapeHTML(item.description)}</p>
+
+            <div class="suggestion-meta">
+              <span class="pill">
+                ${escapeHTML(categoryNames[item.category] || item.category)}
+              </span>
+              <span class="pill pill-green">
+                ${escapeHTML(progressLabel(item.progress_status))}
+              </span>
+            </div>
+
+            <div class="muted">
+              Propus de ${escapeHTML(item.author_name || "Elev anonim")}
+              · ${formatDate(item.created_at)}
+            </div>
+
+            <div class="vote-row">
+              <span class="vote-count">
+                ❤️ ${Number(item.vote_count) || 0} voturi
+              </span>
+
+              ${
+                canVote
+                  ? `<button class="btn btn-green vote-button"
+                      onclick="voteSuggestion('${item.id}')">
+                      Votează
+                    </button>`
+                  : alreadyVoted
+                    ? `<span class="pill pill-green">Ai votat deja</span>`
+                    : `<span class="muted">
+                        ${currentUser
+                          ? "Contul trebuie aprobat pentru vot."
+                          : "Autentifică-te pentru a vota."}
+                      </span>`
+              }
+            </div>
+          </article>
+        `;
+      }).join("");
     }
-
-    return new Date(b.created_at) - new Date(a.created_at);
-  });
-
-  container.innerHTML = sortedSuggestions.map((item, index) => {
-    const alreadyVoted = myVotes.has(item.id);
-    const canVote = (currentIsApproved || currentIsAdmin) && !alreadyVoted;
-
-    const rank =
-      index === 0 ? "🥇" :
-      index === 1 ? "🥈" :
-      index === 2 ? "🥉" :
-      `#${index + 1}`;
-
-    return `
-      <article class="suggestion">
-        <div class="suggestion-meta">
-          <span class="pill pill-green">${rank} Locul ${index + 1}</span>
-        </div>
-
-        <h3>${escapeHTML(item.title)}</h3>
-        <p>${escapeHTML(item.description)}</p>
-
-        <div class="suggestion-meta">
-          <span class="pill">
-            ${escapeHTML(categoryNames[item.category] || item.category)}
-          </span>
-          <span class="pill pill-green">
-            ${escapeHTML(progressLabel(item.progress_status))}
-          </span>
-        </div>
-
-        <div class="muted">
-          Propus de ${escapeHTML(item.author_name || "Elev anonim")}
-          · ${formatDate(item.created_at)}
-        </div>
-
-        <div class="vote-row">
-          <span class="vote-count">
-            ❤️ ${Number(item.vote_count) || 0} voturi
-          </span>
-
-          ${
-            canVote
-              ? `<button class="btn btn-green btn-small"
-                  onclick="voteSuggestion('${item.id}')">
-                  Votează
-                </button>`
-              : alreadyVoted
-                ? `<span class="pill pill-green">Ai votat deja</span>`
-                : `<span class="muted">
-                    ${currentUser
-                      ? "Contul trebuie aprobat pentru vot."
-                      : "Autentifică-te pentru a vota."}
-                  </span>`
-          }
-        </div>
-      </article>
-    `;
-  }).join("");
-}
-
 
     // VOTARE
     async function voteSuggestion(suggestionId) {
@@ -1316,6 +1432,35 @@ async function loadPublicSuggestions() {
         const author = profile.display_name || "Nume indisponibil";
         const className = profile.class_name || "";
 
+        let moderationButtons = "";
+
+        if (item.approval_status === "pending") {
+          moderationButtons = `
+            <button class="btn btn-green btn-small"
+              onclick="moderateSuggestion('${item.id}', 'approved')">
+              Aprobă și publică
+            </button>
+            <button class="btn btn-danger btn-small"
+              onclick="moderateSuggestion('${item.id}', 'rejected')">
+              Respinge
+            </button>
+          `;
+        } else if (item.approval_status === "approved") {
+          moderationButtons = `
+            <button class="btn btn-warning btn-small"
+              onclick="withdrawSuggestion('${item.id}')">
+              Retrage de pe site
+            </button>
+          `;
+        } else {
+          moderationButtons = `
+            <button class="btn btn-green btn-small"
+              onclick="moderateSuggestion('${item.id}', 'approved')">
+              Publică din nou
+            </button>
+          `;
+        }
+
         return `
           <div class="admin-item">
             <h3>${escapeHTML(item.title)}</h3>
@@ -1323,7 +1468,10 @@ async function loadPublicSuggestions() {
 
             <div class="suggestion-meta">
               <span class="pill">${escapeHTML(categoryNames[item.category] || item.category)}</span>
-              <span class="pill">${escapeHTML(approvalLabel(item.approval_status))}</span>
+              <span class="pill ${
+                item.approval_status === "approved" ? "pill-green" :
+                item.approval_status === "rejected" ? "pill-red" : "pill-orange"
+              }">${escapeHTML(approvalLabel(item.approval_status))}</span>
               <span class="pill">${escapeHTML(progressLabel(item.progress_status))}</span>
             </div>
 
@@ -1335,20 +1483,12 @@ async function loadPublicSuggestions() {
             </p>
 
             <div class="admin-actions">
-              ${
-                item.approval_status === "pending"
-                  ? `
-                    <button class="btn btn-green btn-small"
-                      onclick="moderateSuggestion('${item.id}', 'approved')">
-                      Aprobă
-                    </button>
-                    <button class="btn btn-danger btn-small"
-                      onclick="moderateSuggestion('${item.id}', 'rejected')">
-                      Respinge
-                    </button>
-                  `
-                  : ""
-              }
+              ${moderationButtons}
+
+              <button class="btn btn-danger btn-small"
+                onclick="deleteSuggestion('${item.id}')">
+                Șterge definitiv
+              </button>
             </div>
 
             ${
@@ -1368,7 +1508,7 @@ async function loadPublicSuggestions() {
       }).join("");
     }
 
-    // ADMIN: MODERARE
+    // ADMIN: MODERARE / REPUBLICARE
     async function moderateSuggestion(id, approvalStatus) {
       if (!currentIsAdmin) return;
 
@@ -1398,6 +1538,76 @@ async function loadPublicSuggestions() {
 
       await loadAdminSuggestions();
       await loadPublicSuggestions();
+      await loadMySuggestions();
+    }
+
+    // ADMIN: RETRAGERE DE PE SITE
+    async function withdrawSuggestion(id) {
+      if (!currentIsAdmin) return;
+
+      const confirmed = confirm(
+        "Vrei să retragi această sugestie de pe site?\n\n" +
+        "Sugestia nu va mai fi vizibilă public, dar va rămâne salvată și o vei putea publica din nou."
+      );
+
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient
+        .from("suggestions")
+        .update({
+          approval_status: "rejected",
+          status: "rejected",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+
+      if (error) {
+        showMessage("adminMessage", "Nu am putut retrage sugestia: " + error.message, "error");
+        return;
+      }
+
+      showMessage(
+        "adminMessage",
+        "Sugestia a fost retrasă de pe site. O poți publica din nou oricând.",
+        "success"
+      );
+
+      await loadAdminSuggestions();
+      await loadPublicSuggestions();
+      await loadMySuggestions();
+    }
+
+    // ADMIN: ȘTERGERE DEFINITIVĂ
+    async function deleteSuggestion(id) {
+      if (!currentIsAdmin) return;
+
+      const confirmed = confirm(
+        "ATENȚIE!\n\n" +
+        "Ești sigur că vrei să ștergi definitiv această sugestie?\n\n" +
+        "Această acțiune nu poate fi anulată. Dacă baza de date permite ștergerea în cascadă, voturile asociate vor fi eliminate și ele."
+      );
+
+      if (!confirmed) return;
+
+      const { error } = await supabaseClient
+        .from("suggestions")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        showMessage(
+          "adminMessage",
+          "Nu am putut șterge sugestia. Verifică permisiunile și relația cu tabelul voturilor din Supabase. Detalii: " + error.message,
+          "error"
+        );
+        return;
+      }
+
+      showMessage("adminMessage", "Sugestia a fost ștearsă definitiv.", "success");
+
+      await loadAdminSuggestions();
+      await loadPublicSuggestions();
+      await loadMySuggestions();
     }
 
     // ADMIN: ACTUALIZARE PROGRES
@@ -1425,6 +1635,7 @@ async function loadPublicSuggestions() {
       }
 
       showMessage("adminMessage", "Progresul a fost actualizat.", "success");
+      await loadAdminSuggestions();
       await loadPublicSuggestions();
     }
 
@@ -1512,8 +1723,11 @@ async function loadPublicSuggestions() {
     }
 
     // FUNCȚII ACCESIBILE DIN BUTOANELE HTML
+    window.togglePassword = togglePassword;
     window.voteSuggestion = voteSuggestion;
     window.moderateSuggestion = moderateSuggestion;
+    window.withdrawSuggestion = withdrawSuggestion;
+    window.deleteSuggestion = deleteSuggestion;
     window.changeProgress = changeProgress;
     window.setStudentApproval = setStudentApproval;
 
