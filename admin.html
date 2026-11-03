@@ -1120,7 +1120,81 @@ console.log("VERIFICARE RETRAGERE:", {
       card.appendChild(retractButton);
     }
 
+   
+    // REPUBLICARE ÎNTREBARE RETRASĂ
+
+    if (question.status === "withdrawn") {
+      const republishButton = document.createElement("button");
+      republishButton.textContent = "Republică întrebarea";
+
+      republishButton.style.cssText = `
+        margin-top: 12px;
+        margin-left: 10px;
+        padding: 10px 16px;
+        background: #16a34a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      `;
+
+      republishButton.addEventListener("click", async () => {
+        if (!question.answer_text || !question.answer_text.trim()) {
+          alert("Întrebarea nu are un răspuns salvat și nu poate fi republicată.");
+          return;
+        }
+
+        const confirmed = await showConfirmDialog({
+          title: "Republică întrebarea?",
+          message: "Întrebarea și răspunsul existent vor redeveni vizibile public.",
+          confirmText: "Da, republică",
+          confirmColor: "#16a34a",
+          icon: "✓"
+        });
+
+        if (!confirmed) return;
+
+        republishButton.disabled = true;
+        republishButton.textContent = "Se republică...";
+
+        try {
+          const { data, error } = await supabaseClient
+            .from("questions")
+            .update({
+              status: "published",
+              answered_by: currentUser.id,
+              answered_at: new Date().toISOString()
+            })
+            .eq("id", question.id)
+            .select();
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            throw new Error("Întrebarea nu a fost actualizată.");
+          }
+
+          await showSuccessDialog(
+            "Întrebare republicată!",
+            "Întrebarea și răspunsul au fost publicate din nou."
+          );
+
+          await loadQuestions();
+
+        } catch (error) {
+          console.error("Eroare la republicare:", error);
+          alert("Eroare: " + error.message);
+
+          republishButton.disabled = false;
+          republishButton.textContent = "Republică întrebarea";
+        }
+      });
+
+      card.appendChild(republishButton);
+    }
+
     questionsList.appendChild(card);
+
   });
 }
 
