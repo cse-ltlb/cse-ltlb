@@ -1149,58 +1149,96 @@
     }
 
     // SUGESTII PUBLICE
-    async function loadPublicSuggestions() {
-      const container = $("publicSuggestions");
-      container.innerHTML = '<div class="empty">Se încarcă sugestiile...</div>';
+   
+async function loadPublicSuggestions() {
+  const container = $("publicSuggestions");
+  container.innerHTML = '<div class="empty">Se încarcă topul sugestiilor...</div>';
 
-      const { data, error } = await supabaseClient.rpc("get_public_suggestions");
+  const { data, error } = await supabaseClient.rpc("get_public_suggestions");
 
-      if (error) {
-        container.innerHTML =
-          '<div class="empty">Nu am putut încărca sugestiile. Încearcă din nou.</div>';
-        return;
-      }
+  if (error) {
+    container.innerHTML =
+      '<div class="empty">Nu am putut încărca sugestiile. Încearcă din nou.</div>';
+    return;
+  }
 
-      if (!data || data.length === 0) {
-        container.innerHTML =
-          '<div class="empty">Momentan nu există sugestii publicate. Fii primul care propune o idee!</div>';
-        return;
-      }
+  if (!data || data.length === 0) {
+    container.innerHTML =
+      '<div class="empty">Momentan nu există sugestii publicate. Fii primul care propune o idee!</div>';
+    return;
+  }
 
-      container.innerHTML = data.map(item => {
-        const alreadyVoted = myVotes.has(item.id);
-        const canVote = (currentIsApproved || currentIsAdmin) && !alreadyVoted;
+  // SORTARE: cele mai multe voturi primele.
+  // La egalitate, sugestia mai recentă apare prima.
+  const sortedSuggestions = [...data].sort((a, b) => {
+    const votesDifference =
+      Number(b.vote_count || 0) - Number(a.vote_count || 0);
 
-        return `
-          <article class="suggestion">
-            <h3>${escapeHTML(item.title)}</h3>
-            <p>${escapeHTML(item.description)}</p>
-
-            <div class="suggestion-meta">
-              <span class="pill">${escapeHTML(categoryNames[item.category] || item.category)}</span>
-              <span class="pill pill-green">${escapeHTML(progressLabel(item.progress_status))}</span>
-            </div>
-
-            <div class="muted">
-              Propus de ${escapeHTML(item.author_name || "Elev anonim")}
-              · ${formatDate(item.created_at)}
-            </div>
-
-            <div class="vote-row">
-              <span class="vote-count">❤️ ${Number(item.vote_count) || 0} voturi</span>
-
-              ${
-                canVote
-                  ? `<button class="btn btn-green btn-small" onclick="voteSuggestion('${item.id}')">Votează</button>`
-                  : alreadyVoted
-                    ? `<span class="pill pill-green">Ai votat deja</span>`
-                    : `<span class="muted">${currentUser ? "Contul trebuie aprobat pentru vot." : "Autentifică-te pentru a vota."}</span>`
-              }
-            </div>
-          </article>
-        `;
-      }).join("");
+    if (votesDifference !== 0) {
+      return votesDifference;
     }
+
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  container.innerHTML = sortedSuggestions.map((item, index) => {
+    const alreadyVoted = myVotes.has(item.id);
+    const canVote = (currentIsApproved || currentIsAdmin) && !alreadyVoted;
+
+    const rank =
+      index === 0 ? "🥇" :
+      index === 1 ? "🥈" :
+      index === 2 ? "🥉" :
+      `#${index + 1}`;
+
+    return `
+      <article class="suggestion">
+        <div class="suggestion-meta">
+          <span class="pill pill-green">${rank} Locul ${index + 1}</span>
+        </div>
+
+        <h3>${escapeHTML(item.title)}</h3>
+        <p>${escapeHTML(item.description)}</p>
+
+        <div class="suggestion-meta">
+          <span class="pill">
+            ${escapeHTML(categoryNames[item.category] || item.category)}
+          </span>
+          <span class="pill pill-green">
+            ${escapeHTML(progressLabel(item.progress_status))}
+          </span>
+        </div>
+
+        <div class="muted">
+          Propus de ${escapeHTML(item.author_name || "Elev anonim")}
+          · ${formatDate(item.created_at)}
+        </div>
+
+        <div class="vote-row">
+          <span class="vote-count">
+            ❤️ ${Number(item.vote_count) || 0} voturi
+          </span>
+
+          ${
+            canVote
+              ? `<button class="btn btn-green btn-small"
+                  onclick="voteSuggestion('${item.id}')">
+                  Votează
+                </button>`
+              : alreadyVoted
+                ? `<span class="pill pill-green">Ai votat deja</span>`
+                : `<span class="muted">
+                    ${currentUser
+                      ? "Contul trebuie aprobat pentru vot."
+                      : "Autentifică-te pentru a vota."}
+                  </span>`
+          }
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
 
     // VOTARE
     async function voteSuggestion(suggestionId) {
