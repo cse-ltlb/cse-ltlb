@@ -557,8 +557,8 @@ function updateStatistics() {
 
 
 
-function displayQuestions() {
 
+function displayQuestions() {
   const questionsList = document.getElementById("questionsList");
 
   let filteredQuestions = allQuestions;
@@ -578,7 +578,6 @@ function displayQuestions() {
   questionsList.innerHTML = "";
 
   filteredQuestions.forEach(question => {
-
     const card = document.createElement("div");
 
     card.style.cssText = `
@@ -617,7 +616,7 @@ function displayQuestions() {
       card.appendChild(identity);
     }
 
-    // ISTORICUL ÎNTREBĂRII
+    // ISTORIC
 
     const history = document.createElement("div");
 
@@ -663,11 +662,12 @@ function displayQuestions() {
 
     card.appendChild(history);
 
-    // CÂMPUL PENTRU RĂSPUNS
+    // RĂSPUNS
 
     const answerInput = document.createElement("textarea");
     answerInput.placeholder = "Scrie răspunsul aici...";
     answerInput.value = question.answer_text || "";
+
     answerInput.style.cssText = `
       width: 100%;
       min-height: 100px;
@@ -681,10 +681,11 @@ function displayQuestions() {
 
     card.appendChild(answerInput);
 
-    // BUTON PUBLICARE
+    // PUBLICARE
 
     const publishButton = document.createElement("button");
     publishButton.textContent = "Publică răspunsul";
+
     publishButton.style.cssText = `
       margin-top: 12px;
       padding: 10px 16px;
@@ -696,7 +697,6 @@ function displayQuestions() {
     `;
 
     publishButton.addEventListener("click", async () => {
-
       const answer = answerInput.value.trim();
 
       if (!answer) {
@@ -724,15 +724,15 @@ function displayQuestions() {
 
       alert("Răspuns publicat cu succes!");
       await loadQuestions();
-
     });
 
     card.appendChild(publishButton);
 
-    // BUTON RESPINGERE
+    // RESPINGERE
 
     const rejectButton = document.createElement("button");
     rejectButton.textContent = "Respinge întrebarea";
+
     rejectButton.style.cssText = `
       margin-top: 12px;
       margin-left: 10px;
@@ -745,7 +745,6 @@ function displayQuestions() {
     `;
 
     rejectButton.addEventListener("click", async () => {
-
       if (!confirm("Sigur dorești să respingi această întrebare?")) {
         return;
       }
@@ -755,7 +754,9 @@ function displayQuestions() {
       const { error } = await supabaseClient
         .from("questions")
         .update({
-          status: "rejected"
+          status: "rejected",
+          answered_by: currentUser.id,
+          answered_at: new Date().toISOString()
         })
         .eq("id", question.id);
 
@@ -767,15 +768,11 @@ function displayQuestions() {
 
       alert("Întrebarea a fost respinsă.");
       await loadQuestions();
-
     });
 
     card.appendChild(rejectButton);
-
     questionsList.appendChild(card);
-
   });
-
 }
 
 
