@@ -1,5 +1,3 @@
-
-```html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -172,7 +170,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 18px;
       margin-bottom: 35px;
     }
@@ -324,8 +322,7 @@
 
       <div class="stat-card">
         <span>Toate întrebările</span>
-   
-<strong id="totalCount">0</strong>
+        <strong id="totalCount">0</strong>
       </div>
 
       <div class="stat-card">
@@ -386,21 +383,27 @@
 
     </section>
 
-   
-      <div id="questionsList">
-        <p>Întrebările vor apărea aici.</p>
-      </div>
-
-    </section>
-
   </main>
 
-  <!-- JAVASCRIPT -->
+  <!-- CONECTARE SUPABASE ȘI REFERINȚE HTML -->
 
   <script>
+    const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const loginForm = document.getElementById("loginForm");
+    const loginCard = document.getElementById("loginCard");
+    const loginButton = document.getElementById("loginButton");
+    const message = document.getElementById("message");
+    const dashboard = document.getElementById("dashboard");
+    const logoutButton = document.getElementById("logoutButton");
 
     let currentUser = null;
-
 
     function showMessage(text, type) {
       message.textContent = text;
@@ -426,7 +429,9 @@
       loginCard.style.display = "none";
       dashboard.style.display = "block";
       document.body.classList.add("dashboard-active");
+
       await loadQuestions();
+
       console.log("QUESTIONS LOADED AUTOMATICALLY");
     }
 
@@ -487,751 +492,807 @@
       message.className = "message";
 
     });
-// INCARCAREA INTREBARILOR
 
-let allQuestions = [];
+    // INCARCAREA INTREBARILOR
+
+    let allQuestions = [];
     console.log("DASHBOARD SCRIPT LOADED");
-let currentFilter = "all";
-let adminNames = {};
 
-async function loadAdminNames() {
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("id, display_name");
+    let currentFilter = "all";
+    let adminNames = {};
 
-  if (error) {
-    console.error("Eroare la încărcarea administratorilor:", error);
-    return;
-  }
+    async function loadAdminNames() {
 
-  adminNames = {};
+      const { data, error } = await supabaseClient
+        .from("profiles")
+        .select("id, display_name");
 
-  data.forEach(profile => {
-    adminNames[profile.id] = profile.display_name;
-  });
-}
-async function loadQuestions() {
-
-  const questionsList = document.getElementById("questionsList");
-
-  questionsList.innerHTML = "<p>Se încarcă întrebările...</p>";
-
-  const { data, error } = await supabaseClient
-    .from("questions")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    questionsList.textContent =
-      "Eroare la încărcarea întrebărilor: " + error.message;
-    return;
-  }
-
-allQuestions = data || [];
-
-await loadAdminNames();
-
-updateStatistics();
-displayQuestions();
-}
-
-
-// ACTUALIZAREA STATISTICILOR
-
-
-function updateStatistics() {
-  document.getElementById("totalCount").textContent =
-    allQuestions.length;
-
-  document.getElementById("pendingCount").textContent =
-    allQuestions.filter(q => q.status === "pending").length;
-
-  document.getElementById("publishedCount").textContent =
-    allQuestions.filter(q => q.status === "published").length;
-
-  document.getElementById("rejectedCount").textContent =
-    allQuestions.filter(q => q.status === "rejected").length;
-
-  const withdrawnElement = document.getElementById("withdrawnCount");
-
-  if (withdrawnElement) {
-    withdrawnElement.textContent =
-      allQuestions.filter(q => q.status === "withdrawn").length;
-  }
-}
-
-
-// AFISAREA INTREBARILOR
-
-
-
-
-
-function showConfirmDialog({
-  title,
-  message,
-  confirmText,
-  confirmColor = "#2677EF",
-  icon = "✓"
-}) {
-  return new Promise(resolve => {
-    const overlay = document.createElement("div");
-
-    overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      padding: 20px;
-      backdrop-filter: blur(4px);
-    `;
-
-    const modal = document.createElement("div");
-
-    modal.style.cssText = `
-      background: white;
-      width: 100%;
-      max-width: 420px;
-      padding: 28px;
-      border-radius: 18px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-      text-align: center;
-      font-family: inherit;
-      animation: modalAppear 0.2s ease;
-    `;
-
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes modalAppear {
-        from {
-          opacity: 0;
-          transform: translateY(15px) scale(0.97);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-
-    const iconElement = document.createElement("div");
-    iconElement.textContent = icon;
-
-    iconElement.style.cssText = `
-      width: 58px;
-      height: 58px;
-      border-radius: 50%;
-      background: ${confirmColor}18;
-      color: ${confirmColor};
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: bold;
-      margin: 0 auto 18px;
-    `;
-
-    const heading = document.createElement("h2");
-    heading.textContent = title;
-
-    heading.style.cssText = `
-      margin: 0 0 10px;
-      color: #1e293b;
-      font-size: 21px;
-    `;
-
-    const description = document.createElement("p");
-    description.textContent = message;
-
-    description.style.cssText = `
-      color: #64748b;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 25px;
-    `;
-
-    const buttons = document.createElement("div");
-
-    buttons.style.cssText = `
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    `;
-
-    const cancelButton = document.createElement("button");
-    cancelButton.textContent = "Anulează";
-
-    cancelButton.style.cssText = `
-      flex: 1;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 9px;
-      background: white;
-      color: #475569;
-      cursor: pointer;
-      font-weight: 600;
-    `;
-
-    const confirmButton = document.createElement("button");
-    confirmButton.textContent = confirmText;
-
-    confirmButton.style.cssText = `
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 9px;
-      background: ${confirmColor};
-      color: white;
-      cursor: pointer;
-      font-weight: 600;
-    `;
-
-    function close(result) {
-      overlay.remove();
-      style.remove();
-      resolve(result);
-    }
-
-    cancelButton.addEventListener("click", () => close(false));
-    confirmButton.addEventListener("click", () => close(true));
-
-    overlay.addEventListener("click", event => {
-      if (event.target === overlay) close(false);
-    });
-
-    buttons.append(cancelButton, confirmButton);
-    modal.append(iconElement, heading, description, buttons);
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-  });
-}
-
-
-function showSuccessDialog(title, message) {
-  return new Promise(resolve => {
-    const overlay = document.createElement("div");
-
-    overlay.style.cssText = `
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.55);
-      backdrop-filter: blur(5px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      padding: 20px;
-    `;
-
-    const modal = document.createElement("div");
-
-    modal.style.cssText = `
-      background: white;
-      width: 100%;
-      max-width: 420px;
-      padding: 30px;
-      border-radius: 20px;
-      text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,.2);
-      font-family: Arial, sans-serif;
-      animation: modalAppear .25s ease;
-    `;
-
-    const icon = document.createElement("div");
-    icon.textContent = "✓";
-    icon.style.cssText = `
-      width: 65px;
-      height: 65px;
-      border-radius: 50%;
-      background: #dcfce7;
-      color: #16a34a;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
-      margin: 0 auto 20px;
-    `;
-
-    const heading = document.createElement("h2");
-    heading.textContent = title;
-    heading.style.cssText = `
-      color: #1e293b;
-      font-size: 22px;
-      margin-bottom: 12px;
-    `;
-
-    const description = document.createElement("p");
-    description.textContent = message;
-    description.style.cssText = `
-      color: #64748b;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 25px;
-    `;
-
-    const button = document.createElement("button");
-    button.textContent = "Am înțeles";
-    button.style.cssText = `
-      width: 100%;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
-      background: #16a34a;
-      color: white;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    `;
-
-    button.addEventListener("click", () => {
-      overlay.remove();
-      resolve(true);
-    });
-
-    modal.append(icon, heading, description, button);
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-  });
-}
-
-
-function displayQuestions() {
-  const questionsList = document.getElementById("questionsList");
-
-  let filteredQuestions = allQuestions;
-
-  if (currentFilter !== "all") {
-    filteredQuestions = allQuestions.filter(
-      q => q.status === currentFilter
-    );
-  }
-
-  if (filteredQuestions.length === 0) {
-    questionsList.innerHTML =
-      "<p>Nu există întrebări în această categorie.</p>";
-    return;
-  }
-
-  questionsList.innerHTML = "";
-
-  filteredQuestions.forEach(question => {
-    const card = document.createElement("div");
-
-    card.style.cssText = `
-      border: 1px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 15px;
-      background: #ffffff;
-    `;
-
-    const title = document.createElement("h3");
-    title.textContent = question.category || "Fără categorie";
-
-    const text = document.createElement("p");
-    text.textContent = question.question_text;
-    text.style.marginTop = "12px";
-
-    const status = document.createElement("p");
-    status.textContent = "Status: " + question.status;
-    status.style.marginTop = "12px";
-    status.style.fontWeight = "bold";
-
-    const visibility = document.createElement("p");
-    visibility.textContent =
-      question.visibility === "private"
-        ? "Întrebare privată"
-        : "Întrebare publică";
-
-    card.append(title, text, status, visibility);
-
-    if (!question.is_anonymous && question.student_name) {
-      const identity = document.createElement("p");
-      identity.textContent =
-        "Elev: " + question.student_name +
-        (question.student_class ? " · " + question.student_class : "");
-
-      card.appendChild(identity);
-    }
-
-    // ISTORIC
-
-    const history = document.createElement("div");
-
-    history.style.cssText = `
-      margin-top: 15px;
-      padding: 12px;
-      background: #f1f5f9;
-      border-radius: 8px;
-      font-size: 14px;
-      line-height: 1.8;
-    `;
-
-    const submittedDate = question.created_at
-      ? new Date(question.created_at).toLocaleString("ro-RO")
-      : "Necunoscută";
-
-    const processedDate = question.answered_at
-      ? new Date(question.answered_at).toLocaleString("ro-RO")
-      : "Neprocesată";
-
-    const adminName = question.answered_by
-      ? adminNames[question.answered_by] || "Administrator necunoscut"
-      : "Nespecificat";
-
-    const historyTitle = document.createElement("strong");
-    historyTitle.textContent = "Istoric";
-
-    const submittedInfo = document.createElement("p");
-    submittedInfo.textContent = "Trimisă la: " + submittedDate;
-
-    const processedInfo = document.createElement("p");
-    processedInfo.textContent = "Procesată la: " + processedDate;
-
-    const adminInfo = document.createElement("p");
-    adminInfo.textContent = "Procesată de: " + adminName;
-
-    history.append(
-      historyTitle,
-      submittedInfo,
-      processedInfo,
-      adminInfo
-    );
-
-    card.appendChild(history);
-
-    // RĂSPUNS
-
-    const answerInput = document.createElement("textarea");
-    answerInput.placeholder = "Scrie răspunsul aici...";
-    answerInput.value = question.answer_text || "";
-
-    answerInput.style.cssText = `
-      width: 100%;
-      min-height: 100px;
-      margin-top: 15px;
-      padding: 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      box-sizing: border-box;
-      font: inherit;
-    `;
-
-    card.appendChild(answerInput);
-
-    // PUBLICARE
-
-    const publishButton = document.createElement("button");
-    publishButton.textContent = "Publică răspunsul";
-
-    publishButton.style.cssText = `
-      margin-top: 12px;
-      padding: 10px 16px;
-      background: #2677EF;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    `;
-
-    publishButton.addEventListener("click", async () => {
-      const answer = answerInput.value.trim();
-
-      if (!answer) {
-        alert("Scrie un răspuns înainte de publicare.");
+      if (error) {
+        console.error("Eroare la încărcarea administratorilor:", error);
         return;
       }
 
-      const confirmed = await showConfirmDialog({
-        title: "Publică răspunsul?",
-        message: "Răspunsul va deveni vizibil elevilor pe pagina publică a CȘE.",
-        confirmText: "Da, publică",
-        confirmColor: "#2677EF",
-        icon: "✓"
+      adminNames = {};
+
+      data.forEach(profile => {
+        adminNames[profile.id] = profile.display_name;
       });
 
-      if (!confirmed) return;
+    }
 
-      publishButton.disabled = true;
-      publishButton.textContent = "Se publică...";
+    async function loadQuestions() {
 
-      try {
-        const { data, error } = await supabaseClient
-          .from("questions")
-          .update({
-            answer_text: answer,
-            status: "published",
-            answered_by: currentUser.id,
-            answered_at: new Date().toISOString()
-          })
-          .eq("id", question.id)
-          .select();
+      const questionsList = document.getElementById("questionsList");
 
-        if (error) throw error;
+      questionsList.innerHTML = "<p>Se încarcă întrebările...</p>";
 
-        if (!data || data.length === 0) {
-          throw new Error("Întrebarea nu a fost actualizată.");
+      const { data, error } = await supabaseClient
+        .from("questions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        questionsList.textContent =
+          "Eroare la încărcarea întrebărilor: " + error.message;
+        return;
+      }
+
+      allQuestions = data || [];
+
+      await loadAdminNames();
+
+      updateStatistics();
+      displayQuestions();
+
+    }
+
+
+    // ACTUALIZAREA STATISTICILOR
+
+    function updateStatistics() {
+
+      document.getElementById("totalCount").textContent =
+        allQuestions.length;
+
+      document.getElementById("pendingCount").textContent =
+        allQuestions.filter(q => q.status === "pending").length;
+
+      document.getElementById("publishedCount").textContent =
+        allQuestions.filter(q => q.status === "published").length;
+
+      document.getElementById("rejectedCount").textContent =
+        allQuestions.filter(q => q.status === "rejected").length;
+
+      const withdrawnElement = document.getElementById("withdrawnCount");
+
+      if (withdrawnElement) {
+        withdrawnElement.textContent =
+          allQuestions.filter(q => q.status === "withdrawn").length;
+      }
+
+    }
+
+
+    // FERASTRE DE CONFIRMARE
+
+    function showConfirmDialog({
+      title,
+      message,
+      confirmText,
+      confirmColor = "#2677EF",
+      icon = "✓"
+    }) {
+
+      return new Promise(resolve => {
+
+        const overlay = document.createElement("div");
+
+        overlay.style.cssText = `
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.55);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 99999;
+          padding: 20px;
+          backdrop-filter: blur(4px);
+        `;
+
+        const modal = document.createElement("div");
+
+        modal.style.cssText = `
+          background: white;
+          width: 100%;
+          max-width: 420px;
+          padding: 28px;
+          border-radius: 18px;
+          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+          text-align: center;
+          font-family: inherit;
+          animation: modalAppear 0.2s ease;
+        `;
+
+        const style = document.createElement("style");
+
+        style.textContent = `
+          @keyframes modalAppear {
+            from {
+              opacity: 0;
+              transform: translateY(15px) scale(0.97);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+        `;
+
+        document.head.appendChild(style);
+
+        const iconElement = document.createElement("div");
+        iconElement.textContent = icon;
+
+        iconElement.style.cssText = `
+          width: 58px;
+          height: 58px;
+          border-radius: 50%;
+          background: ${confirmColor}18;
+          color: ${confirmColor};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 28px;
+          font-weight: bold;
+          margin: 0 auto 18px;
+        `;
+
+        const heading = document.createElement("h2");
+        heading.textContent = title;
+
+        heading.style.cssText = `
+          margin: 0 0 10px;
+          color: #1e293b;
+          font-size: 21px;
+        `;
+
+        const description = document.createElement("p");
+        description.textContent = message;
+
+        description.style.cssText = `
+          color: #64748b;
+          font-size: 14px;
+          line-height: 1.6;
+          margin-bottom: 25px;
+        `;
+
+        const buttons = document.createElement("div");
+
+        buttons.style.cssText = `
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+        `;
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Anulează";
+
+        cancelButton.style.cssText = `
+          flex: 1;
+          padding: 12px;
+          border: 1px solid #cbd5e1;
+          border-radius: 9px;
+          background: white;
+          color: #475569;
+          cursor: pointer;
+          font-weight: 600;
+        `;
+
+        const confirmButton = document.createElement("button");
+        confirmButton.textContent = confirmText;
+
+        confirmButton.style.cssText = `
+          flex: 1;
+          padding: 12px;
+          border: none;
+          border-radius: 9px;
+          background: ${confirmColor};
+          color: white;
+          cursor: pointer;
+          font-weight: 600;
+        `;
+
+        function close(result) {
+          overlay.remove();
+          style.remove();
+          resolve(result);
         }
 
-        await showSuccessDialog(
-          "Răspuns publicat!",
-          "Răspunsul a fost publicat cu succes."
+        cancelButton.addEventListener("click", () => close(false));
+        confirmButton.addEventListener("click", () => close(true));
+
+        overlay.addEventListener("click", event => {
+          if (event.target === overlay) close(false);
+        });
+
+        buttons.append(cancelButton, confirmButton);
+        modal.append(iconElement, heading, description, buttons);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+      });
+
+    }
+
+
+    // FEREASTRA DE SUCCES
+
+    function showSuccessDialog(title, message) {
+
+      return new Promise(resolve => {
+
+        const overlay = document.createElement("div");
+
+        overlay.style.cssText = `
+          position: fixed;
+          inset: 0;
+          background: rgba(15, 23, 42, 0.55);
+          backdrop-filter: blur(5px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 99999;
+          padding: 20px;
+        `;
+
+        const modal = document.createElement("div");
+
+        modal.style.cssText = `
+          background: white;
+          width: 100%;
+          max-width: 420px;
+          padding: 30px;
+          border-radius: 20px;
+          text-align: center;
+          box-shadow: 0 20px 60px rgba(0,0,0,.2);
+          font-family: Arial, sans-serif;
+          animation: modalAppear .25s ease;
+        `;
+
+        const icon = document.createElement("div");
+        icon.textContent = "✓";
+
+        icon.style.cssText = `
+          width: 65px;
+          height: 65px;
+          border-radius: 50%;
+          background: #dcfce7;
+          color: #16a34a;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 32px;
+          font-weight: bold;
+          margin: 0 auto 20px;
+        `;
+
+        const heading = document.createElement("h2");
+        heading.textContent = title;
+
+        heading.style.cssText = `
+          color: #1e293b;
+          font-size: 22px;
+          margin-bottom: 12px;
+        `;
+
+        const description = document.createElement("p");
+        description.textContent = message;
+
+        description.style.cssText = `
+          color: #64748b;
+          font-size: 14px;
+          line-height: 1.6;
+          margin-bottom: 25px;
+        `;
+
+        const button = document.createElement("button");
+        button.textContent = "Am înțeles";
+
+        button.style.cssText = `
+          width: 100%;
+          padding: 13px;
+          border: none;
+          border-radius: 10px;
+          background: #16a34a;
+          color: white;
+          font-size: 15px;
+          font-weight: bold;
+          cursor: pointer;
+        `;
+
+        button.addEventListener("click", () => {
+          overlay.remove();
+          resolve(true);
+        });
+
+        modal.append(icon, heading, description, button);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+      });
+
+    }
+
+
+    // AFISAREA INTREBARILOR
+
+    function displayQuestions() {
+
+      const questionsList = document.getElementById("questionsList");
+
+      let filteredQuestions = allQuestions;
+
+      if (currentFilter !== "all") {
+        filteredQuestions = allQuestions.filter(
+          q => q.status === currentFilter
+        );
+      }
+
+      if (filteredQuestions.length === 0) {
+        questionsList.innerHTML =
+          "<p>Nu există întrebări în această categorie.</p>";
+        return;
+      }
+
+      questionsList.innerHTML = "";
+
+      filteredQuestions.forEach(question => {
+
+        const card = document.createElement("div");
+
+        card.style.cssText = `
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 20px;
+          margin-bottom: 15px;
+          background: #ffffff;
+        `;
+
+        const title = document.createElement("h3");
+        title.textContent = question.category || "Fără categorie";
+
+        const text = document.createElement("p");
+        text.textContent = question.question_text;
+        text.style.marginTop = "12px";
+
+        const status = document.createElement("p");
+        status.textContent = "Status: " + question.status;
+        status.style.marginTop = "12px";
+        status.style.fontWeight = "bold";
+
+        const visibility = document.createElement("p");
+
+        visibility.textContent =
+          question.visibility === "private"
+            ? "Întrebare privată"
+            : "Întrebare publică";
+
+        card.append(title, text, status, visibility);
+
+        if (!question.is_anonymous && question.student_name) {
+
+          const identity = document.createElement("p");
+
+          identity.textContent =
+            "Elev: " + question.student_name +
+            (question.student_class ? " · " + question.student_class : "");
+
+          card.appendChild(identity);
+
+        }
+
+        // ISTORIC
+
+        const history = document.createElement("div");
+
+        history.style.cssText = `
+          margin-top: 15px;
+          padding: 12px;
+          background: #f1f5f9;
+          border-radius: 8px;
+          font-size: 14px;
+          line-height: 1.8;
+        `;
+
+        const submittedDate = question.created_at
+          ? new Date(question.created_at).toLocaleString("ro-RO")
+          : "Necunoscută";
+
+        const processedDate = question.answered_at
+          ? new Date(question.answered_at).toLocaleString("ro-RO")
+          : "Neprocesată";
+
+        const adminName = question.answered_by
+          ? adminNames[question.answered_by] || "Administrator necunoscut"
+          : "Nespecificat";
+
+        const historyTitle = document.createElement("strong");
+        historyTitle.textContent = "Istoric";
+
+        const submittedInfo = document.createElement("p");
+        submittedInfo.textContent = "Trimisă la: " + submittedDate;
+
+        const processedInfo = document.createElement("p");
+        processedInfo.textContent = "Procesată la: " + processedDate;
+
+        const adminInfo = document.createElement("p");
+        adminInfo.textContent = "Procesată de: " + adminName;
+
+        history.append(
+          historyTitle,
+          submittedInfo,
+          processedInfo,
+          adminInfo
         );
 
-        await loadQuestions();
+        card.appendChild(history);
 
-      } catch (error) {
-        alert("Eroare: " + error.message);
-        publishButton.disabled = false;
+        // RĂSPUNS
+
+        const answerInput = document.createElement("textarea");
+        answerInput.placeholder = "Scrie răspunsul aici...";
+        answerInput.value = question.answer_text || "";
+
+        answerInput.style.cssText = `
+          width: 100%;
+          min-height: 100px;
+          margin-top: 15px;
+          padding: 12px;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          box-sizing: border-box;
+          font: inherit;
+        `;
+
+        card.appendChild(answerInput);
+
+        // PUBLICARE
+
+        const publishButton = document.createElement("button");
         publishButton.textContent = "Publică răspunsul";
-      }
-    });
 
-    card.appendChild(publishButton);
+        publishButton.style.cssText = `
+          margin-top: 12px;
+          padding: 10px 16px;
+          background: #2677EF;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+        `;
 
-    // RESPINGERE
+        publishButton.addEventListener("click", async () => {
 
-    const rejectButton = document.createElement("button");
-    rejectButton.textContent = "Respinge întrebarea";
+          const answer = answerInput.value.trim();
 
-    rejectButton.style.cssText = `
-      margin-top: 12px;
-      margin-left: 10px;
-      padding: 10px 16px;
-      background: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    `;
+          if (!answer) {
+            alert("Scrie un răspuns înainte de publicare.");
+            return;
+          }
 
-    rejectButton.addEventListener("click", async () => {
-      const confirmed = await showConfirmDialog({
-        title: "Respinge întrebarea?",
-        message: "Întrebarea va fi marcată ca respinsă și nu va fi publicată.",
-        confirmText: "Da, respinge",
-        confirmColor: "#dc3545",
-        icon: "!"
-      });
+          const confirmed = await showConfirmDialog({
+            title: "Publică răspunsul?",
+            message: "Răspunsul va deveni vizibil elevilor pe pagina publică a CȘE.",
+            confirmText: "Da, publică",
+            confirmColor: "#2677EF",
+            icon: "✓"
+          });
 
-      if (!confirmed) return;
+          if (!confirmed) return;
 
-      rejectButton.disabled = true;
-      rejectButton.textContent = "Se procesează...";
+          publishButton.disabled = true;
+          publishButton.textContent = "Se publică...";
 
-      try {
-        const { data, error } = await supabaseClient
-          .from("questions")
-          .update({
-            status: "rejected",
-            answered_by: currentUser.id,
-            answered_at: new Date().toISOString()
-          })
-          .eq("id", question.id)
-          .select();
+          try {
 
-        if (error) throw error;
+            const { data, error } = await supabaseClient
+              .from("questions")
+              .update({
+                answer_text: answer,
+                status: "published",
+                answered_by: currentUser.id,
+                answered_at: new Date().toISOString()
+              })
+              .eq("id", question.id)
+              .select();
 
-        if (!data || data.length === 0) {
-          throw new Error("Întrebarea nu a fost actualizată.");
-        }
+            if (error) throw error;
 
-        await showSuccessDialog(
-          "Întrebare respinsă!",
-          "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
-        );
+            if (!data || data.length === 0) {
+              throw new Error("Întrebarea nu a fost actualizată.");
+            }
 
-        await loadQuestions();
+            await showSuccessDialog(
+              "Răspuns publicat!",
+              "Răspunsul a fost publicat cu succes."
+            );
 
-      } catch (error) {
-        console.error("Eroare la respingere:", error);
-        alert("Eroare: " + error.message);
+            await loadQuestions();
 
-        rejectButton.disabled = false;
+          } catch (error) {
+
+            alert("Eroare: " + error.message);
+
+            publishButton.disabled = false;
+            publishButton.textContent = "Publică răspunsul";
+
+          }
+
+        });
+
+        card.appendChild(publishButton);
+
+        // RESPINGERE
+
+        const rejectButton = document.createElement("button");
         rejectButton.textContent = "Respinge întrebarea";
-      }
-    });
 
-    card.appendChild(rejectButton);
+        rejectButton.style.cssText = `
+          margin-top: 12px;
+          margin-left: 10px;
+          padding: 10px 16px;
+          background: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+        `;
 
-    // RETRAGERE ÎNTREBARE PUBLICATĂ
-console.log("VERIFICARE RETRAGERE:", {
-  id: question.id,
-  status: question.status,
-  visibility: question.visibility
-});
-    if (
-      question.status === "published" &&
-      question.visibility === "public"
-    ) {
-      const retractButton = document.createElement("button");
-      retractButton.textContent = "Retrage întrebarea";
+        rejectButton.addEventListener("click", async () => {
 
-      retractButton.style.cssText = `
-        margin-top: 12px;
-        margin-left: 10px;
-        padding: 10px 16px;
-        background: #64748b;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-      `;
+          const confirmed = await showConfirmDialog({
+            title: "Respinge întrebarea?",
+            message: "Întrebarea va fi marcată ca respinsă și nu va fi publicată.",
+            confirmText: "Da, respinge",
+            confirmColor: "#dc3545",
+            icon: "!"
+          });
 
-      retractButton.addEventListener("click", async () => {
-        const confirmed = await showConfirmDialog({
-          title: "Retragi întrebarea?",
-          message: "Întrebarea și răspunsul nu vor mai apărea pe pagina publică. Înregistrarea va rămâne în istoricul administrării.",
-          confirmText: "Da, retrage",
-          confirmColor: "#64748b",
-          icon: "!"
-        });
+          if (!confirmed) return;
 
-        if (!confirmed) return;
+          rejectButton.disabled = true;
+          rejectButton.textContent = "Se procesează...";
 
-        retractButton.disabled = true;
-        retractButton.textContent = "Se retrage...";
+          try {
 
-        try {
-          const { data, error } = await supabaseClient
-            .from("questions")
-            .update({
-             status: "withdrawn",
-              answered_by: currentUser.id,
-              answered_at: new Date().toISOString()
-            })
-            .eq("id", question.id)
-            .select();
+            const { data, error } = await supabaseClient
+              .from("questions")
+              .update({
+                status: "rejected",
+                answered_by: currentUser.id,
+                answered_at: new Date().toISOString()
+              })
+              .eq("id", question.id)
+              .select();
 
-          if (error) throw error;
+            if (error) throw error;
 
-          if (!data || data.length === 0) {
-            throw new Error("Întrebarea nu a fost actualizată.");
+            if (!data || data.length === 0) {
+              throw new Error("Întrebarea nu a fost actualizată.");
+            }
+
+            await showSuccessDialog(
+              "Întrebare respinsă!",
+              "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
+            );
+
+            await loadQuestions();
+
+          } catch (error) {
+
+            console.error("Eroare la respingere:", error);
+            alert("Eroare: " + error.message);
+
+            rejectButton.disabled = false;
+            rejectButton.textContent = "Respinge întrebarea";
+
           }
 
-          await showSuccessDialog(
-            "Întrebare retrasă!",
-            "Întrebarea nu mai este vizibilă public, iar înregistrarea a fost păstrată în dashboard."
-          );
+        });
 
-          await loadQuestions();
+        card.appendChild(rejectButton);
 
-        } catch (error) {
-          console.error("Eroare la retragere:", error);
-          alert("Eroare: " + error.message);
+        // RETRAGERE ÎNTREBARE PUBLICATĂ
 
-          retractButton.disabled = false;
+        console.log("VERIFICARE RETRAGERE:", {
+          id: question.id,
+          status: question.status,
+          visibility: question.visibility
+        });
+
+        if (
+          question.status === "published" &&
+          question.visibility === "public"
+        ) {
+
+          const retractButton = document.createElement("button");
           retractButton.textContent = "Retrage întrebarea";
+
+          retractButton.style.cssText = `
+            margin-top: 12px;
+            margin-left: 10px;
+            padding: 10px 16px;
+            background: #64748b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+          `;
+
+          retractButton.addEventListener("click", async () => {
+
+            const confirmed = await showConfirmDialog({
+              title: "Retragi întrebarea?",
+              message: "Întrebarea și răspunsul nu vor mai apărea pe pagina publică. Înregistrarea va rămâne în istoricul administrării.",
+              confirmText: "Da, retrage",
+              confirmColor: "#64748b",
+              icon: "!"
+            });
+
+            if (!confirmed) return;
+
+            retractButton.disabled = true;
+            retractButton.textContent = "Se retrage...";
+
+            try {
+
+              const { data, error } = await supabaseClient
+                .from("questions")
+                .update({
+                  status: "withdrawn",
+                  answered_by: currentUser.id,
+                  answered_at: new Date().toISOString()
+                })
+                .eq("id", question.id)
+                .select();
+
+              if (error) throw error;
+
+              if (!data || data.length === 0) {
+                throw new Error("Întrebarea nu a fost actualizată.");
+              }
+
+              await showSuccessDialog(
+                "Întrebare retrasă!",
+                "Întrebarea nu mai este vizibilă public, iar înregistrarea a fost păstrată în dashboard."
+              );
+
+              await loadQuestions();
+
+            } catch (error) {
+
+              console.error("Eroare la retragere:", error);
+              alert("Eroare: " + error.message);
+
+              retractButton.disabled = false;
+              retractButton.textContent = "Retrage întrebarea";
+
+            }
+
+          });
+
+          card.appendChild(retractButton);
+
         }
+
+
+        // REPUBLICARE ÎNTREBARE RETRASĂ
+
+        if (question.status === "withdrawn") {
+
+          const republishButton = document.createElement("button");
+          republishButton.textContent = "Republică întrebarea";
+
+          republishButton.style.cssText = `
+            margin-top: 12px;
+            margin-left: 10px;
+            padding: 10px 16px;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+          `;
+
+          republishButton.addEventListener("click", async () => {
+
+            if (!question.answer_text || !question.answer_text.trim()) {
+              alert("Întrebarea nu are un răspuns salvat și nu poate fi republicată.");
+              return;
+            }
+
+            const confirmed = await showConfirmDialog({
+              title: "Republică întrebarea?",
+              message: "Întrebarea și răspunsul existent vor redeveni vizibile public.",
+              confirmText: "Da, republică",
+              confirmColor: "#16a34a",
+              icon: "✓"
+            });
+
+            if (!confirmed) return;
+
+            republishButton.disabled = true;
+            republishButton.textContent = "Se republică...";
+
+            try {
+
+              const { data, error } = await supabaseClient
+                .from("questions")
+                .update({
+                  status: "published",
+                  answered_by: currentUser.id,
+                  answered_at: new Date().toISOString()
+                })
+                .eq("id", question.id)
+                .select();
+
+              if (error) throw error;
+
+              if (!data || data.length === 0) {
+                throw new Error("Întrebarea nu a fost actualizată.");
+              }
+
+              await showSuccessDialog(
+                "Întrebare republicată!",
+                "Întrebarea și răspunsul au fost publicate din nou."
+              );
+
+              await loadQuestions();
+
+            } catch (error) {
+
+              console.error("Eroare la republicare:", error);
+              alert("Eroare: " + error.message);
+
+              republishButton.disabled = false;
+              republishButton.textContent = "Republică întrebarea";
+
+            }
+
+          });
+
+          card.appendChild(republishButton);
+
+        }
+
+        questionsList.appendChild(card);
+
       });
 
-      card.appendChild(retractButton);
     }
 
-   
-    // REPUBLICARE ÎNTREBARE RETRASĂ
 
-    if (question.status === "withdrawn") {
-      const republishButton = document.createElement("button");
-      republishButton.textContent = "Republică întrebarea";
+    // FILTRELE
 
-      republishButton.style.cssText = `
-        margin-top: 12px;
-        margin-left: 10px;
-        padding: 10px 16px;
-        background: #16a34a;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-      `;
+    document.querySelectorAll(".filter-button").forEach(button => {
 
-      republishButton.addEventListener("click", async () => {
-        if (!question.answer_text || !question.answer_text.trim()) {
-          alert("Întrebarea nu are un răspuns salvat și nu poate fi republicată.");
-          return;
-        }
+      button.addEventListener("click", function() {
 
-        const confirmed = await showConfirmDialog({
-          title: "Republică întrebarea?",
-          message: "Întrebarea și răspunsul existent vor redeveni vizibile public.",
-          confirmText: "Da, republică",
-          confirmColor: "#16a34a",
-          icon: "✓"
+        document.querySelectorAll(".filter-button").forEach(btn => {
+          btn.classList.remove("active");
         });
 
-        if (!confirmed) return;
+        this.classList.add("active");
 
-        republishButton.disabled = true;
-        republishButton.textContent = "Se republică...";
+        currentFilter = this.dataset.status;
 
-        try {
-          const { data, error } = await supabaseClient
-            .from("questions")
-            .update({
-              status: "published",
-              answered_by: currentUser.id,
-              answered_at: new Date().toISOString()
-            })
-            .eq("id", question.id)
-            .select();
+        displayQuestions();
 
-          if (error) throw error;
-
-          if (!data || data.length === 0) {
-            throw new Error("Întrebarea nu a fost actualizată.");
-          }
-
-          await showSuccessDialog(
-            "Întrebare republicată!",
-            "Întrebarea și răspunsul au fost publicate din nou."
-          );
-
-          await loadQuestions();
-
-        } catch (error) {
-          console.error("Eroare la republicare:", error);
-          alert("Eroare: " + error.message);
-
-          republishButton.disabled = false;
-          republishButton.textContent = "Republică întrebarea";
-        }
       });
 
-      card.appendChild(republishButton);
-    }
-
-    questionsList.appendChild(card);
-
-  });
-}
-
-
-// FILTRELE
-
-document.querySelectorAll(".filter-button").forEach(button => {
-
-  button.addEventListener("click", function() {
-
-    document.querySelectorAll(".filter-button").forEach(btn => {
-      btn.classList.remove("active");
     });
 
-    this.classList.add("active");
 
-    currentFilter = this.dataset.status;
-
-    displayQuestions();
-
-  });
-
-});
     // VERIFICARE SESIUNE EXISTENTĂ
 
     async function checkExistingSession() {
@@ -1255,12 +1316,11 @@ document.querySelectorAll(".filter-button").forEach(button => {
 
     }
 
-   window.addEventListener("load", async () => {
-  await checkExistingSession();
-});
+    window.addEventListener("load", async () => {
+      await checkExistingSession();
+    });
 
   </script>
 
 </body>
 </html>
-```
