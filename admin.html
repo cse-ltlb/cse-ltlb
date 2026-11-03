@@ -1053,7 +1053,11 @@ function displayQuestions() {
     card.appendChild(rejectButton);
 
     // RETRAGERE ÎNTREBARE PUBLICATĂ
-
+console.log("VERIFICARE RETRAGERE:", {
+  id: question.id,
+  status: question.status,
+  visibility: question.visibility
+});
     if (
       question.status === "published" &&
       question.visibility === "public"
