@@ -1,33 +1,382 @@
-@@ -1,5 +1,3 @@
-
-```html
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-@@ -172,7 +170,7 @@
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CȘE Blaga | Administrare</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f7fc;
+      color: #102C50;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: white;
+      width: 100%;
+      max-width: 420px;
+      padding: 35px;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(16,44,80,.08);
+    }
+
+    .logo {
+      background: linear-gradient(120deg,#2677EF,#19A875);
+      color: white;
+      width: 55px;
+      height: 55px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+      font-size: 22px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      font-size: 25px;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #64748b;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccd7e6;
+      border-radius: 9px;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+
+    input:focus {
+      outline: 2px solid #2677EF;
+      border-color: #2677EF;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 9px;
+      background: #2677EF;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #155fc9;
+    }
+
+    button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      margin-top: 18px;
+      padding: 13px;
+      border-radius: 9px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .error {
+      display: block;
+      background: #fff0f0;
+      color: #a32323;
+    }
+
+    .success {
+      display: block;
+      background: #e7f8ef;
+      color: #12663e;
+    }
+
+    .footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+      margin-top: 25px;
+    }
+
+    /* DASHBOARD */
+
+    body.dashboard-active {
+      display: block;
+      padding: 30px;
+    }
+
+    .dashboard {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 35px;
+    }
+
+    .dashboard-header .logo {
+      margin-bottom: 15px;
+    }
+
+    .dashboard-header p {
+      color: #64748b;
+      margin-top: 8px;
+    }
+
+    .logout-button {
+      width: auto;
+      padding: 12px 20px;
+      background: #e8eef7;
+      color: #102C50;
+    }
+
+    .logout-button:hover {
+      background: #d5e0ef;
+    }
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
       grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 18px;
       margin-bottom: 35px;
     }
-@@ -324,8 +322,7 @@ <h1>Panou de administrare</h1>
+
+    .stat-card {
+      background: white;
+      padding: 22px;
+      border-radius: 14px;
+      box-shadow: 0 4px 15px rgba(16,44,80,.05);
+    }
+
+    .stat-card span {
+      display: block;
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .stat-card strong {
+      font-size: 30px;
+    }
+
+    .questions-section {
+      background: white;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(16,44,80,.05);
+    }
+
+    .questions-section h2 {
+      margin-bottom: 22px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    .filter-button {
+      width: auto;
+      padding: 10px 16px;
+      background: #e8eef7;
+      color: #102C50;
+    }
+
+    .filter-button.active {
+      background: #2677EF;
+      color: white;
+    }
+
+    @media (max-width: 750px) {
+      body.dashboard-active {
+        padding: 16px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .dashboard-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .logout-button {
+        width: 100%;
+      }
+
+      .questions-section {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- AUTENTIFICARE -->
+
+  <main class="login-card" id="loginCard">
+
+    <div class="logo">CȘE</div>
+
+    <h1>Panou de administrare</h1>
+
+    <p class="description">
+      Autentifică-te pentru a administra întrebările
+      și activitatea Consiliului Școlar al Elevilor.
+    </p>
+
+    <form id="loginForm">
+
+      <label for="email">Adresa de e-mail</label>
+      <input
+        type="email"
+        id="email"
+        placeholder="E-mail"
+        autocomplete="username"
+        required
+      >
+
+      <label for="password">Parola</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="Parola"
+        autocomplete="current-password"
+        required
+      >
+
+      <button type="submit" id="loginButton">
+        Autentificare
+      </button>
+
+    </form>
+
+    <div id="message" class="message"></div>
+
+    <div class="footer">
+      Consiliul Școlar al Elevilor · Liceul Teoretic „Lucian Blaga”
+    </div>
+
+  </main>
+
+
+  <!-- DASHBOARD -->
+
+  <main id="dashboard" class="dashboard" style="display: none;">
+
+    <header class="dashboard-header">
+
+      <div>
+        <div class="logo">CȘE</div>
+        <h1>Panou de administrare</h1>
+        <p>Consiliul Școlar al Elevilor · Blaga</p>
+      </div>
+
+      <button id="logoutButton" class="logout-button">
+        Deconectare
+      </button>
+
+    </header>
+
+    <!-- STATISTICI -->
+
+    <section class="stats">
 
       <div class="stat-card">
         <span>Toate întrebările</span>
-   
-<strong id="totalCount">0</strong>
         <strong id="totalCount">0</strong>
       </div>
 
       <div class="stat-card">
-@@ -386,21 +383,27 @@ <h2>Gestionarea întrebărilor</h2>
+        <span>În așteptare</span>
+        <strong id="pendingCount">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Publicate</span>
+        <strong id="publishedCount">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Respinse</span>
+        <strong id="rejectedCount">0</strong>
+      </div>
+
+      <div class="stat-card">
+        <span>Retrase</span>
+        <strong id="withdrawnCount">0</strong>
+      </div>
 
     </section>
 
-   
+    <!-- ÎNTREBĂRI -->
+
+    <section class="questions-section">
+
+      <h2>Gestionarea întrebărilor</h2>
+
+      <div class="filters">
+
+        <button class="filter-button active" data-status="all">
+          Toate
+        </button>
+
+        <button class="filter-button" data-status="pending">
+          În așteptare
+        </button>
+
+        <button class="filter-button" data-status="published">
+          Publicate
+        </button>
+
+        <button class="filter-button" data-status="rejected">
+          Respinse
+        </button>
+
+        <button class="filter-button" data-status="withdrawn">
+          Retrase
+        </button>
+
+      </div>
+
       <div id="questionsList">
         <p>Întrebările vor apărea aici.</p>
       </div>
@@ -36,14 +385,12 @@
 
   </main>
 
-  <!-- JAVASCRIPT -->
   <!-- CONECTARE SUPABASE ȘI REFERINȚE HTML -->
 
   <script>
     const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
     const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
 
-    let currentUser = null;
     const supabaseClient = window.supabase.createClient(
       SUPABASE_URL,
       SUPABASE_KEY
@@ -60,150 +407,165 @@
 
     function showMessage(text, type) {
       message.textContent = text;
-@@ -426,7 +429,9 @@ <h2>Gestionarea întrebărilor</h2>
+      message.className = "message " + type;
+    }
+
+    async function verifyAdministrator(user) {
+
+      const { data: profile, error } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+
+      if (!["president", "vice_president", "admin"].includes(profile.role)) {
+        throw new Error("Nu ai permisiunea de administrator.");
+      }
+
+      currentUser = user;
+
       loginCard.style.display = "none";
       dashboard.style.display = "block";
       document.body.classList.add("dashboard-active");
-
       await loadQuestions();
-
       console.log("QUESTIONS LOADED AUTOMATICALLY");
     }
 
-@@ -487,751 +492,807 @@ <h2>Gestionarea întrebărilor</h2>
+    loginForm.addEventListener("submit", async function(event) {
+
+      event.preventDefault();
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Se verifică...";
+      message.className = "message";
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        await verifyAdministrator(data.user);
+
+      } catch (error) {
+
+        await supabaseClient.auth.signOut();
+
+        showMessage(
+          error.message || "A apărut o eroare.",
+          "error"
+        );
+
+      } finally {
+
+        loginButton.disabled = false;
+        loginButton.textContent = "Autentificare";
+
+      }
+
+    });
+
+    // DELOGARE
+
+    logoutButton.addEventListener("click", async function() {
+
+      await supabaseClient.auth.signOut();
+
+      currentUser = null;
+
+      dashboard.style.display = "none";
+      loginCard.style.display = "block";
+
+      document.body.classList.remove("dashboard-active");
+
+      loginForm.reset();
       message.className = "message";
 
     });
-// INCARCAREA INTREBARILOR
 
-let allQuestions = [];
     // INCARCAREA INTREBARILOR
 
     let allQuestions = [];
     console.log("DASHBOARD SCRIPT LOADED");
-let currentFilter = "all";
-let adminNames = {};
+    let currentFilter = "all";
+    let adminNames = {};
 
-async function loadAdminNames() {
+      async function loadAdminNames() {
   const { data, error } = await supabaseClient
     .from("profiles")
     .select("id, display_name");
-    let currentFilter = "all";
-    let adminNames = {};
 
   if (error) {
     console.error("Eroare la încărcarea administratorilor:", error);
     return;
   }
-    async function loadAdminNames() {
 
   adminNames = {};
-      const { data, error } = await supabaseClient
-        .from("profiles")
-        .select("id, display_name");
 
   data.forEach(profile => {
     adminNames[profile.id] = profile.display_name;
   });
 }
+
 async function loadQuestions() {
-      if (error) {
-        console.error("Eroare la încărcarea administratorilor:", error);
-        return;
-      }
 
   const questionsList = document.getElementById("questionsList");
-      adminNames = {};
 
   questionsList.innerHTML = "<p>Se încarcă întrebările...</p>";
-      data.forEach(profile => {
-        adminNames[profile.id] = profile.display_name;
-      });
 
   const { data, error } = await supabaseClient
     .from("questions")
     .select("*")
     .order("created_at", { ascending: false });
-    }
 
   if (error) {
     questionsList.textContent =
       "Eroare la încărcarea întrebărilor: " + error.message;
     return;
   }
-    async function loadQuestions() {
 
-allQuestions = data || [];
-      const questionsList = document.getElementById("questionsList");
+  allQuestions = data || [];
 
-await loadAdminNames();
-      questionsList.innerHTML = "<p>Se încarcă întrebările...</p>";
+  await loadAdminNames();
 
-updateStatistics();
-displayQuestions();
+  updateStatistics();
+  displayQuestions();
 }
-      const { data, error } = await supabaseClient
-        .from("questions")
-        .select("*")
-        .order("created_at", { ascending: false });
 
-      if (error) {
-        questionsList.textContent =
-          "Eroare la încărcarea întrebărilor: " + error.message;
-        return;
-      }
 
 // ACTUALIZAREA STATISTICILOR
-      allQuestions = data || [];
-
-      await loadAdminNames();
 
 function updateStatistics() {
   document.getElementById("totalCount").textContent =
     allQuestions.length;
-      updateStatistics();
-      displayQuestions();
 
   document.getElementById("pendingCount").textContent =
     allQuestions.filter(q => q.status === "pending").length;
-    }
 
   document.getElementById("publishedCount").textContent =
     allQuestions.filter(q => q.status === "published").length;
 
   document.getElementById("rejectedCount").textContent =
     allQuestions.filter(q => q.status === "rejected").length;
-    // ACTUALIZAREA STATISTICILOR
 
   const withdrawnElement = document.getElementById("withdrawnCount");
-    function updateStatistics() {
 
   if (withdrawnElement) {
     withdrawnElement.textContent =
       allQuestions.filter(q => q.status === "withdrawn").length;
   }
 }
-      document.getElementById("totalCount").textContent =
-        allQuestions.length;
 
-      document.getElementById("pendingCount").textContent =
-        allQuestions.filter(q => q.status === "pending").length;
 
 // AFISAREA INTREBARILOR
-      document.getElementById("publishedCount").textContent =
-        allQuestions.filter(q => q.status === "published").length;
-
-      document.getElementById("rejectedCount").textContent =
-        allQuestions.filter(q => q.status === "rejected").length;
-
-      const withdrawnElement = document.getElementById("withdrawnCount");
-
-      if (withdrawnElement) {
-        withdrawnElement.textContent =
-          allQuestions.filter(q => q.status === "withdrawn").length;
-      }
-
-    }
 
 function showConfirmDialog({
   title,
@@ -226,144 +588,8 @@ function showConfirmDialog({
       padding: 20px;
       backdrop-filter: blur(4px);
     `;
-    // FERASTRE DE CONFIRMARE
-
-    function showConfirmDialog({
-      title,
-      message,
-      confirmText,
-      confirmColor = "#2677EF",
-      icon = "✓"
-    }) {
-
-      return new Promise(resolve => {
-
-        const overlay = document.createElement("div");
-
-        overlay.style.cssText = `
-          position: fixed;
-          inset: 0;
-          background: rgba(15, 23, 42, 0.55);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 99999;
-          padding: 20px;
-          backdrop-filter: blur(4px);
-        `;
-
-        const modal = document.createElement("div");
-
-        modal.style.cssText = `
-          background: white;
-          width: 100%;
-          max-width: 420px;
-          padding: 28px;
-          border-radius: 18px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-          text-align: center;
-          font-family: inherit;
-          animation: modalAppear 0.2s ease;
-        `;
-
-        const style = document.createElement("style");
-
-        style.textContent = `
-          @keyframes modalAppear {
-            from {
-              opacity: 0;
-              transform: translateY(15px) scale(0.97);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0) scale(1);
-            }
-          }
-        `;
-
-        document.head.appendChild(style);
-
-        const iconElement = document.createElement("div");
-        iconElement.textContent = icon;
-
-        iconElement.style.cssText = `
-          width: 58px;
-          height: 58px;
-          border-radius: 50%;
-          background: ${confirmColor}18;
-          color: ${confirmColor};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 28px;
-          font-weight: bold;
-          margin: 0 auto 18px;
-        `;
-
-        const heading = document.createElement("h2");
-        heading.textContent = title;
-
-        heading.style.cssText = `
-          margin: 0 0 10px;
-          color: #1e293b;
-          font-size: 21px;
-        `;
-
-        const description = document.createElement("p");
-        description.textContent = message;
-
-        description.style.cssText = `
-          color: #64748b;
-          font-size: 14px;
-          line-height: 1.6;
-          margin-bottom: 25px;
-        `;
-
-        const buttons = document.createElement("div");
-
-        buttons.style.cssText = `
-          display: flex;
-          gap: 10px;
-          justify-content: center;
-        `;
-
-        const cancelButton = document.createElement("button");
-        cancelButton.textContent = "Anulează";
-
-        cancelButton.style.cssText = `
-          flex: 1;
-          padding: 12px;
-          border: 1px solid #cbd5e1;
-          border-radius: 9px;
-          background: white;
-          color: #475569;
-          cursor: pointer;
-          font-weight: 600;
-        `;
-
-        const confirmButton = document.createElement("button");
-        confirmButton.textContent = confirmText;
-
-        confirmButton.style.cssText = `
-          flex: 1;
-          padding: 12px;
-          border: none;
-          border-radius: 9px;
-          background: ${confirmColor};
-          color: white;
-          cursor: pointer;
-          font-weight: 600;
-        `;
-
-        function close(result) {
-          overlay.remove();
-          style.remove();
-          resolve(result);
-        }
 
     const modal = document.createElement("div");
-        cancelButton.addEventListener("click", () => close(false));
-        confirmButton.addEventListener("click", () => close(true));
 
     modal.style.cssText = `
       background: white;
@@ -390,19 +616,11 @@ function showConfirmDialog({
         }
       }
     `;
-        overlay.addEventListener("click", event => {
-          if (event.target === overlay) close(false);
-        });
 
     document.head.appendChild(style);
-        buttons.append(cancelButton, confirmButton);
-        modal.append(iconElement, heading, description, buttons);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
 
     const iconElement = document.createElement("div");
     iconElement.textContent = icon;
-      });
 
     iconElement.style.cssText = `
       width: 58px;
@@ -417,7 +635,6 @@ function showConfirmDialog({
       font-weight: bold;
       margin: 0 auto 18px;
     `;
-    }
 
     const heading = document.createElement("h2");
     heading.textContent = title;
@@ -427,101 +644,9 @@ function showConfirmDialog({
       color: #1e293b;
       font-size: 21px;
     `;
-    // FEREASTRA DE SUCCES
-
-    function showSuccessDialog(title, message) {
-
-      return new Promise(resolve => {
-
-        const overlay = document.createElement("div");
-
-        overlay.style.cssText = `
-          position: fixed;
-          inset: 0;
-          background: rgba(15, 23, 42, 0.55);
-          backdrop-filter: blur(5px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 99999;
-          padding: 20px;
-        `;
-
-        const modal = document.createElement("div");
-
-        modal.style.cssText = `
-          background: white;
-          width: 100%;
-          max-width: 420px;
-          padding: 30px;
-          border-radius: 20px;
-          text-align: center;
-          box-shadow: 0 20px 60px rgba(0,0,0,.2);
-          font-family: Arial, sans-serif;
-          animation: modalAppear .25s ease;
-        `;
-
-        const icon = document.createElement("div");
-        icon.textContent = "✓";
-
-        icon.style.cssText = `
-          width: 65px;
-          height: 65px;
-          border-radius: 50%;
-          background: #dcfce7;
-          color: #16a34a;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 32px;
-          font-weight: bold;
-          margin: 0 auto 20px;
-        `;
-
-        const heading = document.createElement("h2");
-        heading.textContent = title;
-
-        heading.style.cssText = `
-          color: #1e293b;
-          font-size: 22px;
-          margin-bottom: 12px;
-        `;
-
-        const description = document.createElement("p");
-        description.textContent = message;
-
-        description.style.cssText = `
-          color: #64748b;
-          font-size: 14px;
-          line-height: 1.6;
-          margin-bottom: 25px;
-        `;
-
-        const button = document.createElement("button");
-        button.textContent = "Am înțeles";
-
-        button.style.cssText = `
-          width: 100%;
-          padding: 13px;
-          border: none;
-          border-radius: 10px;
-          background: #16a34a;
-          color: white;
-          font-size: 15px;
-          font-weight: bold;
-          cursor: pointer;
-        `;
-
-        button.addEventListener("click", () => {
-          overlay.remove();
-          resolve(true);
-        });
 
     const description = document.createElement("p");
     description.textContent = message;
-        modal.append(icon, heading, description, button);
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
 
     description.style.cssText = `
       color: #64748b;
@@ -529,10 +654,8 @@ function showConfirmDialog({
       line-height: 1.6;
       margin-bottom: 25px;
     `;
-      });
 
     const buttons = document.createElement("div");
-    }
 
     buttons.style.cssText = `
       display: flex;
@@ -542,7 +665,6 @@ function showConfirmDialog({
 
     const cancelButton = document.createElement("button");
     cancelButton.textContent = "Anulează";
-    // AFISAREA INTREBARILOR
 
     cancelButton.style.cssText = `
       flex: 1;
@@ -554,11 +676,9 @@ function showConfirmDialog({
       cursor: pointer;
       font-weight: 600;
     `;
-    function displayQuestions() {
 
     const confirmButton = document.createElement("button");
     confirmButton.textContent = confirmText;
-      const questionsList = document.getElementById("questionsList");
 
     confirmButton.style.cssText = `
       flex: 1;
@@ -570,31 +690,19 @@ function showConfirmDialog({
       cursor: pointer;
       font-weight: 600;
     `;
-      let filteredQuestions = allQuestions;
 
     function close(result) {
       overlay.remove();
       style.remove();
       resolve(result);
     }
-      if (currentFilter !== "all") {
-        filteredQuestions = allQuestions.filter(
-          q => q.status === currentFilter
-        );
-      }
 
     cancelButton.addEventListener("click", () => close(false));
     confirmButton.addEventListener("click", () => close(true));
-      if (filteredQuestions.length === 0) {
-        questionsList.innerHTML =
-          "<p>Nu există întrebări în această categorie.</p>";
-        return;
-      }
 
     overlay.addEventListener("click", event => {
       if (event.target === overlay) close(false);
     });
-      questionsList.innerHTML = "";
 
     buttons.append(cancelButton, confirmButton);
     modal.append(iconElement, heading, description, buttons);
@@ -602,20 +710,11 @@ function showConfirmDialog({
     document.body.appendChild(overlay);
   });
 }
-      filteredQuestions.forEach(question => {
 
-        const card = document.createElement("div");
 
 function showSuccessDialog(title, message) {
   return new Promise(resolve => {
     const overlay = document.createElement("div");
-        card.style.cssText = `
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 20px;
-          margin-bottom: 15px;
-          background: #ffffff;
-        `;
 
     overlay.style.cssText = `
       position: fixed;
@@ -628,13 +727,8 @@ function showSuccessDialog(title, message) {
       z-index: 99999;
       padding: 20px;
     `;
-        const title = document.createElement("h3");
-        title.textContent = question.category || "Fără categorie";
 
     const modal = document.createElement("div");
-        const text = document.createElement("p");
-        text.textContent = question.question_text;
-        text.style.marginTop = "12px";
 
     modal.style.cssText = `
       background: white;
@@ -663,10 +757,6 @@ function showSuccessDialog(title, message) {
       font-weight: bold;
       margin: 0 auto 20px;
     `;
-        const status = document.createElement("p");
-        status.textContent = "Status: " + question.status;
-        status.style.marginTop = "12px";
-        status.style.fontWeight = "bold";
 
     const heading = document.createElement("h2");
     heading.textContent = title;
@@ -675,7 +765,6 @@ function showSuccessDialog(title, message) {
       font-size: 22px;
       margin-bottom: 12px;
     `;
-        const visibility = document.createElement("p");
 
     const description = document.createElement("p");
     description.textContent = message;
@@ -685,10 +774,6 @@ function showSuccessDialog(title, message) {
       line-height: 1.6;
       margin-bottom: 25px;
     `;
-        visibility.textContent =
-          question.visibility === "private"
-            ? "Întrebare privată"
-            : "Întrebare publică";
 
     const button = document.createElement("button");
     button.textContent = "Am înțeles";
@@ -703,61 +788,40 @@ function showSuccessDialog(title, message) {
       font-weight: bold;
       cursor: pointer;
     `;
-        card.append(title, text, status, visibility);
 
     button.addEventListener("click", () => {
       overlay.remove();
       resolve(true);
     });
-        if (!question.is_anonymous && question.student_name) {
 
     modal.append(icon, heading, description, button);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
   });
 }
-          const identity = document.createElement("p");
 
-          identity.textContent =
-            "Elev: " + question.student_name +
-            (question.student_class ? " · " + question.student_class : "");
 
 function displayQuestions() {
   const questionsList = document.getElementById("questionsList");
-          card.appendChild(identity);
 
   let filteredQuestions = allQuestions;
-        }
 
   if (currentFilter !== "all") {
     filteredQuestions = allQuestions.filter(
       q => q.status === currentFilter
     );
   }
-        // ISTORIC
 
   if (filteredQuestions.length === 0) {
     questionsList.innerHTML =
       "<p>Nu există întrebări în această categorie.</p>";
     return;
   }
-        const history = document.createElement("div");
 
   questionsList.innerHTML = "";
-        history.style.cssText = `
-          margin-top: 15px;
-          padding: 12px;
-          background: #f1f5f9;
-          border-radius: 8px;
-          font-size: 14px;
-          line-height: 1.8;
-        `;
 
   filteredQuestions.forEach(question => {
     const card = document.createElement("div");
-        const submittedDate = question.created_at
-          ? new Date(question.created_at).toLocaleString("ro-RO")
-          : "Necunoscută";
 
     card.style.cssText = `
       border: 1px solid #e2e8f0;
@@ -766,64 +830,39 @@ function displayQuestions() {
       margin-bottom: 15px;
       background: #ffffff;
     `;
-        const processedDate = question.answered_at
-          ? new Date(question.answered_at).toLocaleString("ro-RO")
-          : "Neprocesată";
 
     const title = document.createElement("h3");
     title.textContent = question.category || "Fără categorie";
-        const adminName = question.answered_by
-          ? adminNames[question.answered_by] || "Administrator necunoscut"
-          : "Nespecificat";
 
     const text = document.createElement("p");
     text.textContent = question.question_text;
     text.style.marginTop = "12px";
-        const historyTitle = document.createElement("strong");
-        historyTitle.textContent = "Istoric";
 
     const status = document.createElement("p");
     status.textContent = "Status: " + question.status;
     status.style.marginTop = "12px";
     status.style.fontWeight = "bold";
-        const submittedInfo = document.createElement("p");
-        submittedInfo.textContent = "Trimisă la: " + submittedDate;
 
     const visibility = document.createElement("p");
     visibility.textContent =
       question.visibility === "private"
         ? "Întrebare privată"
         : "Întrebare publică";
-        const processedInfo = document.createElement("p");
-        processedInfo.textContent = "Procesată la: " + processedDate;
 
     card.append(title, text, status, visibility);
-        const adminInfo = document.createElement("p");
-        adminInfo.textContent = "Procesată de: " + adminName;
 
     if (!question.is_anonymous && question.student_name) {
       const identity = document.createElement("p");
       identity.textContent =
         "Elev: " + question.student_name +
         (question.student_class ? " · " + question.student_class : "");
-        history.append(
-          historyTitle,
-          submittedInfo,
-          processedInfo,
-          adminInfo
-        );
 
       card.appendChild(identity);
     }
-        card.appendChild(history);
 
     // ISTORIC
-        // RĂSPUNS
 
     const history = document.createElement("div");
-        const answerInput = document.createElement("textarea");
-        answerInput.placeholder = "Scrie răspunsul aici...";
-        answerInput.value = question.answer_text || "";
 
     history.style.cssText = `
       margin-top: 15px;
@@ -833,59 +872,30 @@ function displayQuestions() {
       font-size: 14px;
       line-height: 1.8;
     `;
-        answerInput.style.cssText = `
-          width: 100%;
-          min-height: 100px;
-          margin-top: 15px;
-          padding: 12px;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
-          box-sizing: border-box;
-          font: inherit;
-        `;
 
     const submittedDate = question.created_at
       ? new Date(question.created_at).toLocaleString("ro-RO")
       : "Necunoscută";
-        card.appendChild(answerInput);
 
     const processedDate = question.answered_at
       ? new Date(question.answered_at).toLocaleString("ro-RO")
       : "Neprocesată";
-        // PUBLICARE
 
     const adminName = question.answered_by
       ? adminNames[question.answered_by] || "Administrator necunoscut"
       : "Nespecificat";
-        const publishButton = document.createElement("button");
-        publishButton.textContent = "Publică răspunsul";
 
     const historyTitle = document.createElement("strong");
     historyTitle.textContent = "Istoric";
-        publishButton.style.cssText = `
-          margin-top: 12px;
-          padding: 10px 16px;
-          background: #2677EF;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-        `;
 
     const submittedInfo = document.createElement("p");
     submittedInfo.textContent = "Trimisă la: " + submittedDate;
-        publishButton.addEventListener("click", async () => {
 
     const processedInfo = document.createElement("p");
     processedInfo.textContent = "Procesată la: " + processedDate;
-          const answer = answerInput.value.trim();
 
     const adminInfo = document.createElement("p");
     adminInfo.textContent = "Procesată de: " + adminName;
-          if (!answer) {
-            alert("Scrie un răspuns înainte de publicare.");
-            return;
-          }
 
     history.append(
       historyTitle,
@@ -893,25 +903,14 @@ function displayQuestions() {
       processedInfo,
       adminInfo
     );
-          const confirmed = await showConfirmDialog({
-            title: "Publică răspunsul?",
-            message: "Răspunsul va deveni vizibil elevilor pe pagina publică a CȘE.",
-            confirmText: "Da, publică",
-            confirmColor: "#2677EF",
-            icon: "✓"
-          });
 
     card.appendChild(history);
-          if (!confirmed) return;
 
     // RĂSPUNS
-          publishButton.disabled = true;
-          publishButton.textContent = "Se publică...";
 
     const answerInput = document.createElement("textarea");
     answerInput.placeholder = "Scrie răspunsul aici...";
     answerInput.value = question.answer_text || "";
-          try {
 
     answerInput.style.cssText = `
       width: 100%;
@@ -923,31 +922,13 @@ function displayQuestions() {
       box-sizing: border-box;
       font: inherit;
     `;
-            const { data, error } = await supabaseClient
-              .from("questions")
-              .update({
-                answer_text: answer,
-                status: "published",
-                answered_by: currentUser.id,
-                answered_at: new Date().toISOString()
-              })
-              .eq("id", question.id)
-              .select();
 
     card.appendChild(answerInput);
-            if (error) throw error;
 
     // PUBLICARE
-            if (!data || data.length === 0) {
-              throw new Error("Întrebarea nu a fost actualizată.");
-            }
 
     const publishButton = document.createElement("button");
     publishButton.textContent = "Publică răspunsul";
-            await showSuccessDialog(
-              "Răspuns publicat!",
-              "Răspunsul a fost publicat cu succes."
-            );
 
     publishButton.style.cssText = `
       margin-top: 12px;
@@ -958,17 +939,14 @@ function displayQuestions() {
       border-radius: 8px;
       cursor: pointer;
     `;
-            await loadQuestions();
 
     publishButton.addEventListener("click", async () => {
       const answer = answerInput.value.trim();
-          } catch (error) {
 
       if (!answer) {
         alert("Scrie un răspuns înainte de publicare.");
         return;
       }
-            alert("Eroare: " + error.message);
 
       const confirmed = await showConfirmDialog({
         title: "Publică răspunsul?",
@@ -977,15 +955,11 @@ function displayQuestions() {
         confirmColor: "#2677EF",
         icon: "✓"
       });
-            publishButton.disabled = false;
-            publishButton.textContent = "Publică răspunsul";
 
       if (!confirmed) return;
-          }
 
       publishButton.disabled = true;
       publishButton.textContent = "Se publică...";
-        });
 
       try {
         const { data, error } = await supabaseClient
@@ -998,34 +972,19 @@ function displayQuestions() {
           })
           .eq("id", question.id)
           .select();
-        card.appendChild(publishButton);
 
         if (error) throw error;
-        // RESPINGERE
 
         if (!data || data.length === 0) {
           throw new Error("Întrebarea nu a fost actualizată.");
         }
-        const rejectButton = document.createElement("button");
-        rejectButton.textContent = "Respinge întrebarea";
 
         await showSuccessDialog(
           "Răspuns publicat!",
           "Răspunsul a fost publicat cu succes."
         );
-        rejectButton.style.cssText = `
-          margin-top: 12px;
-          margin-left: 10px;
-          padding: 10px 16px;
-          background: #dc3545;
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-        `;
 
         await loadQuestions();
-        rejectButton.addEventListener("click", async () => {
 
       } catch (error) {
         alert("Eroare: " + error.message);
@@ -1033,24 +992,13 @@ function displayQuestions() {
         publishButton.textContent = "Publică răspunsul";
       }
     });
-          const confirmed = await showConfirmDialog({
-            title: "Respinge întrebarea?",
-            message: "Întrebarea va fi marcată ca respinsă și nu va fi publicată.",
-            confirmText: "Da, respinge",
-            confirmColor: "#dc3545",
-            icon: "!"
-          });
 
     card.appendChild(publishButton);
-          if (!confirmed) return;
 
     // RESPINGERE
-          rejectButton.disabled = true;
-          rejectButton.textContent = "Se procesează...";
 
     const rejectButton = document.createElement("button");
     rejectButton.textContent = "Respinge întrebarea";
-          try {
 
     rejectButton.style.cssText = `
       margin-top: 12px;
@@ -1071,24 +1019,11 @@ function displayQuestions() {
         confirmColor: "#dc3545",
         icon: "!"
       });
-            const { data, error } = await supabaseClient
-              .from("questions")
-              .update({
-                status: "rejected",
-                answered_by: currentUser.id,
-                answered_at: new Date().toISOString()
-              })
-              .eq("id", question.id)
-              .select();
 
       if (!confirmed) return;
-            if (error) throw error;
 
       rejectButton.disabled = true;
       rejectButton.textContent = "Se procesează...";
-            if (!data || data.length === 0) {
-              throw new Error("Întrebarea nu a fost actualizată.");
-            }
 
       try {
         const { data, error } = await supabaseClient
@@ -1100,49 +1035,39 @@ function displayQuestions() {
           })
           .eq("id", question.id)
           .select();
-            await showSuccessDialog(
-              "Întrebare respinsă!",
-              "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
-            );
 
         if (error) throw error;
-            await loadQuestions();
 
         if (!data || data.length === 0) {
           throw new Error("Întrebarea nu a fost actualizată.");
         }
-          } catch (error) {
 
         await showSuccessDialog(
           "Întrebare respinsă!",
           "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
         );
-            console.error("Eroare la respingere:", error);
-            alert("Eroare: " + error.message);
 
         await loadQuestions();
-            rejectButton.disabled = false;
-            rejectButton.textContent = "Respinge întrebarea";
 
       } catch (error) {
         console.error("Eroare la respingere:", error);
         alert("Eroare: " + error.message);
-          }
 
         rejectButton.disabled = false;
         rejectButton.textContent = "Respinge întrebarea";
       }
     });
-        });
 
     card.appendChild(rejectButton);
 
-    // RETRAGERE ÎNTREBARE PUBLICATĂ
-console.log("VERIFICARE RETRAGERE:", {
-  id: question.id,
-  status: question.status,
-  visibility: question.visibility
-});
+
+                                // RETRAGERE ÎNTREBARE PUBLICATĂ
+    console.log("VERIFICARE RETRAGERE:", {
+      id: question.id,
+      status: question.status,
+      visibility: question.visibility
+    });
+
     if (
       question.status === "published" &&
       question.visibility === "public"
@@ -1168,96 +1093,50 @@ console.log("VERIFICARE RETRAGERE:", {
           confirmText: "Da, retrage",
           confirmColor: "#64748b",
           icon: "!"
-        card.appendChild(rejectButton);
-
-        // RETRAGERE ÎNTREBARE PUBLICATĂ
-
-        console.log("VERIFICARE RETRAGERE:", {
-          id: question.id,
-          status: question.status,
-          visibility: question.visibility
         });
 
         if (!confirmed) return;
-        if (
-          question.status === "published" &&
-          question.visibility === "public"
-        ) {
 
         retractButton.disabled = true;
         retractButton.textContent = "Se retrage...";
-          const retractButton = document.createElement("button");
-          retractButton.textContent = "Retrage întrebarea";
 
         try {
           const { data, error } = await supabaseClient
             .from("questions")
             .update({
-             status: "withdrawn",
+              status: "withdrawn",
               answered_by: currentUser.id,
               answered_at: new Date().toISOString()
             })
             .eq("id", question.id)
             .select();
-          retractButton.style.cssText = `
-            margin-top: 12px;
-            margin-left: 10px;
-            padding: 10px 16px;
-            background: #64748b;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-          `;
 
           if (error) throw error;
-          retractButton.addEventListener("click", async () => {
 
           if (!data || data.length === 0) {
             throw new Error("Întrebarea nu a fost actualizată.");
           }
-            const confirmed = await showConfirmDialog({
-              title: "Retragi întrebarea?",
-              message: "Întrebarea și răspunsul nu vor mai apărea pe pagina publică. Înregistrarea va rămâne în istoricul administrării.",
-              confirmText: "Da, retrage",
-              confirmColor: "#64748b",
-              icon: "!"
-            });
 
           await showSuccessDialog(
             "Întrebare retrasă!",
             "Întrebarea nu mai este vizibilă public, iar înregistrarea a fost păstrată în dashboard."
           );
-            if (!confirmed) return;
 
           await loadQuestions();
-            retractButton.disabled = true;
-            retractButton.textContent = "Se retrage...";
 
         } catch (error) {
           console.error("Eroare la retragere:", error);
           alert("Eroare: " + error.message);
-            try {
 
           retractButton.disabled = false;
           retractButton.textContent = "Retrage întrebarea";
         }
       });
-              const { data, error } = await supabaseClient
-                .from("questions")
-                .update({
-                  status: "withdrawn",
-                  answered_by: currentUser.id,
-                  answered_at: new Date().toISOString()
-                })
-                .eq("id", question.id)
-                .select();
 
       card.appendChild(retractButton);
     }
-              if (error) throw error;
 
-   
+
     // REPUBLICARE ÎNTREBARE RETRASĂ
 
     if (question.status === "withdrawn") {
@@ -1280,9 +1159,6 @@ console.log("VERIFICARE RETRAGERE:", {
           alert("Întrebarea nu are un răspuns salvat și nu poate fi republicată.");
           return;
         }
-              if (!data || data.length === 0) {
-                throw new Error("Întrebarea nu a fost actualizată.");
-              }
 
         const confirmed = await showConfirmDialog({
           title: "Republică întrebarea?",
@@ -1291,17 +1167,11 @@ console.log("VERIFICARE RETRAGERE:", {
           confirmColor: "#16a34a",
           icon: "✓"
         });
-              await showSuccessDialog(
-                "Întrebare retrasă!",
-                "Întrebarea nu mai este vizibilă public, iar înregistrarea a fost păstrată în dashboard."
-              );
 
         if (!confirmed) return;
-              await loadQuestions();
 
         republishButton.disabled = true;
         republishButton.textContent = "Se republică...";
-            } catch (error) {
 
         try {
           const { data, error } = await supabaseClient
@@ -1313,115 +1183,27 @@ console.log("VERIFICARE RETRAGERE:", {
             })
             .eq("id", question.id)
             .select();
-              console.error("Eroare la retragere:", error);
-              alert("Eroare: " + error.message);
 
           if (error) throw error;
-              retractButton.disabled = false;
-              retractButton.textContent = "Retrage întrebarea";
 
           if (!data || data.length === 0) {
             throw new Error("Întrebarea nu a fost actualizată.");
           }
-            }
 
           await showSuccessDialog(
             "Întrebare republicată!",
             "Întrebarea și răspunsul au fost publicate din nou."
           );
-          });
-
-          card.appendChild(retractButton);
-
-        }
 
           await loadQuestions();
 
         } catch (error) {
           console.error("Eroare la republicare:", error);
           alert("Eroare: " + error.message);
-        // REPUBLICARE ÎNTREBARE RETRASĂ
 
           republishButton.disabled = false;
-        if (question.status === "withdrawn") {
-
-          const republishButton = document.createElement("button");
           republishButton.textContent = "Republică întrebarea";
-
-          republishButton.style.cssText = `
-            margin-top: 12px;
-            margin-left: 10px;
-            padding: 10px 16px;
-            background: #16a34a;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-          `;
-
-          republishButton.addEventListener("click", async () => {
-
-            if (!question.answer_text || !question.answer_text.trim()) {
-              alert("Întrebarea nu are un răspuns salvat și nu poate fi republicată.");
-              return;
-            }
-
-            const confirmed = await showConfirmDialog({
-              title: "Republică întrebarea?",
-              message: "Întrebarea și răspunsul existent vor redeveni vizibile public.",
-              confirmText: "Da, republică",
-              confirmColor: "#16a34a",
-              icon: "✓"
-            });
-
-            if (!confirmed) return;
-
-            republishButton.disabled = true;
-            republishButton.textContent = "Se republică...";
-
-            try {
-
-              const { data, error } = await supabaseClient
-                .from("questions")
-                .update({
-                  status: "published",
-                  answered_by: currentUser.id,
-                  answered_at: new Date().toISOString()
-                })
-                .eq("id", question.id)
-                .select();
-
-              if (error) throw error;
-
-              if (!data || data.length === 0) {
-                throw new Error("Întrebarea nu a fost actualizată.");
-              }
-
-              await showSuccessDialog(
-                "Întrebare republicată!",
-                "Întrebarea și răspunsul au fost publicate din nou."
-              );
-
-              await loadQuestions();
-
-            } catch (error) {
-
-              console.error("Eroare la republicare:", error);
-              alert("Eroare: " + error.message);
-
-              republishButton.disabled = false;
-              republishButton.textContent = "Republică întrebarea";
-
-            }
-
-          });
-
-          card.appendChild(republishButton);
-
         }
-
-        questionsList.appendChild(card);
-
       });
 
       card.appendChild(republishButton);
@@ -1431,51 +1213,55 @@ console.log("VERIFICARE RETRAGERE:", {
 
   });
 }
-    // FILTRELE
 
-    document.querySelectorAll(".filter-button").forEach(button => {
 
 // FILTRELE
-      button.addEventListener("click", function() {
 
 document.querySelectorAll(".filter-button").forEach(button => {
-        document.querySelectorAll(".filter-button").forEach(btn => {
-          btn.classList.remove("active");
-        });
 
   button.addEventListener("click", function() {
-        this.classList.add("active");
 
     document.querySelectorAll(".filter-button").forEach(btn => {
       btn.classList.remove("active");
     });
-        currentFilter = this.dataset.status;
 
     this.classList.add("active");
-        displayQuestions();
 
     currentFilter = this.dataset.status;
-      });
 
     displayQuestions();
-    });
 
   });
 
 });
-    // VERIFICARE SESIUNE EXISTENTĂ
 
-    async function checkExistingSession() {
-@@ -1255,12 +1316,11 @@ <h2>Gestionarea întrebărilor</h2>
 
-    }
+// VERIFICARE SESIUNE EXISTENTĂ
 
-   window.addEventListener("load", async () => {
+async function checkExistingSession() {
+
+  const { data: { session } } =
+    await supabaseClient.auth.getSession();
+
+  if (!session) return;
+
+  try {
+
+    await verifyAdministrator(session.user);
+
+  } catch (error) {
+
+    await supabaseClient.auth.signOut();
+
+    showMessage(error.message, "error");
+
+  }
+
+}
+
+window.addEventListener("load", async () => {
   await checkExistingSession();
 });
-    window.addEventListener("load", async () => {
-      await checkExistingSession();
-    });
 
   </script>
 
