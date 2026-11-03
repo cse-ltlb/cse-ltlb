@@ -792,6 +792,7 @@ function showSuccessDialog(title, message) {
   });
 }
 
+
 function displayQuestions() {
   const questionsList = document.getElementById("questionsList");
 
@@ -897,7 +898,7 @@ function displayQuestions() {
 
     card.appendChild(history);
 
-    // CÂMP RĂSPUNS
+    // RĂSPUNS
 
     const answerInput = document.createElement("textarea");
     answerInput.placeholder = "Scrie răspunsul aici...";
@@ -952,29 +953,36 @@ function displayQuestions() {
       publishButton.disabled = true;
       publishButton.textContent = "Se publică...";
 
-      const { error } = await supabaseClient
-        .from("questions")
-        .update({
-          answer_text: answer,
-          status: "published",
-          answered_by: currentUser.id,
-          answered_at: new Date().toISOString()
-        })
-        .eq("id", question.id);
+      try {
+        const { data, error } = await supabaseClient
+          .from("questions")
+          .update({
+            answer_text: answer,
+            status: "published",
+            answered_by: currentUser.id,
+            answered_at: new Date().toISOString()
+          })
+          .eq("id", question.id)
+          .select();
 
-      if (error) {
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          throw new Error("Întrebarea nu a fost actualizată.");
+        }
+
+        await showSuccessDialog(
+          "Răspuns publicat!",
+          "Răspunsul a fost publicat cu succes."
+        );
+
+        await loadQuestions();
+
+      } catch (error) {
         alert("Eroare: " + error.message);
         publishButton.disabled = false;
         publishButton.textContent = "Publică răspunsul";
-        return;
       }
-
-    await showSuccessDialog(
-  "Răspuns publicat!",
-  "Răspunsul a fost publicat cu succes."
-);
-
-await loadQuestions();
     });
 
     card.appendChild(publishButton);
@@ -1026,12 +1034,12 @@ await loadQuestions();
           throw new Error("Întrebarea nu a fost actualizată.");
         }
 
-     await showSuccessDialog(
-  "Întrebare respinsă!",
-  "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
-);
+        await showSuccessDialog(
+          "Întrebare respinsă!",
+          "Întrebarea a fost respinsă cu succes și a fost înregistrată în istoricul administrării."
+        );
 
-await loadQuestions();
+        await loadQuestions();
 
       } catch (error) {
         console.error("Eroare la respingere:", error);
@@ -1043,10 +1051,80 @@ await loadQuestions();
     });
 
     card.appendChild(rejectButton);
+
+    // RETRAGERE ÎNTREBARE PUBLICATĂ
+
+    if (
+      question.status === "published" &&
+      question.visibility === "public"
+    ) {
+      const retractButton = document.createElement("button");
+      retractButton.textContent = "Retrage întrebarea";
+
+      retractButton.style.cssText = `
+        margin-top: 12px;
+        margin-left: 10px;
+        padding: 10px 16px;
+        background: #64748b;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+      `;
+
+      retractButton.addEventListener("click", async () => {
+        const confirmed = await showConfirmDialog({
+          title: "Retragi întrebarea?",
+          message: "Întrebarea și răspunsul nu vor mai apărea pe pagina publică. Înregistrarea va rămâne în istoricul administrării.",
+          confirmText: "Da, retrage",
+          confirmColor: "#64748b",
+          icon: "!"
+        });
+
+        if (!confirmed) return;
+
+        retractButton.disabled = true;
+        retractButton.textContent = "Se retrage...";
+
+        try {
+          const { data, error } = await supabaseClient
+            .from("questions")
+            .update({
+              status: "rejected",
+              answered_by: currentUser.id,
+              answered_at: new Date().toISOString()
+            })
+            .eq("id", question.id)
+            .select();
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            throw new Error("Întrebarea nu a fost actualizată.");
+          }
+
+          await showSuccessDialog(
+            "Întrebare retrasă!",
+            "Întrebarea nu mai este vizibilă public, iar înregistrarea a fost păstrată în dashboard."
+          );
+
+          await loadQuestions();
+
+        } catch (error) {
+          console.error("Eroare la retragere:", error);
+          alert("Eroare: " + error.message);
+
+          retractButton.disabled = false;
+          retractButton.textContent = "Retrage întrebarea";
+        }
+      });
+
+      card.appendChild(retractButton);
+    }
+
     questionsList.appendChild(card);
   });
 }
-
 
 
 // FILTRELE
