@@ -881,11 +881,12 @@ function displayQuestions() {
         return;
       }
 
-      await showSuccessDialog(
+    await showSuccessDialog(
   "Răspuns publicat!",
-  "Răspunsul a fost publicat cu succes și este acum disponibil conform setărilor întrebării."
+  "Răspunsul a fost publicat cu succes."
 );
-      await loadQuestions();
+
+await loadQuestions();
     });
 
     card.appendChild(publishButton);
