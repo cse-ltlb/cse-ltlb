@@ -536,8 +536,8 @@ displayQuestions();
 
 // ACTUALIZAREA STATISTICILOR
 
-function updateStatistics() {
 
+function updateStatistics() {
   document.getElementById("totalCount").textContent =
     allQuestions.length;
 
@@ -550,6 +550,12 @@ function updateStatistics() {
   document.getElementById("rejectedCount").textContent =
     allQuestions.filter(q => q.status === "rejected").length;
 
+  const withdrawnElement = document.getElementById("withdrawnCount");
+
+  if (withdrawnElement) {
+    withdrawnElement.textContent =
+      allQuestions.filter(q => q.status === "withdrawn").length;
+  }
 }
 
 
