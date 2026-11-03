@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verifică răspunsul | CȘE Blaga</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: white;
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 15px 45px rgba(0,0,0,.08);
+    }
+
+    h1 { margin-top: 0; font-size: 26px; }
+
+    p {
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 15px 0;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 16px;
+      text-transform: uppercase;
+    }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #1e40af;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled { opacity: .6; }
+
+    #result {
+      margin-top: 22px;
+      padding: 16px;
+      border-radius: 12px;
+      display: none;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .success { background: #ecfdf5; }
+    .pending { background: #fffbeb; }
+    .error { background: #fef2f2; }
+
+    .answer {
+      margin-top: 10px;
+      color: #1e293b;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <h1>Verifică răspunsul</h1>
+
+    <p>
+      Introdu codul primit atunci când ai trimis întrebarea
+      privată pentru a verifica dacă ai primit un răspuns.
+    </p>
+
+    <form id="checkForm">
+      <input
+        id="codeInput"
+        type="text"
+        placeholder="Ex.: BLAGA-8K4P-29MX"
+        maxlength="40"
+        required
+        autocomplete="off"
+      >
+
+      <button id="checkButton" type="submit">
+        Verifică răspunsul
+      </button>
+    </form>
+
+    <div id="result" aria-live="polite"></div>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "SUPABASE_ANON_KEY";
+
+    const supabaseClient = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+    async function hashCode(code) {
+      const data = new TextEncoder().encode(code);
+      const hash = await crypto.subtle.digest("SHA-256", data);
+
+      return Array.from(new Uint8Array(hash))
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    const form = document.getElementById("checkForm");
+    const input = document.getElementById("codeInput");
+    const button = document.getElementById("checkButton");
+    const result = document.getElementById("result");
+
+    function showMessage(message, type) {
+      result.className = type;
+      result.style.display = "block";
+      result.textContent = message;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const code = input.value.trim().toUpperCase();
+
+      if (!code) return;
+
+      button.disabled = true;
+      button.textContent = "Se verifică...";
+      result.style.display = "none";
+
+      try {
+        const codeHash = await hashCode(code);
+
+        const { data, error } = await supabaseClient.rpc(
+          "check_private_answer",
+          { p_code_hash: codeHash }
+        );
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+          showMessage(
+            "Codul nu a fost găsit. Verifică dacă l-ai introdus corect.",
+            "error"
+          );
+          return;
+        }
+
+        const item = data[0];
+
+        if (item.answer_status !== "published") {
+          showMessage(
+            "Întrebarea ta a fost înregistrată, dar încă nu a primit un răspuns. Revino mai târziu!",
+            "pending"
+          );
+          return;
+        }
+
+        result.className = "success";
+        result.style.display = "block";
+
+        const title = document.createElement("strong");
+        title.textContent = "Răspunsul Consiliului Elevilor:";
+
+        const answer = document.createElement("div");
+        answer.className = "answer";
+        answer.textContent = item.answer || "Nu a fost adăugat un răspuns.";
+
+        result.replaceChildren(title, answer);
+
+      } catch (error) {
+        console.error(error);
+        showMessage(
+          "A apărut o eroare. Încearcă din nou mai târziu.",
+          "error"
+        );
+      } finally {
+        button.disabled = false;
+        button.textContent = "Verifică răspunsul";
+      }
+    });
+  </script>
+</body>
+</html>
