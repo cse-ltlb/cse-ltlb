@@ -1,0 +1,987 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sugestii CȘE Blaga</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root {
+  --blue:#193D5B;
+  --blue-light:#A6CBE8;
+  --green:#285D20;
+  --green-light:#9CCB72;
+  --background:#F4F7F9;
+  --border:#DCE6ED;
+  --muted:#64748B;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  background:var(--background);
+  color:var(--blue);
+  font-family:Arial,sans-serif;
+}
+button,input,textarea,select { font:inherit; }
+button { cursor:pointer; }
+.container {
+  width:min(100% - 28px,950px);
+  margin:28px auto;
+}
+.hero {
+  padding:35px 28px;
+  border-radius:20px;
+  color:white;
+  background:linear-gradient(120deg,var(--blue),var(--green));
+  margin-bottom:22px;
+}
+.hero h1 { margin:0 0 10px; font-size:30px; }
+.hero p { margin:0; line-height:1.6; color:#edf5fa; }
+.card {
+  background:white;
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:23px;
+  margin-bottom:18px;
+  box-shadow:0 5px 20px rgba(25,61,91,.045);
+}
+h2 { margin:0 0 12px; font-size:22px; }
+h3 { margin:0 0 9px; }
+.muted { color:var(--muted); font-size:13px; line-height:1.6; }
+.field { margin:15px 0; }
+label { display:block; font-weight:600; margin-bottom:7px; }
+input,textarea,select {
+  width:100%;
+  border:1px solid #ccdbe5;
+  border-radius:10px;
+  padding:12px;
+  color:var(--blue);
+  background:white;
+}
+textarea { min-height:110px; resize:vertical; }
+input:focus,textarea:focus,select:focus {
+  outline:none;
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(166,203,232,.35);
+}
+.btn {
+  border:0;
+  border-radius:10px;
+  padding:12px 17px;
+  font-weight:700;
+  transition:.2s;
+}
+.btn:hover { transform:translateY(-1px); }
+.primary { background:var(--blue); color:white; }
+.primary:hover { background:#102f49; }
+.green { background:var(--green); color:white; }
+.light { background:#edf3f7; color:var(--blue); }
+.danger { background:#fff0f0; color:#a32323; }
+.full { width:100%; }
+.btn:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+.tabs button.active { background:var(--blue); color:white; }
+.hidden { display:none !important; }
+.notice {
+  display:none;
+  padding:13px;
+  border-radius:10px;
+  margin:13px 0;
+  line-height:1.5;
+}
+.notice.success { background:#eff7e9; color:#285D20; }
+.notice.error { background:#fff0f0; color:#a32323; }
+.notice.info { background:#edf4f9; color:var(--blue); }
+.suggestion {
+  border:1px solid var(--border);
+  border-left:4px solid var(--green);
+  border-radius:12px;
+  padding:17px;
+  margin:13px 0;
+  background:white;
+}
+.suggestion p { line-height:1.6; white-space:pre-wrap; }
+.meta {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin:10px 0;
+}
+.pill {
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:20px;
+  background:#edf3f7;
+  font-size:12px;
+  color:var(--blue);
+}
+.pill.green-pill { background:#eff7e9; color:var(--green); }
+.vote-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.admin-item {
+  padding:15px 0;
+  border-bottom:1px solid var(--border);
+}
+.admin-item:last-child { border-bottom:0; }
+.admin-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:12px;
+}
+.status-select { max-width:260px; }
+.empty {
+  text-align:center;
+  padding:25px 10px;
+  color:var(--muted);
+}
+.topline {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+@media(max-width:600px) {
+  .container { margin:14px auto; }
+  .hero { padding:27px 20px; }
+  .hero h1 { font-size:25px; }
+  .card { padding:17px; }
+}
+</style>
+</head>
+
+<body>
+<main class="container">
+
+  <header class="hero">
+    <h1>Sugestii CȘE Blaga</h1>
+    <p>
+      Ai o idee pentru liceul nostru? Propune-o, susține ideile colegilor
+      și contribuie la schimbare. Vocea ta contează!
+    </p>
+  </header>
+
+  <!-- AUTENTIFICARE -->
+  <section id="authSection" class="card">
+    <div class="tabs">
+      <button class="btn primary active" id="loginTab">Autentificare</button>
+      <button class="btn light" id="registerTab">Creează cont</button>
+    </div>
+
+    <div id="loginPanel">
+      <h2>Bine ai revenit!</h2>
+      <p class="muted">Autentifică-te pentru a participa la Sugestii CȘE.</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginEmail">Adresă de e-mail</label>
+          <input id="loginEmail" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="loginPassword">Parolă</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn primary full" id="loginButton">Autentificare</button>
+      </form>
+    </div>
+
+    <div id="registerPanel" class="hidden">
+      <h2>Creează un cont de elev</h2>
+      <p class="muted">
+        Contul va putea fi folosit după confirmarea e-mailului, dacă aceasta
+        este solicitată, și după aprobarea de către echipa CȘE.
+      </p>
+      <form id="registerForm">
+        <div class="field">
+          <label for="registerName">Nume și prenume</label>
+          <input id="registerName" maxlength="100" required>
+        </div>
+        <div class="field">
+          <label for="registerClass">Clasa</label>
+          <input id="registerClass" maxlength="10" placeholder="Exemplu: 11A" required>
+        </div>
+        <div class="field">
+          <label for="registerEmail">Adresă de e-mail</label>
+          <input id="registerEmail" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="registerPassword">Parolă (minimum 8 caractere)</label>
+          <input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required>
+        </div>
+        <button class="btn primary full" id="registerButton">Trimite cererea de înscriere</button>
+      </form>
+    </div>
+
+    <div id="authMessage" class="notice" role="status"></div>
+  </section>
+
+  <!-- CONT ELEV -->
+  <section id="studentSection" class="hidden">
+    <div class="card">
+      <div class="topline">
+        <div>
+          <h2 id="welcomeTitle">Bun venit!</h2>
+          <p class="muted">Contul tău este conectat.</p>
+        </div>
+        <button class="btn light" id="logoutButton">Deconectare</button>
+      </div>
+    </div>
+
+    <div id="waitingPanel" class="card hidden">
+      <h2>Cont în așteptarea aprobării</h2>
+      <p>
+        Cererea ta de înscriere a fost înregistrată. Un administrator CȘE
+        trebuie să o aprobe înainte să poți trimite sugestii sau vota.
+      </p>
+      <p class="muted">Revino după ce primești confirmarea aprobării.</p>
+    </div>
+
+    <div id="rejectedPanel" class="card hidden">
+      <h2>Cont neaprobat</h2>
+      <p>
+        Cererea ta de înscriere nu a fost aprobată. Dacă ai întrebări,
+        contactează echipa CȘE.
+      </p>
+    </div>
+
+    <div id="approvedPanel" class="hidden">
+      <div class="card">
+        <h2>Trimite o sugestie</h2>
+        <p class="muted">
+          Propune o idee concretă pentru îmbunătățirea vieții școlare.
+          Sugestiile sunt verificate înainte de publicare.
+        </p>
+
+        <form id="suggestionForm">
+          <div class="field">
+            <label for="suggestionTitle">Titlul sugestiei</label>
+            <input id="suggestionTitle" maxlength="100" required
+              placeholder="Exemplu: Mai multe activități sportive">
+          </div>
+
+          <div class="field">
+            <label for="suggestionCategory">Categorie</label>
+            <select id="suggestionCategory" required>
+              <option value="">Alege categoria</option>
+              <option>Activități și evenimente</option>
+              <option>Viața școlară</option>
+              <option>Infrastructură și dotări</option>
+              <option>Comunicare și reprezentare</option>
+              <option>Voluntariat și proiecte</option>
+              <option>Altele</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="suggestionDescription">Descriere</label>
+            <textarea id="suggestionDescription" maxlength="2000"
+              required placeholder="Explică ideea și cum ar putea ajuta elevii..."></textarea>
+          </div>
+
+          <div class="field">
+            <label>
+              <input id="anonymousSuggestion" type="checkbox"
+                style="width:auto;accent-color:#285D20">
+              Publică sugestia anonim
+            </label>
+            <p class="muted">
+              Numele tău nu va fi afișat public. Administratorii CȘE
+              vor putea vedea autorul pentru moderare.
+            </p>
+          </div>
+
+          <button class="btn primary full" id="submitSuggestionButton">
+            Trimite sugestia
+          </button>
+        </form>
+        <div id="suggestionMessage" class="notice" role="status"></div>
+      </div>
+
+      <div class="card">
+        <div class="topline">
+          <div>
+            <h2>Sugestiile elevilor</h2>
+            <p class="muted">Idei aprobate de echipa CȘE.</p>
+          </div>
+          <button class="btn light" id="refreshSuggestions">Reîncarcă</button>
+        </div>
+        <div id="suggestionsList">
+          <div class="empty">Se încarcă sugestiile...</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="adminSection" class="hidden">
+    <div class="card">
+      <div class="topline">
+        <div>
+          <h2>Administrare Sugestii CȘE</h2>
+          <p class="muted">Panou disponibil administratorilor autorizați.</p>
+        </div>
+        <button class="btn light" id="adminLogoutButton">Deconectare</button>
+      </div>
+
+      <div class="tabs">
+        <button class="btn primary active" id="membersAdminTab">Conturi</button>
+        <button class="btn light" id="suggestionsAdminTab">Sugestii</button>
+      </div>
+
+      <div id="membersAdminPanel">
+        <h3>Cereri de înscriere</h3>
+        <div id="membersList"><div class="empty">Se încarcă...</div></div>
+      </div>
+
+      <div id="suggestionsAdminPanel" class="hidden">
+        <h3>Moderarea sugestiilor</h3>
+        <div id="adminSuggestionsList"><div class="empty">Se încarcă...</div></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+"use strict";
+
+const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
+
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+
+let currentUser = null;
+let currentMember = null;
+let isAdmin = false;
+let ownVotes = new Set();
+
+function message(element, text, type = "info") {
+  element.textContent = text;
+  element.className = "notice " + type;
+  element.style.display = "block";
+}
+
+function hide(element) {
+  element.classList.add("hidden");
+}
+
+function show(element) {
+  element.classList.remove("hidden");
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#039;"
+  })[char]);
+}
+
+function statusLabel(status) {
+  return {
+    in_analysis: "În analiză",
+    in_implementation: "În implementare",
+    implemented: "Implementată"
+  }[status] || "În analiză";
+}
+
+function adminCheck(profile) {
+  return !!profile &&
+    ["president", "vice_president", "admin"].includes(profile.role);
+}
+
+async function loadProfile(user) {
+  const { data, error } = await db
+    .from("suggestion_members")
+    .select("*")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+async function checkAdministrator(user) {
+  const { data, error } = await db
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return adminCheck(data);
+}
+
+function hideAllSections() {
+  hide($("authSection"));
+  hide($("studentSection"));
+  hide($("adminSection"));
+}
+
+async function refreshApp() {
+  const { data: { session }, error } = await db.auth.getSession();
+  if (error) throw error;
+
+  hideAllSections();
+
+  if (!session) {
+    show($("authSection"));
+    currentUser = null;
+    return;
+  }
+
+  currentUser = session.user;
+
+  isAdmin = await checkAdministrator(currentUser);
+
+  if (isAdmin) {
+    show($("adminSection"));
+    await loadAdminMembers();
+    await loadAdminSuggestions();
+    return;
+  }
+
+  currentMember = await loadProfile(currentUser);
+
+  show($("studentSection"));
+
+  if (!currentMember) {
+    $("welcomeTitle").textContent = "Cont în curs de configurare";
+    show($("waitingPanel"));
+    hide($("rejectedPanel"));
+    hide($("approvedPanel"));
+    return;
+  }
+
+  $("welcomeTitle").textContent =
+    "Bun venit, " + currentMember.display_name + "!";
+
+  hide($("waitingPanel"));
+  hide($("rejectedPanel"));
+  hide($("approvedPanel"));
+
+  if (currentMember.is_rejected) {
+    show($("rejectedPanel"));
+  } else if (!currentMember.is_approved) {
+    show($("waitingPanel"));
+  } else {
+    show($("approvedPanel"));
+    await loadSuggestions();
+  }
+}
+
+// TABURI AUTENTIFICARE
+$("loginTab").addEventListener("click", () => {
+  show($("loginPanel"));
+  hide($("registerPanel"));
+  $("loginTab").className = "btn primary active";
+  $("registerTab").className = "btn light";
+  $("authMessage").style.display = "none";
+});
+
+$("registerTab").addEventListener("click", () => {
+  hide($("loginPanel"));
+  show($("registerPanel"));
+  $("loginTab").className = "btn light";
+  $("registerTab").className = "btn primary active";
+  $("authMessage").style.display = "none";
+});
+
+// INREGISTRARE
+$("registerForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("registerButton");
+  button.disabled = true;
+  button.textContent = "Se creează contul...";
+
+  const name = $("registerName").value.trim();
+  const className = $("registerClass").value.trim().toUpperCase();
+  const email = $("registerEmail").value.trim();
+  const password = $("registerPassword").value;
+
+  try {
+    if (name.length < 2 || className.length < 2) {
+      throw new Error("Completează corect numele și clasa.");
+    }
+
+    const { data, error } = await db.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: name,
+          class_name: className
+        },
+        emailRedirectTo: window.location.href
+      }
+    });
+
+    if (error) throw error;
+
+    if (data.session) {
+      message(
+        $("authMessage"),
+        "Contul a fost creat. Cererea ta așteaptă aprobarea CȘE.",
+        "success"
+      );
+      await refreshApp();
+    } else {
+      message(
+        $("authMessage"),
+        "Cererea de înregistrare a fost trimisă. Verifică e-mailul pentru confirmare, dacă ți se solicită. După confirmare, contul va aștepta aprobarea CȘE.",
+        "success"
+      );
+    }
+
+    $("registerForm").reset();
+
+  } catch (error) {
+    message($("authMessage"), error.message || "Nu am putut crea contul.", "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "Trimite cererea de înscriere";
+  }
+});
+
+// AUTENTIFICARE
+$("loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("loginButton");
+  button.disabled = true;
+  button.textContent = "Se verifică...";
+
+  try {
+    const { error } = await db.auth.signInWithPassword({
+      email: $("loginEmail").value.trim(),
+      password: $("loginPassword").value
+    });
+
+    if (error) throw error;
+    await refreshApp();
+
+  } catch (error) {
+    message(
+      $("authMessage"),
+      error.message || "Autentificarea nu a reușit.",
+      "error"
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Autentificare";
+  }
+});
+
+// DELOGARE
+async function logout() {
+  await db.auth.signOut();
+  currentUser = null;
+  currentMember = null;
+  isAdmin = false;
+  hideAllSections();
+  show($("authSection"));
+}
+
+$("logoutButton").addEventListener("click", logout);
+$("adminLogoutButton").addEventListener("click", logout);
+
+// TRIMITERE SUGESTIE
+$("suggestionForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const button = $("submitSuggestionButton");
+  button.disabled = true;
+  button.textContent = "Se trimite...";
+
+  try {
+    const title = $("suggestionTitle").value.trim();
+    const description = $("suggestionDescription").value.trim();
+    const category = $("suggestionCategory").value;
+    const isAnonymous = $("anonymousSuggestion").checked;
+
+    if (title.length < 4 || description.length < 10) {
+      throw new Error("Titlul sau descrierea sunt prea scurte.");
+    }
+
+    const { error } = await db
+      .from("suggestions")
+      .insert({
+        user_id: currentUser.id,
+        title,
+        description,
+        category,
+        is_anonymous: isAnonymous,
+        approval_status: "pending",
+        progress_status: "in_analysis"
+      });
+
+    if (error) throw error;
+
+    $("suggestionForm").reset();
+
+    message(
+      $("suggestionMessage"),
+      "Sugestia a fost trimisă! Va apărea public după aprobarea administratorilor.",
+      "success"
+    );
+
+  } catch (error) {
+    message(
+      $("suggestionMessage"),
+      error.message || "Nu am putut trimite sugestia.",
+      "error"
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "Trimite sugestia";
+  }
+});
+
+// INCARCARE SUGESTII PUBLICE
+async function loadSuggestions() {
+  const list = $("suggestionsList");
+  list.innerHTML = '<div class="empty">Se încarcă sugestiile...</div>';
+
+  try {
+    const { data, error } = await db.rpc("get_public_suggestions");
+    if (error) throw error;
+
+    const { data: votes, error: voteError } = await db
+      .from("suggestion_votes")
+      .select("suggestion_id")
+      .eq("user_id", currentUser.id);
+
+    if (voteError) throw voteError;
+
+    ownVotes = new Set((votes || []).map(v => v.suggestion_id));
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="empty">Momentan nu există sugestii publicate.</div>';
+      return;
+    }
+
+    list.innerHTML = data.map(item => `
+      <article class="suggestion">
+        <div class="meta">
+          <span class="pill">${escapeHTML(item.category)}</span>
+          <span class="pill green-pill">${escapeHTML(statusLabel(item.progress_status))}</span>
+        </div>
+        <h3>${escapeHTML(item.title)}</h3>
+        <p>${escapeHTML(item.description)}</p>
+        <div class="muted">
+          Propus de: ${escapeHTML(item.author_name)}
+          · ${new Date(item.created_at).toLocaleDateString("ro-RO")}
+        </div>
+        <div class="vote-row">
+          <strong>♥ ${Number(item.vote_count)} voturi</strong>
+          <button
+            class="btn ${ownVotes.has(item.id) ? "green" : "primary"}"
+            data-vote="${escapeHTML(item.id)}"
+            ${ownVotes.has(item.id) ? "disabled" : ""}
+          >
+            ${ownVotes.has(item.id) ? "Ai votat" : "Votează"}
+          </button>
+        </div>
+      </article>
+    `).join("");
+
+    list.querySelectorAll("[data-vote]").forEach(button => {
+      button.addEventListener("click", () => voteForSuggestion(button.dataset.vote, button));
+    });
+
+  } catch (error) {
+    console.error(error);
+    list.innerHTML = '<div class="empty">Nu am putut încărca sugestiile. Încearcă din nou.</div>';
+  }
+}
+
+async function voteForSuggestion(id, button) {
+  button.disabled = true;
+
+  try {
+    const { error } = await db
+      .from("suggestion_votes")
+      .insert({
+        suggestion_id: id,
+        user_id: currentUser.id
+      });
+
+    if (error) {
+      if (error.code === "23505") {
+        throw new Error("Ai votat deja această sugestie.");
+      }
+      throw error;
+    }
+
+    await loadSuggestions();
+
+  } catch (error) {
+    alert(error.message || "Nu am putut înregistra votul.");
+    button.disabled = false;
+  }
+}
+
+$("refreshSuggestions").addEventListener("click", loadSuggestions);
+
+// TABURI ADMIN
+$("membersAdminTab").addEventListener("click", () => {
+  show($("membersAdminPanel"));
+  hide($("suggestionsAdminPanel"));
+  $("membersAdminTab").className = "btn primary active";
+  $("suggestionsAdminTab").className = "btn light";
+});
+
+$("suggestionsAdminTab").addEventListener("click", () => {
+  hide($("membersAdminPanel"));
+  show($("suggestionsAdminPanel"));
+  $("membersAdminTab").className = "btn light";
+  $("suggestionsAdminTab").className = "btn primary active";
+});
+
+// INCARCARE CONTURI PENTRU ADMIN
+async function loadAdminMembers() {
+  const list = $("membersList");
+  list.innerHTML = '<div class="empty">Se încarcă cererile...</div>';
+
+  try {
+    const { data, error } = await db
+      .from("suggestion_members")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="empty">Nu există cereri de înscriere.</div>';
+      return;
+    }
+
+    list.innerHTML = data.map(member => `
+      <div class="admin-item">
+        <strong>${escapeHTML(member.display_name)}</strong>
+        <div class="muted">
+          ${escapeHTML(member.email)} · ${escapeHTML(member.class_name)}
+        </div>
+        <div class="meta">
+          <span class="pill">
+            ${member.is_approved ? "Aprobat" : member.is_rejected ? "Respins" : "În așteptare"}
+          </span>
+        </div>
+        <div class="admin-actions">
+          <button class="btn green" data-approve="${escapeHTML(member.user_id)}">
+            Aprobă
+          </button>
+          <button class="btn danger" data-reject-member="${escapeHTML(member.user_id)}">
+            Respinge
+          </button>
+        </div>
+      </div>
+    `).join("");
+
+    list.querySelectorAll("[data-approve]").forEach(button => {
+      button.addEventListener("click", () =>
+        updateMember(button.dataset.approve, true)
+      );
+    });
+
+    list.querySelectorAll("[data-reject-member]").forEach(button => {
+      button.addEventListener("click", () =>
+        updateMember(button.dataset.rejectMember, false)
+      );
+    });
+
+  } catch (error) {
+    console.error(error);
+    list.innerHTML = '<div class="empty">Nu am putut încărca cererile. Verifică permisiunile.</div>';
+  }
+}
+
+async function updateMember(userId, approve) {
+  const confirmed = confirm(
+    approve ? "Aprobi acest cont de elev?" : "Respinge acest cont?"
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await db
+    .from("suggestion_members")
+    .update({
+      is_approved: approve,
+      is_rejected: !approve,
+      approved_at: approve ? new Date().toISOString() : null
+    })
+    .eq("user_id", userId);
+
+  if (error) {
+    alert("Nu am putut actualiza contul: " + error.message);
+    return;
+  }
+
+  await loadAdminMembers();
+}
+
+// INCARCARE SUGESTII PENTRU ADMIN
+async function loadAdminSuggestions() {
+  const list = $("adminSuggestionsList");
+  list.innerHTML = '<div class="empty">Se încarcă sugestiile...</div>';
+
+  try {
+    const { data, error } = await db
+      .from("suggestions")
+      .select(`
+        id,
+        user_id,
+        title,
+        description,
+        category,
+        is_anonymous,
+        approval_status,
+        progress_status,
+        created_at,
+        suggestion_members (
+          display_name,
+          email,
+          class_name
+        )
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      list.innerHTML = '<div class="empty">Nu există sugestii trimise.</div>';
+      return;
+    }
+
+    list.innerHTML = data.map(item => {
+      const member = item.suggestion_members;
+      const author = Array.isArray(member) ? member[0] : member;
+
+      return `
+        <div class="admin-item">
+          <div class="meta">
+            <span class="pill">${escapeHTML(item.category)}</span>
+            <span class="pill">${escapeHTML(item.approval_status)}</span>
+          </div>
+          <h3>${escapeHTML(item.title)}</h3>
+          <p>${escapeHTML(item.description)}</p>
+          <div class="muted">
+            Autor: ${escapeHTML(author?.display_name || "Necunoscut")}
+            · ${escapeHTML(author?.class_name || "")}
+            · ${escapeHTML(author?.email || "")}
+            · ${item.is_anonymous ? "Ales anonim pentru public" : "Nume afișat public"}
+          </div>
+          <div class="admin-actions">
+            <button class="btn green" data-approve-suggestion="${escapeHTML(item.id)}">
+              Aprobă
+            </button>
+            <button class="btn danger" data-reject-suggestion="${escapeHTML(item.id)}">
+              Respinge
+            </button>
+          </div>
+          <div class="field">
+            <label>Stadiul sugestiei</label>
+            <select class="status-select" data-progress="${escapeHTML(item.id)}">
+              <option value="in_analysis" ${item.progress_status === "in_analysis" ? "selected" : ""}>În analiză</option>
+              <option value="in_implementation" ${item.progress_status === "in_implementation" ? "selected" : ""}>În implementare</option>
+              <option value="implemented" ${item.progress_status === "implemented" ? "selected" : ""}>Implementată</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.querySelectorAll("[data-approve-suggestion]").forEach(button => {
+      button.addEventListener("click", () =>
+        moderateSuggestion(button.dataset.approveSuggestion, "approved")
+      );
+    });
+
+    list.querySelectorAll("[data-reject-suggestion]").forEach(button => {
+      button.addEventListener("click", () =>
+        moderateSuggestion(button.dataset.rejectSuggestion, "rejected")
+      );
+    });
+
+    list.querySelectorAll("[data-progress]").forEach(select => {
+      select.addEventListener("change", () =>
+        updateProgress(select.dataset.progress, select.value)
+      );
+    });
+
+  } catch (error) {
+    console.error(error);
+    list.innerHTML = '<div class="empty">Nu am putut încărca sugestiile. Verifică permisiunile.</div>';
+  }
+}
+
+async function moderateSuggestion(id, status) {
+  const { error } = await db
+    .from("suggestions")
+    .update({
+      approval_status: status,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if (error) {
+    alert("Nu am putut actualiza sugestia: " + error.message);
+    return;
+  }
+
+  await loadAdminSuggestions();
+}
+
+async function updateProgress(id, status) {
+  const { error } = await db
+    .from("suggestions")
+    .update({
+      progress_status: status,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
+
+  if (error) {
+    alert("Nu am putut actualiza stadiul: " + error.message);
+    return;
+  }
+
+  alert("Stadiul sugestiei a fost actualizat.");
+}
+
+// INITIALIZARE
+db.auth.onAuthStateChange(() => {
+  setTimeout(() => {
+    refreshApp().catch(error => {
+      console.error("Eroare la inițializare:", error);
+    });
+  }, 0);
+});
+
+refreshApp().catch(error => {
+  console.error(error);
+  hideAllSections();
+  show($("authSection"));
+  message(
+    $("authMessage"),
+    "Nu am putut încărca aplicația. Verifică setările Supabase și reîncarcă pagina.",
+    "error"
+  );
+});
+
+})();
+</script>
+</body>
+</html>
