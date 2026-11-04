@@ -55,6 +55,23 @@
     .event-actions button { font-size:12px; }
     .login-box { display:grid; gap:12px; max-width:420px; }
     .event-image { display:block; width:100%; max-height:200px; object-fit:cover; border-radius:10px; margin:10px 0; }
+    .image-preview { display:block; width:100%; max-width:380px; max-height:230px; object-fit:contain; border-radius:12px; border:1px solid #dce8df; background:#f6faf7; }
+    .image-note { font-weight:400; color:#72818b; font-size:12px; }
+    .image-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .archive-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin:18px 0 12px; }
+    .archive-toolbar button.active { background:var(--blue); color:white; }
+    .archive-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; }
+    .archive-item { border:1px solid #dce8df; border-radius:13px; padding:15px; background:#fbfdfb; }
+    .archive-item h3 { font-size:15px; margin:6px 0; }
+    .archive-item .event-image { max-height:140px; }
+    .pill { display:inline-block; padding:4px 9px; border-radius:30px; font-size:11px; font-weight:700; background:#e4f3dc; color:#27612a; }
+    .pill.private { background:#edf0f3; color:#475968; }
+    .modal-backdrop { position:fixed; inset:0; z-index:1000; background:rgba(12,29,41,.68); display:grid; place-items:center; padding:18px; }
+    .modal-card { background:white; border-radius:20px; padding:26px; width:min(100%,440px); box-shadow:0 25px 90px #102b3b55; }
+    .modal-card h2 { margin:0 0 10px; font-size:21px; }
+    .modal-card p { line-height:1.6; font-size:14px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-top:22px; }
+    body.modal-open { overflow:hidden; }
     @media(max-width:700px) { .layout { grid-template-columns:1fr; } .wrapper { padding:14px; } .card { padding:16px; } .day { min-height:44px; } .form-grid { grid-template-columns:1fr; } }
   </style>
 </head>
@@ -98,6 +115,13 @@
       </div>
       <div id="adminSection" class="hidden">
         <button type="button" class="primary" id="addBtn">+ Adaugă proiect</button>
+        <div class="archive-toolbar" role="group" aria-label="Filtrează proiectele din administrare">
+          <button type="button" data-filter="all" class="active">Toate proiectele</button>
+          <button type="button" data-filter="public">Publicate</button>
+          <button type="button" data-filter="hidden">Ascunse</button>
+        </div>
+        <p class="muted" id="adminListInfo">Proiectele ascunse sunt vizibile numai administratorilor.</p>
+        <div id="adminProjects" class="archive-list"></div>
         <form id="eventForm" class="hidden" style="margin-top:18px">
           <h3 id="formTitle">Adaugă un proiect</h3>
           <label>Titlu *<input id="eventTitle" maxlength="150" required></label>
@@ -109,7 +133,18 @@
             <label>Ora încheierii<input id="eventEnd" type="time"></label>
           </div>
           <label>Locație<input id="eventLocation" maxlength="250"></label>
-          <label>Link imagine (opțional)<input id="eventImage" type="url" placeholder="https://..." maxlength="2000"></label>
+          <label><span>Vizibilitate</span><select id="eventVisibility"><option value="true">Publicat – vizibil tuturor</option><option value="false">Ascuns – doar administratori</option></select></label>
+          <label>Fotografia proiectului (opțional)
+            <input id="eventImageFile" type="file" accept="image/jpeg,image/png,image/webp">
+            <span class="image-note">JPG, PNG sau WebP, maximum 5 MB. Poți selecta direct din galerie.</span>
+          </label>
+          <div id="imagePreviewBox" class="hidden">
+            <img id="imagePreview" class="image-preview" alt="Previzualizarea imaginii proiectului">
+            <div class="image-row" style="margin-top:8px">
+              <button id="removeImageBtn" type="button">Elimină imaginea</button>
+              <span id="imagePreviewInfo" class="image-note"></span>
+            </div>
+          </div>
           <div class="form-actions">
             <button class="primary" type="submit" id="saveBtn">Salvează proiectul</button>
             <button type="button" id="cancelBtn">Anulează</button>
@@ -120,6 +155,16 @@
     </section>
   </main>
 
+  <div id="confirmOverlay" class="modal-backdrop hidden" aria-hidden="true">
+    <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+      <h2 id="confirmTitle">Confirmă acțiunea</h2>
+      <p id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button type="button" id="confirmCancel">Anulează</button>
+        <button type="button" id="confirmAccept" class="primary">Confirmă</button>
+      </div>
+    </section>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     'use strict';
@@ -130,7 +175,41 @@
     const calendar = $('calendar'), monthTitle = $('monthTitle'), eventsList = $('eventsList'), listInfo = $('listInfo');
     const today = new Date();
     let year = today.getFullYear(), month = today.getMonth(), selectedDate = null;
-    let events = [], isAdmin = false, editingId = null;
+    let events = [], isAdmin = false, editingId = null, adminFilter = 'all';
+    let pendingConfirm = null;
+    function askConfirm(title, message, action, danger=false) {
+      if (pendingConfirm) return;
+      pendingConfirm = action;
+      $('confirmTitle').textContent=title;
+      $('confirmMessage').textContent=message;
+      $('confirmAccept').textContent=danger?'Șterge definitiv':'Confirmă';
+      $('confirmAccept').className=danger?'danger':'primary';
+      $('confirmOverlay').classList.remove('hidden');
+      $('confirmOverlay').setAttribute('aria-hidden','false');
+      document.body.classList.add('modal-open');
+      $('confirmCancel').focus();
+    }
+    function closeConfirm() {
+      pendingConfirm=null;
+      $('confirmOverlay').classList.add('hidden');
+      $('confirmOverlay').setAttribute('aria-hidden','true');
+      document.body.classList.remove('modal-open');
+    }
+    $('confirmCancel').addEventListener('click',closeConfirm);
+    $('confirmOverlay').addEventListener('click',e=>{if(e.target===$('confirmOverlay'))closeConfirm();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pendingConfirm)closeConfirm();});
+    $('confirmAccept').addEventListener('click',async()=>{
+      const action=pendingConfirm;
+      if(!action)return;
+      $('confirmAccept').disabled=true;
+      try { await action(); closeConfirm(); }
+      catch(err) { closeConfirm(); status('Acțiunea a eșuat: '+err.message,true); }
+      finally { $('confirmAccept').disabled=false; }
+    });
+    let existingImageUrl = null, removeExistingImage = false, previewObjectUrl = null;
+    const IMAGE_BUCKET = 'project-images';
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    const IMAGE_TYPES = {'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 
     function status(message, error = false) {
       $('status').textContent = message;
@@ -148,11 +227,52 @@
       try { const parsed = new URL(url); return ['https:','http:'].includes(parsed.protocol); }
       catch { return false; }
     }
+    function resetPreviewUrl() {
+      if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+    function refreshImagePreview() {
+      resetPreviewUrl();
+      const file = $('eventImageFile').files[0];
+      const url = file ? (previewObjectUrl = URL.createObjectURL(file)) : (!removeExistingImage ? existingImageUrl : null);
+      $('imagePreviewBox').classList.toggle('hidden', !url);
+      if (url) $('imagePreview').src = url;
+      else $('imagePreview').removeAttribute('src');
+      $('imagePreviewInfo').textContent = file ? 'Imagine nouă selectată' : 'Imaginea salvată';
+    }
+    $('eventImageFile').addEventListener('change', () => {
+      const file = $('eventImageFile').files[0];
+      if (file && (!IMAGE_TYPES[file.type] || file.size > MAX_IMAGE_BYTES)) {
+        $('eventImageFile').value = '';
+        status('Alege o imagine JPG, PNG sau WebP de maximum 5 MB.', true);
+      } else if (file) {
+        removeExistingImage = false;
+        status('Imagine selectată. Apasă „Salvează proiectul” pentru a o încărca.');
+      }
+      refreshImagePreview();
+    });
+    $('removeImageBtn').addEventListener('click', () => {
+      $('eventImageFile').value = '';
+      removeExistingImage = true;
+      refreshImagePreview();
+    });
+    async function uploadProjectImage(file) {
+      if (!IMAGE_TYPES[file.type] || file.size > MAX_IMAGE_BYTES) {
+        throw new Error('Imaginea trebuie să fie JPG, PNG sau WebP și să aibă maximum 5 MB.');
+      }
+      const path = `${crypto.randomUUID()}.${IMAGE_TYPES[file.type]}`;
+      const {error} = await db.storage.from(IMAGE_BUCKET).upload(path, file, {
+        contentType:file.type, upsert:false, cacheControl:'3600'
+      });
+      if (error) throw new Error('Încărcarea imaginii a eșuat: ' + error.message);
+      const {data} = db.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+      return {path, url:data.publicUrl};
+    }
     function showEvents(date = null) {
       eventsList.replaceChildren();
       listInfo.textContent = date ? 'Activități pentru ' + formatDate(date) : 'Toate activitățile lunii selectate.';
       const prefix = dateKey(year,month,1).slice(0,7);
-      const filtered = events.filter(e => date ? e.event_date === date : e.event_date.startsWith(prefix));
+      const filtered = events.filter(e => e.is_public !== false && (date ? e.event_date === date : e.event_date.startsWith(prefix)));
       if (!filtered.length) { eventsList.appendChild(make('p','muted','Nu există evenimente programate.')); return; }
       filtered.sort((a,b) => a.event_date.localeCompare(b.event_date) || (a.start_time||'').localeCompare(b.start_time||''));
       for (const event of filtered) {
@@ -170,8 +290,9 @@
         if (isAdmin) {
           const actions=make('div','event-actions');
           const edit=make('button','','Editează'); edit.type='button'; edit.addEventListener('click',()=>openForm(event));
+          const hide=make('button','','Ascunde'); hide.type='button'; hide.addEventListener('click',()=>changeVisibility(event,false));
           const del=make('button','danger','Șterge'); del.type='button'; del.addEventListener('click',()=>deleteEvent(event));
-          actions.append(edit,del); card.appendChild(actions);
+          actions.append(edit,hide,del); card.appendChild(actions);
         }
         eventsList.appendChild(card);
       }
@@ -187,7 +308,7 @@
         const key=dateKey(year,month,d), button=make('button','day',String(d));
         button.type='button'; button.setAttribute('aria-label',formatDate(key));
         button.setAttribute('aria-pressed',String(selectedDate===key));
-        if(events.some(e=>e.event_date===key)) button.classList.add('event');
+        if(events.some(e=>e.is_public!==false&&e.event_date===key)) button.classList.add('event');
         if(selectedDate===key) button.classList.add('selected');
         if(key===dateKey(today.getFullYear(),today.getMonth(),today.getDate())) button.classList.add('today');
         button.addEventListener('click',()=>{selectedDate=selectedDate===key?null:key;renderCalendar();});
@@ -205,7 +326,7 @@
     async function loadEvents() {
       const {data,error}=await db.from('cse_events').select('*').order('event_date',{ascending:true});
       if(error) { events=[];renderCalendar();listInfo.textContent='Nu am putut încărca evenimentele.';status('Eroare la citirea evenimentelor: '+error.message,true);return; }
-      events=data||[];renderCalendar();
+      events=data||[];renderCalendar();renderAdminProjects();
     }
     async function refreshAuth() {
       const {data:{user},error}=await db.auth.getUser();
@@ -225,7 +346,7 @@
           $('adminSection').classList.remove('hidden');
         } else { $('authInfo').textContent='Ești autentificat ca elev. Poți vizualiza proiectele, dar nu le poți modifica.'; }
       }
-      renderCalendar();
+      await loadEvents();
     }
     $('loginForm').addEventListener('submit',async e=>{
       e.preventDefault();status('Se verifică datele...');
@@ -255,40 +376,105 @@
       $('eventStart').value=event?.start_time?.slice(0,5)||'';
       $('eventEnd').value=event?.end_time?.slice(0,5)||'';
       $('eventLocation').value=event?.location||'';
-      $('eventImage').value=event?.image_url||'';
+      $('eventVisibility').value=String(event?.is_public!==false);
+      $('eventImageFile').value='';
+      existingImageUrl=event?.image_url||null;
+      removeExistingImage=false;
+      refreshImagePreview();
       $('eventForm').classList.remove('hidden');
       $('eventForm').scrollIntoView({behavior:'smooth',block:'nearest'});
     }
     $('addBtn').addEventListener('click',()=>openForm());
-    $('cancelBtn').addEventListener('click',()=>{$('eventForm').classList.add('hidden');editingId=null;});
+    $('cancelBtn').addEventListener('click',()=>{
+      $('eventForm').classList.add('hidden');editingId=null;
+      $('eventImageFile').value='';resetPreviewUrl();
+    });
     $('eventForm').addEventListener('submit',async e=>{
       e.preventDefault();if(!isAdmin)return;
       const start=$('eventStart').value||null,end=$('eventEnd').value||null;
       if(start&&end&&end<start) {status('Ora încheierii nu poate fi înaintea începerii.',true);return;}
-      const image=$('eventImage').value.trim();
-      if(image&&!validImageUrl(image)) {status('Introdu un link de imagine http sau https.',true);return;}
       const payload={title:$('eventTitle').value.trim(),description:$('eventDescription').value.trim(),event_date:$('eventDate').value,
-        category:$('eventCategory').value,start_time:start,end_time:end,location:$('eventLocation').value.trim()||null,image_url:image||null};
+        category:$('eventCategory').value,start_time:start,end_time:end,location:$('eventLocation').value.trim()||null,image_url:removeExistingImage?null:existingImageUrl,is_public:$('eventVisibility').value==='true'};
       if(!payload.title||!payload.event_date) {status('Titlul și data sunt obligatorii.',true);return;}
       $('saveBtn').disabled=true;status('Se salvează...');
+      let newUploadPath = null;
       try {
+        const file = $('eventImageFile').files[0];
+        if (file) {
+          status('Se încarcă fotografia...');
+          const uploaded = await uploadProjectImage(file);
+          payload.image_url = uploaded.url;
+          newUploadPath = uploaded.path;
+        }
+        status('Se salvează proiectul...');
         const result=editingId?await db.from('cse_events').update(payload).eq('id',editingId).select('id'):
           await db.from('cse_events').insert(payload).select('id');
         if(result.error) throw result.error;
         if(!result.data?.length) throw new Error('Operațiunea nu a modificat niciun rând. Verifică permisiunile RLS.');
         const wasEditing=!!editingId;
         $('eventForm').classList.add('hidden');editingId=null;
+        $('eventImageFile').value='';resetPreviewUrl();
         const [y,m]=payload.event_date.split('-').map(Number);year=y;month=m-1;selectedDate=payload.event_date;
         await loadEvents();status(wasEditing?'Proiect actualizat cu succes!':'Proiect adăugat cu succes!');
-      } catch(err) {status('Nu am putut salva: '+err.message,true);}
+      } catch(err) {
+        // Dacă imaginea s-a încărcat, dar salvarea proiectului a eșuat,
+        // încercăm să eliminăm fișierul rămas fără proiect.
+        if (newUploadPath) {
+          const cleanup = await db.storage.from(IMAGE_BUCKET).remove([newUploadPath]);
+          if (cleanup.error) console.warn('Curățarea imaginii nereușită:', cleanup.error.message);
+        }
+        status('Nu am putut salva: '+err.message,true);
+      }
       finally {$('saveBtn').disabled=false;}
     });
-    async function deleteEvent(event) {
-      if(!isAdmin||!confirm('Sigur vrei să ștergi proiectul „'+event.title+'”?'))return;
-      const {data,error}=await db.from('cse_events').delete().eq('id',event.id).select('id');
-      if(error||!data?.length) {status('Ștergerea a eșuat: '+(error?.message||'Permisiune insuficientă.'),true);return;}
-      await loadEvents();status('Proiect șters.');
+    function changeVisibility(event,makePublic) {
+      if(!isAdmin)return;
+      askConfirm(makePublic?'Publică proiectul':'Ascunde proiectul',
+        makePublic?'„'+event.title+'” va apărea din nou pe site pentru toți elevii.':
+        '„'+event.title+'” va dispărea de pe site-ul public, dar va rămâne salvat în arhiva administratorilor.',
+        async()=>{
+          const {data,error}=await db.from('cse_events').update({is_public:makePublic}).eq('id',event.id).select('id');
+          if(error||!data?.length)throw new Error(error?.message||'Nu ai permisiunea necesară.');
+          await loadEvents();status(makePublic?'Proiect publicat cu succes.':'Proiect ascuns. Este păstrat în arhivă.');
+        });
     }
+    function deleteEvent(event) {
+      if(!isAdmin)return;
+      askConfirm('Ștergi definitiv proiectul?',
+        '„'+event.title+'” va fi eliminat definitiv din baza de date. Pentru a-l păstra, folosește opțiunea „Ascunde”.',
+        async()=>{
+          const {data,error}=await db.from('cse_events').delete().eq('id',event.id).select('id');
+          if(error||!data?.length)throw new Error(error?.message||'Permisiune insuficientă.');
+          await loadEvents();status('Proiect șters definitiv.');
+        },true);
+    }
+    function renderAdminProjects() {
+      const target=$('adminProjects');target.replaceChildren();
+      if(!isAdmin)return;
+      const items=events.filter(e=>adminFilter==='all'||(adminFilter==='hidden'?e.is_public===false:e.is_public!==false));
+      $('adminListInfo').textContent=items.length+' proiect(e) • Proiectele ascunse sunt accesibile doar administratorilor.';
+      if(!items.length){target.appendChild(make('p','muted','Nu există proiecte în această categorie.'));return;}
+      for(const event of items){
+        const card=make('article','archive-item');
+        card.appendChild(make('span','pill'+(event.is_public===false?' private':''),event.is_public===false?'Ascuns':'Publicat'));
+        card.appendChild(make('h3','',event.title));
+        card.appendChild(make('div','muted',formatDate(event.event_date)+' • '+(event.category||'Proiect')));
+        if(event.image_url&&validImageUrl(event.image_url)){
+          const img=make('img','event-image');img.src=event.image_url;img.alt='Imagine proiect: '+event.title;img.loading='lazy';card.appendChild(img);
+        }
+        if(event.description)card.appendChild(make('p','muted',event.description.length>180?event.description.slice(0,180)+'…':event.description));
+        const actions=make('div','event-actions');
+        const edit=make('button','','Editează');edit.type='button';edit.addEventListener('click',()=>openForm(event));actions.appendChild(edit);
+        const toggle=make('button','',event.is_public===false?'Publică din nou':'Ascunde');toggle.type='button';toggle.addEventListener('click',()=>changeVisibility(event,event.is_public===false));actions.appendChild(toggle);
+        const del=make('button','danger','Șterge');del.type='button';del.addEventListener('click',()=>deleteEvent(event));actions.appendChild(del);
+        card.appendChild(actions);target.appendChild(card);
+      }
+    }
+    document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+      adminFilter=btn.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b===btn));
+      renderAdminProjects();
+    }));
     async function init() {
       renderCalendar();
       await Promise.all([loadEvents(),refreshAuth()]);
