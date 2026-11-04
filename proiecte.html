@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
@@ -7,116 +6,56 @@
   <title>Proiecte și evenimente | CȘE Blaga</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --blue: #244D68;
-      --green: #377C36;
-      --light: #9ACD79;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: #f5f8f7;
-      color: #263d4b;
-      font-family: 'Open Sans', sans-serif;
-    }
-    .hero {
-      background: linear-gradient(120deg, var(--blue), var(--green));
-      color: white;
-      padding: 42px 25px;
-      border-radius: 0 0 25px 25px;
-    }
-    .hero h1 {
-      font-family: Montserrat, sans-serif;
-      font-size: clamp(25px, 5vw, 38px);
-      margin: 8px 0;
-    }
-    .hero p { max-width: 650px; line-height: 1.6; }
-    .wrapper { max-width: 1100px; margin: auto; padding: 24px; }
-    .layout {
-      display: grid;
-      grid-template-columns: 1.2fr 1fr;
-      gap: 22px;
-    }
-    .card {
-      background: white;
-      border: 1px solid #e0e9e5;
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: 0 5px 18px #244d6810;
-    }
-    h2, h3 { font-family: Montserrat, sans-serif; }
-    .calendar-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .calendar-top h2 { font-size: 19px; margin: 0; }
-    button {
-      cursor: pointer;
-      font: inherit;
-      border: 0;
-      border-radius: 10px;
-      padding: 9px 13px;
-      background: #eaf2eb;
-      color: var(--blue);
-    }
-    button:hover { background: #d9e9da; }
-    .days {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      gap: 6px;
-    }
-    .weekday {
-      font-size: 12px;
-      text-align: center;
-      font-weight: 700;
-      padding: 10px 0;
-    }
-    .day {
-      min-height: 55px;
-      padding: 8px 3px;
-      background: #f4f7f6;
-      border: 1px solid transparent;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 13px;
-    }
-    .day.event {
-      background: #e1f0d9;
-      color: #265d27;
-      font-weight: 700;
-    }
-    .day.selected {
-      background: var(--blue);
-      color: white;
-    }
-    .day:focus-visible {
-      outline: 3px solid var(--light);
-      outline-offset: 2px;
-    }
-    .event-card {
-      border: 1px solid #e0e9e5;
-      border-left: 4px solid var(--green);
-      padding: 15px;
-      border-radius: 12px;
-      margin: 12px 0;
-    }
-    .event-card h3 { margin: 6px 0; font-size: 16px; }
-    .event-card p { font-size: 13px; line-height: 1.6; }
-    .date-label {
-      color: var(--green);
-      font-weight: 700;
-      font-size: 12px;
-    }
-    .muted { color: #72818b; font-size: 13px; }
-    @media (max-width: 700px) {
-      .layout { grid-template-columns: 1fr; }
-      .wrapper { padding: 14px; }
-      .card { padding: 16px; }
-      .day { min-height: 44px; }
-    }
+    :root { --blue:#244D68; --green:#377C36; --light:#9ACD79; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:#f5f8f7; color:#263d4b; font-family:'Open Sans',sans-serif; }
+    .hero { background:linear-gradient(120deg,var(--blue),var(--green)); color:white; padding:42px 25px; border-radius:0 0 25px 25px; }
+    .hero h1 { font-family:Montserrat,sans-serif; font-size:clamp(25px,5vw,38px); margin:8px 0; }
+    .hero p { max-width:650px; line-height:1.6; }
+    .wrapper { max-width:1100px; margin:auto; padding:24px; }
+    .layout { display:grid; grid-template-columns:1.2fr 1fr; gap:22px; }
+    .card { background:white; border:1px solid #e0e9e5; border-radius:18px; padding:22px; box-shadow:0 5px 18px #244d6810; }
+    h2,h3 { font-family:Montserrat,sans-serif; }
+    .calendar-top,.toolbar,.event-actions,.form-actions { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+    .calendar-top { margin-bottom:20px; }
+    .calendar-top h2 { font-size:19px; margin:0; text-transform:capitalize; }
+    button { cursor:pointer; font:inherit; border:0; border-radius:10px; padding:9px 13px; background:#eaf2eb; color:var(--blue); }
+    button:hover { background:#d9e9da; }
+    button:disabled { cursor:wait; opacity:.65; }
+    button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible { outline:3px solid var(--light); outline-offset:2px; }
+    .primary { background:var(--green); color:white; font-weight:700; }
+    .primary:hover { background:#286028; }
+    .danger { color:#a32323; background:#fff0f0; }
+    .danger:hover { background:#ffe0e0; }
+    .days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; }
+    .weekday { font-size:12px; text-align:center; font-weight:700; padding:10px 0; }
+    .day { min-height:55px; padding:8px 3px; background:#f4f7f6; border:1px solid transparent; border-radius:10px; text-align:center; font-size:13px; }
+    .day.event { background:#e1f0d9; color:#265d27; font-weight:700; }
+    .day.selected { background:var(--blue); color:white; }
+    .day.today:not(.selected) { border-color:var(--blue); }
+    .event-card { border:1px solid #e0e9e5; border-left:4px solid var(--green); padding:15px; border-radius:12px; margin:12px 0; }
+    .event-card h3 { margin:6px 0; font-size:16px; }
+    .event-card p { font-size:13px; line-height:1.6; white-space:pre-wrap; }
+    .date-label { color:var(--green); font-weight:700; font-size:12px; }
+    .muted { color:#72818b; font-size:13px; }
+    .tag { display:inline-block; background:#eaf2eb; color:var(--green); border-radius:20px; padding:3px 9px; font-size:12px; margin:6px 0; }
+    .admin-panel { margin-top:22px; }
+    .toolbar { margin:0 0 14px; }
+    .toolbar h2 { margin:0; font-size:19px; }
+    .status { font-size:13px; margin:10px 0; min-height:1.4em; }
+    .status.error { color:#a32323; }
+    .status.ok { color:#286028; }
+    .hidden { display:none !important; }
+    form { display:grid; gap:12px; }
+    label { font-size:13px; font-weight:700; display:grid; gap:5px; }
+    input,textarea,select { font:inherit; padding:10px 12px; border:1px solid #cbd9d2; border-radius:10px; background:white; color:#263d4b; width:100%; }
+    textarea { min-height:90px; resize:vertical; }
+    .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .event-actions { justify-content:flex-start; margin-top:12px; }
+    .event-actions button { font-size:12px; }
+    .login-box { display:grid; gap:12px; max-width:420px; }
+    .event-image { display:block; width:100%; max-height:200px; object-fit:cover; border-radius:10px; margin:10px 0; }
+    @media(max-width:700px) { .layout { grid-template-columns:1fr; } .wrapper { padding:14px; } .card { padding:16px; } .day { min-height:44px; } .form-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -124,160 +63,238 @@
     <div style="max-width:1100px;margin:auto">
       <small>CONSILIUL ȘCOLAR AL ELEVILOR</small>
       <h1>Proiecte și evenimente 📅</h1>
-      <p>Descoperă activitățile CȘE și urmărește proiectele
-      prin care transformăm ideile elevilor în realitate.</p>
+      <p>Descoperă activitățile CȘE și urmărește proiectele prin care transformăm ideile elevilor în realitate.</p>
     </div>
   </header>
-
   <main class="wrapper">
     <div class="layout">
-      <section class="card">
+      <section class="card" aria-label="Calendarul evenimentelor">
         <div class="calendar-top">
-          <button id="prev" aria-label="Luna anterioară">❮</button>
+          <button id="prev" type="button" aria-label="Luna anterioară">❮</button>
           <h2 id="monthTitle"></h2>
-          <button id="next" aria-label="Luna următoare">❯</button>
+          <button id="next" type="button" aria-label="Luna următoare">❯</button>
         </div>
         <div class="days" id="calendar"></div>
       </section>
-
       <section class="card">
         <h2>Evenimente și proiecte</h2>
-        <p class="muted" id="listInfo">
-          Selectează o zi pentru a vedea activitățile.
-        </p>
+        <p class="muted" id="listInfo">Se încarcă evenimentele...</p>
         <div id="eventsList"></div>
       </section>
     </div>
+
+    <section class="card admin-panel" aria-label="Administrare proiecte">
+      <div class="toolbar">
+        <h2>Administrare proiecte</h2>
+        <button id="logoutBtn" type="button" class="hidden">Deconectare</button>
+      </div>
+      <p class="muted" id="authInfo">Verificăm sesiunea de autentificare...</p>
+      <div id="loginSection" class="login-box hidden">
+        <form id="loginForm">
+          <label>Email administrator<input id="loginEmail" type="email" autocomplete="email" required></label>
+          <label>Parolă<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+          <div><button class="primary" type="submit" id="loginBtn">Autentificare</button></div>
+        </form>
+      </div>
+      <div id="adminSection" class="hidden">
+        <button type="button" class="primary" id="addBtn">+ Adaugă proiect</button>
+        <form id="eventForm" class="hidden" style="margin-top:18px">
+          <h3 id="formTitle">Adaugă un proiect</h3>
+          <label>Titlu *<input id="eventTitle" maxlength="150" required></label>
+          <label>Descriere<textarea id="eventDescription" maxlength="5000"></textarea></label>
+          <div class="form-grid">
+            <label>Data *<input id="eventDate" type="date" required></label>
+            <label>Categorie<select id="eventCategory"><option>Proiect</option><option>Eveniment</option><option>Voluntariat</option><option>Concurs</option><option>Atelier</option><option>Altă activitate</option></select></label>
+            <label>Ora începerii<input id="eventStart" type="time"></label>
+            <label>Ora încheierii<input id="eventEnd" type="time"></label>
+          </div>
+          <label>Locație<input id="eventLocation" maxlength="250"></label>
+          <label>Link imagine (opțional)<input id="eventImage" type="url" placeholder="https://..." maxlength="2000"></label>
+          <div class="form-actions">
+            <button class="primary" type="submit" id="saveBtn">Salvează proiectul</button>
+            <button type="button" id="cancelBtn">Anulează</button>
+          </div>
+        </form>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
-    const events = [
-      {
-        date: "2026-11-12",
-        title: "Game On",
-        description: "Exemplu de proiect interactiv pentru elevi."
-      },
-      {
-        date: "2026-11-20",
-        title: "Atelier pentru elevi",
-        description: "Exemplu de activitate educativă."
-      }
-    ];
-
-    const calendar = document.getElementById("calendar");
-    const monthTitle = document.getElementById("monthTitle");
-    const eventsList = document.getElementById("eventsList");
-    const listInfo = document.getElementById("listInfo");
-
+    'use strict';
+    const SUPABASE_URL = 'https://ilrcoxzqqvmjhlufytsd.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const $ = id => document.getElementById(id);
+    const calendar = $('calendar'), monthTitle = $('monthTitle'), eventsList = $('eventsList'), listInfo = $('listInfo');
     const today = new Date();
-    let year = today.getFullYear();
-    let month = today.getMonth();
-    let selectedDate = null;
+    let year = today.getFullYear(), month = today.getMonth(), selectedDate = null;
+    let events = [], isAdmin = false, editingId = null;
 
-    function dateKey(y, m, d) {
-      return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    function status(message, error = false) {
+      $('status').textContent = message;
+      $('status').className = 'status ' + (error ? 'error' : 'ok');
     }
-
+    function dateKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+    function formatDate(date) { return date.split('-').reverse().join('.'); }
+    function make(tag, cls, value) {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (value != null) el.textContent = value;
+      return el;
+    }
+    function validImageUrl(url) {
+      try { const parsed = new URL(url); return ['https:','http:'].includes(parsed.protocol); }
+      catch { return false; }
+    }
     function showEvents(date = null) {
-      const filtered = events.filter(e =>
-        date ? e.date === date : e.date.startsWith(dateKey(year, month, 1).slice(0, 7))
-      );
-
       eventsList.replaceChildren();
-
-      listInfo.textContent = date
-        ? "Activități pentru " + date.split("-").reverse().join(".")
-        : "Toate activitățile lunii selectate.";
-
-      if (!filtered.length) {
-        const p = document.createElement("p");
-        p.className = "muted";
-        p.textContent = "Nu există evenimente programate.";
-        eventsList.appendChild(p);
-        return;
-      }
-
-      filtered.sort((a, b) => a.date.localeCompare(b.date));
-
-      filtered.forEach(event => {
-        const card = document.createElement("article");
-        card.className = "event-card";
-
-        const date = document.createElement("div");
-        date.className = "date-label";
-        date.textContent = event.date.split("-").reverse().join(".");
-
-        const title = document.createElement("h3");
-        title.textContent = event.title;
-
-        const description = document.createElement("p");
-        description.textContent = event.description;
-
-        card.append(date, title, description);
+      listInfo.textContent = date ? 'Activități pentru ' + formatDate(date) : 'Toate activitățile lunii selectate.';
+      const prefix = dateKey(year,month,1).slice(0,7);
+      const filtered = events.filter(e => date ? e.event_date === date : e.event_date.startsWith(prefix));
+      if (!filtered.length) { eventsList.appendChild(make('p','muted','Nu există evenimente programate.')); return; }
+      filtered.sort((a,b) => a.event_date.localeCompare(b.event_date) || (a.start_time||'').localeCompare(b.start_time||''));
+      for (const event of filtered) {
+        const card = make('article','event-card');
+        card.appendChild(make('div','date-label',formatDate(event.event_date) + (event.start_time ? ' • '+event.start_time.slice(0,5) : '')));
+        card.appendChild(make('h3','',event.title));
+        if (event.category) card.appendChild(make('span','tag',event.category));
+        if (event.image_url && validImageUrl(event.image_url)) {
+          const img = make('img','event-image'); img.src=event.image_url; img.alt='Imagine proiect: '+event.title; img.loading='lazy';
+          card.appendChild(img);
+        }
+        if (event.description) card.appendChild(make('p','',event.description));
+        if (event.location) card.appendChild(make('p','muted','📍 '+event.location));
+        if (event.end_time) card.appendChild(make('p','muted','Ora încheierii: '+event.end_time.slice(0,5)));
+        if (isAdmin) {
+          const actions=make('div','event-actions');
+          const edit=make('button','','Editează'); edit.type='button'; edit.addEventListener('click',()=>openForm(event));
+          const del=make('button','danger','Șterge'); del.type='button'; del.addEventListener('click',()=>deleteEvent(event));
+          actions.append(edit,del); card.appendChild(actions);
+        }
         eventsList.appendChild(card);
-      });
+      }
     }
-
     function renderCalendar() {
       calendar.replaceChildren();
-
-      monthTitle.textContent = new Date(year, month, 1)
-        .toLocaleDateString("ro-RO", {
-          month: "long",
-          year: "numeric"
-        });
-
-      ["L", "Ma", "Mi", "J", "V", "S", "D"].forEach(day => {
-        const label = document.createElement("div");
-        label.className = "weekday";
-        label.textContent = day;
-        calendar.appendChild(label);
-      });
-
-      const offset = (new Date(year, month, 1).getDay() + 6) % 7;
-      const total = new Date(year, month + 1, 0).getDate();
-
-      for (let i = 0; i < offset; i++) {
-        calendar.appendChild(document.createElement("div"));
-      }
-
-      for (let d = 1; d <= total; d++) {
-        const key = dateKey(year, month, d);
-        const button = document.createElement("button");
-        button.className = "day";
-        button.textContent = d;
-        button.setAttribute("aria-label", key);
-
-        if (events.some(e => e.date === key))
-          button.classList.add("event");
-
-        if (selectedDate === key)
-          button.classList.add("selected");
-
-        button.addEventListener("click", () => {
-          selectedDate = selectedDate === key ? null : key;
-          renderCalendar();
-        });
-
+      monthTitle.textContent = new Date(year,month,1).toLocaleDateString('ro-RO',{month:'long',year:'numeric'});
+      for (const day of ['L','Ma','Mi','J','V','S','D']) calendar.appendChild(make('div','weekday',day));
+      const offset=(new Date(year,month,1).getDay()+6)%7;
+      const total=new Date(year,month+1,0).getDate();
+      for(let i=0;i<offset;i++) calendar.appendChild(make('div'));
+      for(let d=1;d<=total;d++) {
+        const key=dateKey(year,month,d), button=make('button','day',String(d));
+        button.type='button'; button.setAttribute('aria-label',formatDate(key));
+        button.setAttribute('aria-pressed',String(selectedDate===key));
+        if(events.some(e=>e.event_date===key)) button.classList.add('event');
+        if(selectedDate===key) button.classList.add('selected');
+        if(key===dateKey(today.getFullYear(),today.getMonth(),today.getDate())) button.classList.add('today');
+        button.addEventListener('click',()=>{selectedDate=selectedDate===key?null:key;renderCalendar();});
         calendar.appendChild(button);
       }
-
       showEvents(selectedDate);
     }
-
     function changeMonth(delta) {
-      const date = new Date(year, month + delta, 1);
-      year = date.getFullYear();
-      month = date.getMonth();
-      selectedDate = null;
+      const date=new Date(year,month+delta,1);
+      year=date.getFullYear(); month=date.getMonth(); selectedDate=null; renderCalendar();
+    }
+    $('prev').addEventListener('click',()=>changeMonth(-1));
+    $('next').addEventListener('click',()=>changeMonth(1));
+
+    async function loadEvents() {
+      const {data,error}=await db.from('cse_events').select('*').order('event_date',{ascending:true});
+      if(error) { events=[];renderCalendar();listInfo.textContent='Nu am putut încărca evenimentele.';status('Eroare la citirea evenimentelor: '+error.message,true);return; }
+      events=data||[];renderCalendar();
+    }
+    async function refreshAuth() {
+      const {data:{user},error}=await db.auth.getUser();
+      isAdmin=false;
+      $('adminSection').classList.add('hidden');
+      $('logoutBtn').classList.toggle('hidden',!user);
+      if(error && !user) console.warn('Sesiune:',error.message);
+      if(!user) {
+        $('authInfo').textContent='Ești administrator CȘE? Autentifică-te pentru a gestiona proiectele.';
+        $('loginSection').classList.remove('hidden');
+      } else {
+        $('loginSection').classList.add('hidden');
+        const {data:profile,error:profileError}=await db.from('profiles').select('role').eq('id',user.id).maybeSingle();
+        if(profileError) { $('authInfo').textContent='Nu am putut verifica rolul contului.';status('Verificarea rolului a eșuat: '+profileError.message,true); }
+        else if(['president','vice_president','admin'].includes(profile?.role)) {
+          isAdmin=true; $('authInfo').textContent='Autentificat ca administrator CȘE.';
+          $('adminSection').classList.remove('hidden');
+        } else { $('authInfo').textContent='Ești autentificat ca elev. Poți vizualiza proiectele, dar nu le poți modifica.'; }
+      }
       renderCalendar();
     }
-
-    document.getElementById("prev").onclick = () => changeMonth(-1);
-    document.getElementById("next").onclick = () => changeMonth(1);
-
-    renderCalendar();
+    $('loginForm').addEventListener('submit',async e=>{
+      e.preventDefault();status('Se verifică datele...');
+      $('loginBtn').disabled=true;
+      try {
+        const {error}=await db.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});
+        if(error) throw error;
+        $('loginPassword').value='';
+        await refreshAuth();
+        status(isAdmin?'Autentificare reușită. Poți administra proiectele.':'Autentificare reușită. Acest cont nu are drepturi de administrator.',!isAdmin);
+      } catch(err) { status('Autentificare nereușită: '+err.message,true); }
+      finally { $('loginBtn').disabled=false; }
+    });
+    $('logoutBtn').addEventListener('click',async()=>{
+      const {error}=await db.auth.signOut();
+      if(error) {status(error.message,true);return;}
+      $('eventForm').classList.add('hidden'); await refreshAuth();status('Te-ai deconectat.');
+    });
+    function openForm(event=null) {
+      if(!isAdmin) return;
+      editingId=event?.id||null;
+      $('formTitle').textContent=event?'Editează proiectul':'Adaugă un proiect';
+      $('eventTitle').value=event?.title||'';
+      $('eventDescription').value=event?.description||'';
+      $('eventDate').value=event?.event_date||selectedDate||dateKey(year,month,today.getDate()<=new Date(year,month+1,0).getDate()?today.getDate():1);
+      $('eventCategory').value=event?.category||'Proiect';
+      $('eventStart').value=event?.start_time?.slice(0,5)||'';
+      $('eventEnd').value=event?.end_time?.slice(0,5)||'';
+      $('eventLocation').value=event?.location||'';
+      $('eventImage').value=event?.image_url||'';
+      $('eventForm').classList.remove('hidden');
+      $('eventForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }
+    $('addBtn').addEventListener('click',()=>openForm());
+    $('cancelBtn').addEventListener('click',()=>{$('eventForm').classList.add('hidden');editingId=null;});
+    $('eventForm').addEventListener('submit',async e=>{
+      e.preventDefault();if(!isAdmin)return;
+      const start=$('eventStart').value||null,end=$('eventEnd').value||null;
+      if(start&&end&&end<start) {status('Ora încheierii nu poate fi înaintea începerii.',true);return;}
+      const image=$('eventImage').value.trim();
+      if(image&&!validImageUrl(image)) {status('Introdu un link de imagine http sau https.',true);return;}
+      const payload={title:$('eventTitle').value.trim(),description:$('eventDescription').value.trim(),event_date:$('eventDate').value,
+        category:$('eventCategory').value,start_time:start,end_time:end,location:$('eventLocation').value.trim()||null,image_url:image||null};
+      if(!payload.title||!payload.event_date) {status('Titlul și data sunt obligatorii.',true);return;}
+      $('saveBtn').disabled=true;status('Se salvează...');
+      try {
+        const result=editingId?await db.from('cse_events').update(payload).eq('id',editingId).select('id'):
+          await db.from('cse_events').insert(payload).select('id');
+        if(result.error) throw result.error;
+        if(!result.data?.length) throw new Error('Operațiunea nu a modificat niciun rând. Verifică permisiunile RLS.');
+        const wasEditing=!!editingId;
+        $('eventForm').classList.add('hidden');editingId=null;
+        const [y,m]=payload.event_date.split('-').map(Number);year=y;month=m-1;selectedDate=payload.event_date;
+        await loadEvents();status(wasEditing?'Proiect actualizat cu succes!':'Proiect adăugat cu succes!');
+      } catch(err) {status('Nu am putut salva: '+err.message,true);}
+      finally {$('saveBtn').disabled=false;}
+    });
+    async function deleteEvent(event) {
+      if(!isAdmin||!confirm('Sigur vrei să ștergi proiectul „'+event.title+'”?'))return;
+      const {data,error}=await db.from('cse_events').delete().eq('id',event.id).select('id');
+      if(error||!data?.length) {status('Ștergerea a eșuat: '+(error?.message||'Permisiune insuficientă.'),true);return;}
+      await loadEvents();status('Proiect șters.');
+    }
+    async function init() {
+      renderCalendar();
+      await Promise.all([loadEvents(),refreshAuth()]);
+      db.auth.onAuthStateChange((_event,_session)=>{setTimeout(()=>refreshAuth(),0);});
+    }
+    init().catch(err=>status('Eroare la inițializare: '+err.message,true));
   </script>
 </body>
 </html>
-  
