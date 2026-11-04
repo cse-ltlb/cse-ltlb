@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Proiecte și evenimente | CȘE Blaga</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #244D68;
+      --green: #377C36;
+      --light: #9ACD79;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f8f7;
+      color: #263d4b;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .hero {
+      background: linear-gradient(120deg, var(--blue), var(--green));
+      color: white;
+      padding: 42px 25px;
+      border-radius: 0 0 25px 25px;
+    }
+    .hero h1 {
+      font-family: Montserrat, sans-serif;
+      font-size: clamp(25px, 5vw, 38px);
+      margin: 8px 0;
+    }
+    .hero p { max-width: 650px; line-height: 1.6; }
+    .wrapper { max-width: 1100px; margin: auto; padding: 24px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 22px;
+    }
+    .card {
+      background: white;
+      border: 1px solid #e0e9e5;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 5px 18px #244d6810;
+    }
+    h2, h3 { font-family: Montserrat, sans-serif; }
+    .calendar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .calendar-top h2 { font-size: 19px; margin: 0; }
+    button {
+      cursor: pointer;
+      font: inherit;
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 13px;
+      background: #eaf2eb;
+      color: var(--blue);
+    }
+    button:hover { background: #d9e9da; }
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .weekday {
+      font-size: 12px;
+      text-align: center;
+      font-weight: 700;
+      padding: 10px 0;
+    }
+    .day {
+      min-height: 55px;
+      padding: 8px 3px;
+      background: #f4f7f6;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 13px;
+    }
+    .day.event {
+      background: #e1f0d9;
+      color: #265d27;
+      font-weight: 700;
+    }
+    .day.selected {
+      background: var(--blue);
+      color: white;
+    }
+    .day:focus-visible {
+      outline: 3px solid var(--light);
+      outline-offset: 2px;
+    }
+    .event-card {
+      border: 1px solid #e0e9e5;
+      border-left: 4px solid var(--green);
+      padding: 15px;
+      border-radius: 12px;
+      margin: 12px 0;
+    }
+    .event-card h3 { margin: 6px 0; font-size: 16px; }
+    .event-card p { font-size: 13px; line-height: 1.6; }
+    .date-label {
+      color: var(--green);
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .muted { color: #72818b; font-size: 13px; }
+    @media (max-width: 700px) {
+      .layout { grid-template-columns: 1fr; }
+      .wrapper { padding: 14px; }
+      .card { padding: 16px; }
+      .day { min-height: 44px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div style="max-width:1100px;margin:auto">
+      <small>CONSILIUL ȘCOLAR AL ELEVILOR</small>
+      <h1>Proiecte și evenimente 📅</h1>
+      <p>Descoperă activitățile CȘE și urmărește proiectele
+      prin care transformăm ideile elevilor în realitate.</p>
+    </div>
+  </header>
+
+  <main class="wrapper">
+    <div class="layout">
+      <section class="card">
+        <div class="calendar-top">
+          <button id="prev" aria-label="Luna anterioară">❮</button>
+          <h2 id="monthTitle"></h2>
+          <button id="next" aria-label="Luna următoare">❯</button>
+        </div>
+        <div class="days" id="calendar"></div>
+      </section>
+
+      <section class="card">
+        <h2>Evenimente și proiecte</h2>
+        <p class="muted" id="listInfo">
+          Selectează o zi pentru a vedea activitățile.
+        </p>
+        <div id="eventsList"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const events = [
+      {
+        date: "2026-11-12",
+        title: "Game On",
+        description: "Exemplu de proiect interactiv pentru elevi."
+      },
+      {
+        date: "2026-11-20",
+        title: "Atelier pentru elevi",
+        description: "Exemplu de activitate educativă."
+      }
+    ];
+
+    const calendar = document.getElementById("calendar");
+    const monthTitle = document.getElementById("monthTitle");
+    const eventsList = document.getElementById("eventsList");
+    const listInfo = document.getElementById("listInfo");
+
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth();
+    let selectedDate = null;
+
+    function dateKey(y, m, d) {
+      return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    }
+
+    function showEvents(date = null) {
+      const filtered = events.filter(e =>
+        date ? e.date === date : e.date.startsWith(dateKey(year, month, 1).slice(0, 7))
+      );
+
+      eventsList.replaceChildren();
+
+      listInfo.textContent = date
+        ? "Activități pentru " + date.split("-").reverse().join(".")
+        : "Toate activitățile lunii selectate.";
+
+      if (!filtered.length) {
+        const p = document.createElement("p");
+        p.className = "muted";
+        p.textContent = "Nu există evenimente programate.";
+        eventsList.appendChild(p);
+        return;
+      }
+
+      filtered.sort((a, b) => a.date.localeCompare(b.date));
+
+      filtered.forEach(event => {
+        const card = document.createElement("article");
+        card.className = "event-card";
+
+        const date = document.createElement("div");
+        date.className = "date-label";
+        date.textContent = event.date.split("-").reverse().join(".");
+
+        const title = document.createElement("h3");
+        title.textContent = event.title;
+
+        const description = document.createElement("p");
+        description.textContent = event.description;
+
+        card.append(date, title, description);
+        eventsList.appendChild(card);
+      });
+    }
+
+    function renderCalendar() {
+      calendar.replaceChildren();
+
+      monthTitle.textContent = new Date(year, month, 1)
+        .toLocaleDateString("ro-RO", {
+          month: "long",
+          year: "numeric"
+        });
+
+      ["L", "Ma", "Mi", "J", "V", "S", "D"].forEach(day => {
+        const label = document.createElement("div");
+        label.className = "weekday";
+        label.textContent = day;
+        calendar.appendChild(label);
+      });
+
+      const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+      const total = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < offset; i++) {
+        calendar.appendChild(document.createElement("div"));
+      }
+
+      for (let d = 1; d <= total; d++) {
+        const key = dateKey(year, month, d);
+        const button = document.createElement("button");
+        button.className = "day";
+        button.textContent = d;
+        button.setAttribute("aria-label", key);
+
+        if (events.some(e => e.date === key))
+          button.classList.add("event");
+
+        if (selectedDate === key)
+          button.classList.add("selected");
+
+        button.addEventListener("click", () => {
+          selectedDate = selectedDate === key ? null : key;
+          renderCalendar();
+        });
+
+        calendar.appendChild(button);
+      }
+
+      showEvents(selectedDate);
+    }
+
+    function changeMonth(delta) {
+      const date = new Date(year, month + delta, 1);
+      year = date.getFullYear();
+      month = date.getMonth();
+      selectedDate = null;
+      renderCalendar();
+    }
+
+    document.getElementById("prev").onclick = () => changeMonth(-1);
+    document.getElementById("next").onclick = () => changeMonth(1);
+
+    renderCalendar();
+  </script>
+</body>
+</html>
+  
