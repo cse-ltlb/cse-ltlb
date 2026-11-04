@@ -7,7 +7,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -521,6 +521,80 @@
       .admin-actions .btn { width:auto; flex:1 1 100px; }
       .vote-row .vote-button { width:100%; }
       .dialog-buttons { flex-direction:column; }
+    }
+
+    /* DESIGN CSE 2026–2027: stiluri exclusiv vizuale */
+    :root {
+      --navy:#244D68;
+      --blue:#244D68;
+      --green:#377C36;
+      --light-blue:#EDF4F8;
+      --light-green:#EEF7E9;
+      --background:#F6F9F7;
+      --white:#FFFFFF;
+      --text:#263C49;
+      --muted:#627581;
+      --border:#DCE8E1;
+      --radius:18px;
+      --shadow:0 8px 26px rgba(36,77,104,.075);
+    }
+    html,body {font-family:'Open Sans',Arial,sans-serif;}
+    h1,h2,h3,.eyebrow,.tab,.btn,.pill,.account-status,
+    .vote-count,.dialog-modal h2 {font-family:'Montserrat',Arial,sans-serif;}
+    .header {
+      background:linear-gradient(120deg,#244D68 0%,#2C625C 52%,#377C36 100%);
+      border-radius:0 0 26px 26px;
+      padding:40px 28px;
+      box-shadow:0 10px 30px rgba(36,77,104,.12);
+    }
+    .eyebrow {color:#C7E8B4;letter-spacing:1.7px;}
+    .header p {color:#F0F7F2;}
+    .container {padding:28px 24px;}
+    .container-inner,.header-inner {max-width:1000px;}
+    .tabs {gap:12px;}
+    .tab {
+      background:#FFFFFF;
+      border:1px solid #DCE8E1;
+      border-radius:14px;
+      padding:16px 12px;
+      box-shadow:0 3px 12px rgba(36,77,104,.045);
+      font-size:14px;
+    }
+    .tab:hover {border-color:#9ACD79;background:#F0F7EB;}
+    .tab.active {background:#244D68;border-color:#244D68;color:#FFFFFF;box-shadow:0 6px 16px rgba(36,77,104,.18);}
+    .card {border-radius:20px;padding:30px;box-shadow:var(--shadow);}
+    .card h2 {font-size:23px;letter-spacing:-.35px;}
+    .description {line-height:1.75;}
+    label {font-weight:700;}
+    input,textarea,select {border-color:#CEDFD7;border-radius:12px;padding:14px 15px;}
+    input:focus,textarea:focus,select:focus {border-color:#377C36;box-shadow:0 0 0 3px rgba(154,205,121,.24);}
+    .btn {border-radius:12px;font-weight:700;}
+    .btn-primary {background:#244D68;color:#FFFFFF;}
+    .btn-primary:hover {background:#193C55;}
+    .btn-green {background:#377C36;color:#FFFFFF;}
+    .btn-green:hover {background:#2B622A;}
+    .btn-secondary {background:#EDF4F8;color:#244D68;}
+    .password-toggle {background:#EDF4F8;color:#244D68;}
+    .account-box {background:#EDF4F8;border-color:#DCE8E1;}
+    .message.success {background:#EEF7E9;color:#285D20;}
+    .message.info {background:#EDF4F8;color:#244D68;}
+    .pill {background:#EDF4F8;color:#244D68;}
+    .pill-green {background:#EEF7E9;color:#285D20;}
+    .suggestion {border-radius:16px;box-shadow:0 3px 14px rgba(36,77,104,.04);}
+    .suggestion:hover {border-color:#B5D4B1;}
+    .vote-button {box-shadow:0 4px 12px rgba(55,124,54,.18);}
+    .vote-button:hover {box-shadow:0 7px 16px rgba(55,124,54,.23);}
+    .admin-section {border-top-color:#377C36;}
+    .admin-item {border-left-color:#244D68;}
+    .dialog-modal {border-radius:20px;}
+    .dialog-confirm {background:#244D68;}
+    button:focus-visible,a:focus-visible {outline:3px solid #9ACD79;outline-offset:3px;}
+    @media(max-width:650px) {
+      .container {padding:14px;}
+      .header {padding:30px 20px;border-radius:0 0 20px 20px;}
+      .tabs {grid-template-columns:1fr;gap:8px;}
+      .tab {padding:14px;}
+      .card {padding:20px;}
     }
   </style>
 </head>
