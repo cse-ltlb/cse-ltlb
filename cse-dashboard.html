@@ -30,34 +30,38 @@
     .cards button { width: 100%; }
     .primary-button:hover, .cards button:not(:disabled):hover { background: #2C632B; }
     .cards button:disabled { background: #9AA8A0; }
-    #qaSection { display: none; margin-top: 35px; }
-    .qa-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .qa-header h2 { margin: 0; }
+    #qaSection, #suggestionsSection { display: none; margin-top: 35px; }
+    .qa-header, .suggestions-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .qa-header h2, .suggestions-header h2 { margin: 0; }
     .secondary-button { background: #244D68; color: white; border: 0; border-radius: 8px; padding: 11px 17px; }
     .secondary-button:hover { background: #17364B; }
-    #qaContent { margin-top: 25px; }
-    .qa-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 25px; }
-    .qa-stat { background: #F0F7ED; border: 1px solid #DDE8D9; border-radius: 12px; padding: 17px; }
-    .qa-stat span { display: block; color: #62727B; font-size: 13px; margin-bottom: 9px; }
-    .qa-stat strong { font-size: 27px; }
-    .qa-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
-    .qa-filters button { background: #E5EFE1; color: #244D68; border: 0; border-radius: 8px; padding: 10px 15px; font-size: 13px; }
-    .qa-filters button.active { background: #377C36; color: white; }
-    .qa-question-card { background: white; border: 1px solid #DDE8D9; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
-    .qa-question-card h3 { margin: 0 0 12px; }
-    .qa-question-text, .qa-answer-text { color: #344B58; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .qa-question-details { color: #71818A; font-size: 13px; line-height: 1.8; margin-top: 12px; }
+    #qaContent, #suggestionsContent { margin-top: 25px; }
+    .qa-stats, .suggestions-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 25px; }
+    .qa-stat, .suggestions-stat { background: #F0F7ED; border: 1px solid #DDE8D9; border-radius: 12px; padding: 17px; }
+    .qa-stat span, .suggestions-stat span { display: block; color: #62727B; font-size: 13px; margin-bottom: 9px; }
+    .qa-stat strong, .suggestions-stat strong { font-size: 27px; }
+    .qa-filters, .suggestions-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
+    .qa-filters button, .suggestions-filters button { background: #E5EFE1; color: #244D68; border: 0; border-radius: 8px; padding: 10px 15px; font-size: 13px; }
+    .qa-filters button.active, .suggestions-filters button.active { background: #377C36; color: white; }
+    .qa-question-card, .suggestion-card { background: white; border: 1px solid #DDE8D9; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+    .qa-question-card h3, .suggestion-card h3 { margin: 0 0 12px; }
+    .qa-question-text, .qa-answer-text, .suggestion-description { color: #344B58; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .qa-question-details, .suggestion-details { color: #71818A; font-size: 13px; line-height: 1.8; margin-top: 12px; }
     .qa-status { display: inline-block; border-radius: 20px; padding: 6px 11px; background: #E5EFE1; font-size: 12px; font-weight: bold; }
     .qa-answer-label { display: block; margin: 18px 0 8px; font-weight: bold; font-size: 14px; }
     .qa-answer-input { display: block; width: 100%; min-height: 105px; resize: vertical; padding: 12px; border: 1px solid #BACFC1; border-radius: 8px; color: #244D68; background: #fff; }
-    .qa-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
-    .qa-actions button { border: 0; border-radius: 8px; padding: 11px 14px; color: white; background: #377C36; }
-    .qa-actions .reject { background: #A43F3F; }
+    .qa-actions, .suggestion-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
+    .qa-actions button, .suggestion-actions button { border: 0; border-radius: 8px; padding: 11px 14px; color: white; background: #377C36; }
+    .qa-actions .reject, .suggestion-actions .reject { background: #A43F3F; }
     .qa-actions .withdraw { background: #9B661C; }
     .qa-actions .republish { background: #244D68; }
-    .qa-empty { padding: 25px; text-align: center; color: #62727B; background: #F0F7ED; border-radius: 10px; }
-    .qa-message { margin: 15px 0; padding: 12px 15px; border-radius: 8px; background: #E5EFE1; color: #244D68; }
-    .qa-message.error { background: #FBEAEA; color: #922E2E; }
+    .qa-empty, .suggestions-empty { padding: 25px; text-align: center; color: #62727B; background: #F0F7ED; border-radius: 10px; }
+    .qa-message, .suggestions-message { margin: 15px 0; padding: 12px 15px; border-radius: 8px; background: #E5EFE1; color: #244D68; }
+    .qa-message.error, .suggestions-message.error { background: #FBEAEA; color: #922E2E; }
+    .suggestion-actions select { padding: 10px; border: 1px solid #BACFC1; border-radius: 8px; background: white; color: #244D68; max-width: 100%; }
+    .suggestions-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
+    .suggestions-toolbar button { background: #244D68; color: white; border: 0; padding: 10px 14px; border-radius: 8px; }
+    .suggestion-votes { font-weight: bold; color: #377C36; }
     .logout { margin-top: 35px; background: #244D68; color: white; border: 0; padding: 13px 25px; border-radius: 9px; }
     .status { margin-top: 25px; color: #64747D; font-size: 13px; }
     footer { text-align: center; padding: 30px; color: #74847B; font-size: 12px; }
@@ -78,7 +82,7 @@
       <section class="welcome"><h2>Bine ai venit!</h2><p>De aici poți administra principalele funcționalități ale platformei Consiliului Elevilor.</p></section>
       <div class="cards">
         <div class="card"><div class="card-icon">💬</div><h3>Q&A</h3><p>Gestionează întrebările și răspunsurile adresate Consiliului.</p><button id="openQAButton">Deschide Q&A</button></div>
-        <div class="card"><div class="card-icon">💡</div><h3>Sugestii</h3><p>Consultă propunerile elevilor și gestionează sugestiile.</p><button disabled>În curând</button></div>
+        <div class="card"><div class="card-icon">💡</div><h3>Sugestii</h3><p>Consultă propunerile elevilor și gestionează sugestiile.</p><button id="openSuggestionsButton">Deschide Sugestii</button></div>
         <div class="card"><div class="card-icon">📅</div><h3>Calendar</h3><p>Adaugă, modifică și organizează evenimentele CȘE.</p><button disabled>În curând</button></div>
         <div class="card" id="adminCard"><div class="card-icon">👥</div><h3>Administratori</h3><p>Gestionează conturile care au acces la panoul administrativ.</p><button disabled>În curând</button></div>
       </div>
@@ -100,8 +104,34 @@
           </div>
         </div>
       </section>
+      <section id="suggestionsSection">
+        <div class="card">
+          <div class="suggestions-header"><h2>💡 Administrare Sugestii</h2><button id="closeSuggestionsButton" class="secondary-button">Închide</button></div>
+          <p>Consultă propunerile, voturile și stadiul proiectelor elevilor.</p>
+          <div id="suggestionsContent">
+            <div id="suggestionsStats" class="suggestions-stats"></div>
+            <div id="suggestionsFilters" class="suggestions-filters">
+              <button class="active" data-filter="all">Toate</button>
+              <button data-filter="pending">În așteptare</button>
+              <button data-filter="approved">Aprobate</button>
+              <button data-filter="rejected">Respinse</button>
+            </div>
+            <div class="suggestions-toolbar">
+              <label for="suggestionsSort">Ordonare:</label>
+              <select id="suggestionsSort">
+                <option value="newest">Cele mai recente</option>
+                <option value="total">Cele mai votate (total)</option>
+                <option value="monthly">Cele mai votate (luna aceasta)</option>
+              </select>
+              <button id="refreshSuggestionsButton" type="button">Reîncarcă</button>
+            </div>
+            <div id="suggestionsMessage" role="status" aria-live="polite"></div>
+            <div id="suggestionsList">Apasă „Deschide Sugestii” pentru a încărca propunerile.</div>
+          </div>
+        </div>
+      </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.3</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.4</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -134,6 +164,13 @@
     let qaLoaded = false;
     let confirmCallback = null;
     let adminNames = new Map();
+    let suggestions = [];
+    let suggestionRankings = new Map();
+    let suggestionsFilter = "all";
+    let suggestionsSort = "newest";
+    let suggestionsBusy = false;
+    let suggestionsLoaded = false;
+    let rankingsAvailable = false;
 
     const statusNames = {
       pending: "În așteptare", published: "Publicată",
@@ -369,6 +406,185 @@
       }
     }
 
+
+    // MODUL SUGESTII — nu modifică tabelul suggestion_votes.
+    const approvalLabels = { pending: "În așteptare", approved: "Aprobată", rejected: "Respinsă" };
+    const progressLabels = { in_analysis: "În analiză", in_implementation: "În implementare", implemented: "Implementată" };
+
+    function showSuggestionsMessage(message, isError = false) {
+      const target = $("suggestionsMessage");
+      target.textContent = message;
+      target.className = message ? `suggestions-message${isError ? " error" : ""}` : "";
+    }
+
+    async function loadSuggestions() {
+      if (suggestionsBusy) return;
+      suggestionsBusy = true;
+      $("suggestionsList").textContent = "Se încarcă sugestiile...";
+      showSuggestionsMessage("");
+      try {
+        // Nu citim user_id: numele autorilor nu sunt necesare pentru administrare.
+        const { data, error } = await supabase.from("suggestions")
+          .select("id,title,description,category,status,approval_status,progress_status,is_anonymous,created_at,updated_at")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        suggestions = data || [];
+        suggestionRankings = new Map();
+        rankingsAvailable = false;
+        // View-ul este opțional: lista și administrarea rămân disponibile dacă citirea lui e restricționată.
+        const { data: rankings, error: rankingsError } = await supabase.from("suggestion_rankings")
+          .select("id,total_votes,monthly_votes");
+        if (!rankingsError) {
+          rankingsAvailable = true;
+          suggestionRankings = new Map((rankings || []).map(r => [r.id, r]));
+        }
+        suggestionsLoaded = true;
+        renderSuggestions();
+        if (rankingsError) showSuggestionsMessage("Sugestiile s-au încărcat, dar clasamentul voturilor nu este disponibil pentru acest cont.", true);
+      } catch (error) {
+        console.error("Eroare la încărcarea sugestiilor:", error);
+        $("suggestionsList").replaceChildren();
+        showSuggestionsMessage("Nu s-au putut încărca sugestiile. Verifică drepturile de citire în Supabase.", true);
+      } finally {
+        suggestionsBusy = false;
+      }
+    }
+
+    function renderSuggestions() {
+      const stats = $("suggestionsStats");
+      stats.replaceChildren();
+      const groups = [
+        ["Toate", suggestions.length],
+        ["În așteptare", suggestions.filter(s => s.approval_status === "pending").length],
+        ["Aprobate", suggestions.filter(s => s.approval_status === "approved").length],
+        ["Respinse", suggestions.filter(s => s.approval_status === "rejected").length],
+        ["Voturi totale*", rankingsAvailable ? suggestions.reduce((sum, s) => sum + Number(suggestionRankings.get(s.id)?.total_votes || 0), 0) : "—"]
+      ];
+      for (const [label, count] of groups) {
+        const box = makeElement("div", undefined, "suggestions-stat");
+        box.append(makeElement("span", label), makeElement("strong", count));
+        stats.append(box);
+      }
+      const container = $("suggestionsList");
+      container.replaceChildren();
+      let visible = suggestionsFilter === "all" ? [...suggestions] : suggestions.filter(s => s.approval_status === suggestionsFilter);
+      if (suggestionsSort === "total" || suggestionsSort === "monthly") {
+        const field = suggestionsSort === "total" ? "total_votes" : "monthly_votes";
+        if (rankingsAvailable) visible.sort((a, b) => Number(suggestionRankings.get(b.id)?.[field] || 0) - Number(suggestionRankings.get(a.id)?.[field] || 0));
+      } else {
+        visible.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+      if (!visible.length) {
+        container.append(makeElement("div", "Nu există sugestii în această categorie.", "suggestions-empty"));
+        return;
+      }
+      for (const suggestion of visible) container.append(createSuggestionCard(suggestion));
+    }
+
+    function createSuggestionCard(s) {
+      const card = makeElement("article", undefined, "suggestion-card");
+      card.append(makeElement("h3", s.title || "Sugestie fără titlu"));
+      card.append(makeElement("p", s.description || "Fără descriere", "suggestion-description"));
+      const details = makeElement("div", undefined, "suggestion-details");
+      details.append(makeElement("div", `Categorie: ${s.category || "—"}`));
+      details.append(makeElement("div", `Aprobare: ${approvalLabels[s.approval_status] || s.approval_status || "—"}`));
+      details.append(makeElement("div", `Status public: ${s.status || "—"}`));
+      details.append(makeElement("div", `Progres: ${progressLabels[s.progress_status] || s.progress_status || "—"}`));
+      details.append(makeElement("div", `Trimisă la: ${formatDate(s.created_at)}`));
+      details.append(makeElement("div", `Actualizată la: ${formatDate(s.updated_at)}`));
+      if (s.is_anonymous) details.append(makeElement("div", "Sugestie anonimă"));
+      const rank = suggestionRankings.get(s.id);
+      if (rank) details.append(makeElement("div", `Voturi: ${rank.total_votes} total · ${rank.monthly_votes} luna aceasta`, "suggestion-votes"));
+      card.append(details);
+      const actions = makeElement("div", undefined, "suggestion-actions");
+      if (s.approval_status === "pending") {
+        actions.append(actionButton("Aprobă", "", () => requestSuggestionAction("approve", s)));
+        actions.append(actionButton("Respinge", "reject", () => requestSuggestionAction("reject", s)));
+      }
+      if (s.approval_status === "approved") {
+        const select = makeElement("select");
+        select.setAttribute("aria-label", `Progres pentru ${s.title || "sugestie"}`);
+        for (const [value, label] of Object.entries(progressLabels)) {
+          const option = makeElement("option", label);
+          option.value = value;
+          select.append(option);
+        }
+        select.value = s.progress_status || "in_analysis";
+        const save = actionButton("Salvează progresul", "", () => requestSuggestionAction("progress", s, select.value));
+        actions.append(select, save);
+      }
+      if (actions.childElementCount) card.append(actions);
+      return card;
+    }
+
+    function requestSuggestionAction(action, s, newProgress = null) {
+      if (suggestionsBusy || !currentUser) return;
+      const descriptions = {
+        approve: ["Aprobă sugestia", "Sugestia va deveni aprobată și publicată."],
+        reject: ["Respinge sugestia", "Sugestia va fi marcată ca respinsă."],
+        progress: ["Actualizează progresul", `Noul progres va fi: ${progressLabels[newProgress] || "necunoscut"}.`]
+      };
+      if (!descriptions[action] || (action === "progress" && !Object.hasOwn(progressLabels, newProgress))) return;
+      $("confirmTitle").textContent = descriptions[action][0];
+      $("confirmDescription").textContent = descriptions[action][1];
+      confirmCallback = () => executeSuggestionAction(action, s, newProgress);
+      confirmDialog.showModal();
+    }
+
+    async function executeSuggestionAction(action, s, newProgress) {
+      if (suggestionsBusy || !currentUser) return;
+      suggestionsBusy = true;
+      showSuggestionsMessage("");
+      const changes = { updated_at: new Date().toISOString() };
+      if (action === "approve") Object.assign(changes, { approval_status: "approved", status: "published" });
+      else if (action === "reject") Object.assign(changes, { approval_status: "rejected", status: "rejected" });
+      else if (action === "progress") changes.progress_status = newProgress;
+      else { suggestionsBusy = false; return; }
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+        if (userError || !user || user.id !== currentUser.id || roleError || !["admin", "super_admin"].includes(role)) {
+          throw new Error("Sesiunea sau drepturile de acces nu mai sunt valide.");
+        }
+        let query = supabase.from("suggestions").update(changes).eq("id", s.id)
+          .eq("approval_status", action === "progress" ? "approved" : "pending");
+        if (action === "progress") query = query.eq("progress_status", s.progress_status);
+        const { data, error } = await query.select("id");
+        if (error) throw error;
+        if (!data || data.length !== 1) throw new Error("Sugestia a fost modificată între timp sau nu ai permisiunea necesară.");
+        suggestionsBusy = false;
+        await loadSuggestions();
+        showSuggestionsMessage("Modificarea a fost salvată cu succes.");
+      } catch (error) {
+        console.error("Eroare la modificarea sugestiei:", error);
+        showSuggestionsMessage(error.message || "Modificarea nu a reușit.", true);
+        suggestionsBusy = false;
+      }
+    }
+
+    $("suggestionsFilters").querySelectorAll("button").forEach(button => {
+      button.addEventListener("click", () => {
+        suggestionsFilter = button.dataset.filter;
+        $("suggestionsFilters").querySelectorAll("button").forEach(b => b.classList.toggle("active", b === button));
+        if (suggestionsLoaded) renderSuggestions();
+      });
+    });
+    $("suggestionsSort").addEventListener("change", event => {
+      suggestionsSort = event.target.value;
+      if (suggestionsLoaded) renderSuggestions();
+    });
+    $("refreshSuggestionsButton").addEventListener("click", loadSuggestions);
+    $("openSuggestionsButton").addEventListener("click", async () => {
+      qaSection.style.display = "none";
+      $("suggestionsSection").style.display = "block";
+      $("suggestionsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+      await loadSuggestions();
+    });
+    $("closeSuggestionsButton").addEventListener("click", () => {
+      $("suggestionsSection").style.display = "none";
+      $("openSuggestionsButton").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
     $("qaFilters").querySelectorAll("button").forEach(button => {
       button.addEventListener("click", () => {
         qaFilter = button.dataset.filter;
@@ -378,6 +594,7 @@
     });
 
     $("openQAButton").addEventListener("click", async () => {
+      $("suggestionsSection").style.display = "none";
       qaSection.style.display = "block";
       qaSection.scrollIntoView({ behavior: "smooth", block: "start" });
       await loadQAQuestions();
