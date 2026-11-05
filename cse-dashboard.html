@@ -3,8 +3,7 @@
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CȘE Dashboard</title>
 
   <style>
@@ -138,7 +137,7 @@
       cursor: not-allowed;
     }
 
-    /* SECȚIUNEA Q&A */
+    /* Q&A */
 
     #qaSection {
       display: none;
@@ -173,12 +172,110 @@
 
     #qaContent {
       margin-top: 25px;
-      padding: 20px;
+    }
+
+    /* STATISTICI Q&A */
+
+    .qa-stats {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 25px;
+    }
+
+    .qa-stat {
       background: #F0F7ED;
-      border: 1px dashed #9ACD79;
-      border-radius: 10px;
+      border: 1px solid #DDE8D9;
+      border-radius: 12px;
+      padding: 17px;
+    }
+
+    .qa-stat span {
+      display: block;
       color: #62727B;
-      line-height: 1.6;
+      font-size: 13px;
+      margin-bottom: 9px;
+    }
+
+    .qa-stat strong {
+      font-size: 27px;
+      color: #244D68;
+    }
+
+    /* FILTRE Q&A */
+
+    .qa-filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+    }
+
+    .qa-filters button {
+      background: #E5EFE1;
+      color: #244D68;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 15px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .qa-filters button:hover {
+      background: #D3E6CC;
+    }
+
+    .qa-filters button.active {
+      background: #377C36;
+      color: white;
+    }
+
+    /* ÎNTREBĂRI */
+
+    .qa-question-card {
+      background: white;
+      border: 1px solid #DDE8D9;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .qa-question-card h3 {
+      margin: 0 0 12px;
+      color: #244D68;
+    }
+
+    .qa-question-text {
+      color: #344B58;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .qa-question-details {
+      color: #71818A;
+      font-size: 13px;
+      line-height: 1.7;
+      margin-top: 15px;
+    }
+
+    .qa-status {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 6px 11px;
+      background: #E5EFE1;
+      color: #244D68;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .qa-empty {
+      padding: 25px;
+      text-align: center;
+      color: #62727B;
+      background: #F0F7ED;
+      border-radius: 10px;
     }
 
     .logout {
@@ -254,9 +351,9 @@
       <section class="welcome">
         <h2>Bine ai venit!</h2>
         <p>
-          De aici vei putea administra
-          principalele funcționalități ale
-          platformei Consiliului Elevilor.
+          De aici poți administra principalele
+          funcționalități ale platformei
+          Consiliului Elevilor.
         </p>
       </section>
 
@@ -320,7 +417,7 @@
 
       </div>
 
-      <!-- MODULUL Q&A -->
+      <!-- MODUL Q&A -->
 
       <section id="qaSection">
 
@@ -338,12 +435,40 @@
           </div>
 
           <p>
-            Gestionează întrebările adresate
+            Consultă întrebările adresate
             Consiliului Școlar al Elevilor.
           </p>
 
           <div id="qaContent">
-            Modulul Q&A va fi încărcat aici.
+
+            <div id="qaStats" class="qa-stats"></div>
+
+            <div id="qaFilters" class="qa-filters">
+              <button class="active" data-filter="all">
+                Toate
+              </button>
+
+              <button data-filter="pending">
+                În așteptare
+              </button>
+
+              <button data-filter="published">
+                Publicate
+              </button>
+
+              <button data-filter="rejected">
+                Respinse
+              </button>
+
+              <button data-filter="withdrawn">
+                Retrase
+              </button>
+            </div>
+
+            <div id="qaQuestions">
+              Apasă „Deschide Q&A” pentru a încărca întrebările.
+            </div>
+
           </div>
 
         </div>
@@ -357,7 +482,7 @@
       </button>
 
       <p class="status">
-        Dashboard CȘE – Versiunea 1.1
+        Dashboard CȘE – Versiunea 1.2
       </p>
 
     </main>
@@ -412,13 +537,16 @@
     const LOGIN_URL =
       "./cse-dashboard-login.html";
 
+    let qaQuestions = [];
+    let qaFilter = "all";
+
+    // VERIFICAREA ACCESULUI
+
     function denyAccess(message) {
       dashboard.style.display = "none";
       loading.style.display = "flex";
       loadingText.textContent = message;
     }
-
-    // VERIFICAREA ACCESULUI
 
     async function checkAccess() {
 
@@ -478,17 +606,227 @@
       }
     }
 
+    // ÎNCĂRCAREA ÎNTREBĂRILOR
+
+    async function loadQAQuestions() {
+
+      const container =
+        document.getElementById("qaQuestions");
+
+      container.textContent =
+        "Se încarcă întrebările...";
+
+      const { data, error } = await supabase
+        .from("questions")
+        .select(
+          "id, question_text, category, status, visibility, created_at"
+        )
+        .order("created_at", {
+          ascending: false
+        });
+
+      if (error) {
+        container.textContent =
+          "Eroare la încărcare: " + error.message;
+        return;
+      }
+
+      qaQuestions = data || [];
+
+      renderQA();
+    }
+
+    // AFIȘAREA STATISTICILOR ȘI ÎNTREBĂRILOR
+
+    function renderQA() {
+
+      const stats =
+        document.getElementById("qaStats");
+
+      const container =
+        document.getElementById("qaQuestions");
+
+      const statuses = [
+        ["Toate", qaQuestions.length],
+        [
+          "În așteptare",
+          qaQuestions.filter(
+            q => q.status === "pending"
+          ).length
+        ],
+        [
+          "Publicate",
+          qaQuestions.filter(
+            q => q.status === "published"
+          ).length
+        ],
+        [
+          "Respinse",
+          qaQuestions.filter(
+            q => q.status === "rejected"
+          ).length
+        ],
+        [
+          "Retrase",
+          qaQuestions.filter(
+            q => q.status === "withdrawn"
+          ).length
+        ]
+      ];
+
+      stats.replaceChildren();
+
+      statuses.forEach(([label, count]) => {
+
+        const item =
+          document.createElement("div");
+
+        item.className = "qa-stat";
+
+        const labelElement =
+          document.createElement("span");
+
+        labelElement.textContent = label;
+
+        const countElement =
+          document.createElement("strong");
+
+        countElement.textContent = count;
+
+        item.append(
+          labelElement,
+          countElement
+        );
+
+        stats.appendChild(item);
+      });
+
+      const filtered = qaFilter === "all"
+        ? qaQuestions
+        : qaQuestions.filter(
+            q => q.status === qaFilter
+          );
+
+      container.replaceChildren();
+
+      if (filtered.length === 0) {
+
+        const empty =
+          document.createElement("div");
+
+        empty.className = "qa-empty";
+
+        empty.textContent =
+          "Nu există întrebări în această categorie.";
+
+        container.appendChild(empty);
+        return;
+      }
+
+      filtered.forEach(question => {
+
+        const card =
+          document.createElement("div");
+
+        card.className = "qa-question-card";
+
+        const title =
+          document.createElement("h3");
+
+        title.textContent =
+          question.category || "Fără categorie";
+
+        const text =
+          document.createElement("p");
+
+        text.className = "qa-question-text";
+        text.textContent = question.question_text;
+
+        const status =
+          document.createElement("span");
+
+        status.className = "qa-status";
+
+        const statusNames = {
+          pending: "În așteptare",
+          published: "Publicată",
+          rejected: "Respinsă",
+          withdrawn: "Retrasă"
+        };
+
+        status.textContent =
+          statusNames[question.status] ||
+          question.status;
+
+        const details =
+          document.createElement("p");
+
+        details.className =
+          "qa-question-details";
+
+        const date = question.created_at
+          ? new Date(
+              question.created_at
+            ).toLocaleString("ro-RO")
+          : "Necunoscută";
+
+        details.textContent =
+          "Vizibilitate: " +
+          (
+            question.visibility === "private"
+              ? "Privată"
+              : "Publică"
+          ) +
+          " · Trimisă la: " +
+          date;
+
+        card.append(
+          title,
+          text,
+          status,
+          details
+        );
+
+        container.appendChild(card);
+      });
+    }
+
+    // FILTRE
+
+    document
+      .querySelectorAll("#qaFilters button")
+      .forEach(button => {
+
+        button.addEventListener("click", () => {
+
+          document
+            .querySelectorAll("#qaFilters button")
+            .forEach(btn => {
+              btn.classList.remove("active");
+            });
+
+          button.classList.add("active");
+
+          qaFilter = button.dataset.filter;
+
+          renderQA();
+        });
+      });
+
     // DESCHIDERE Q&A
 
     openQAButton.addEventListener(
       "click",
-      () => {
+      async () => {
+
         qaSection.style.display = "block";
 
         qaSection.scrollIntoView({
           behavior: "smooth",
           block: "start"
         });
+
+        await loadQAQuestions();
       }
     );
 
@@ -497,6 +835,7 @@
     closeQAButton.addEventListener(
       "click",
       () => {
+
         qaSection.style.display = "none";
 
         openQAButton.scrollIntoView({
@@ -511,9 +850,12 @@
     document
       .getElementById("logoutButton")
       .addEventListener("click", async () => {
+
         try {
           await supabase.auth.signOut();
+
           window.location.replace(LOGIN_URL);
+
         } catch (error) {
           alert("Deconectarea nu a reușit.");
         }
