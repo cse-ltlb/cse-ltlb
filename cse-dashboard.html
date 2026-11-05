@@ -1,1 +1,386 @@
 
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+  <title>CȘE Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #F0F7ED;
+      color: #244D68;
+    }
+
+    #loading {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 25px;
+      text-align: center;
+    }
+
+    #dashboard {
+      display: none;
+    }
+
+    header {
+      background: #244D68;
+      color: white;
+      padding: 22px;
+    }
+
+    .header-content {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    header p {
+      margin: 7px 0 0;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .role-badge {
+      background: #9ACD79;
+      color: #244D68;
+      border-radius: 30px;
+      padding: 9px 15px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .welcome {
+      margin-bottom: 30px;
+    }
+
+    .welcome h2 {
+      margin-bottom: 8px;
+    }
+
+    .welcome p {
+      color: #62727B;
+      line-height: 1.6;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      border: 1px solid #DDE8D9;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+    }
+
+    .card-icon {
+      font-size: 30px;
+      margin-bottom: 15px;
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+    }
+
+    .card p {
+      color: #64747D;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 45px;
+    }
+
+    .card button {
+      background: #377C36;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .card button:hover {
+      background: #2C632B;
+    }
+
+    .card button:disabled {
+      background: #9AA8A0;
+      cursor: not-allowed;
+    }
+
+    .logout {
+      margin-top: 35px;
+      background: #244D68;
+      color: white;
+      border: none;
+      padding: 13px 25px;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .status {
+      margin-top: 25px;
+      color: #64747D;
+      font-size: 13px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: #74847B;
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 21px;
+      }
+
+      main {
+        margin-top: 25px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading">
+    <p id="loadingText">
+      Se verifică accesul administrativ...
+    </p>
+  </div>
+
+  <div id="dashboard">
+
+    <header>
+      <div class="header-content">
+        <div>
+          <h1>🛡️ CȘE Dashboard</h1>
+          <p>
+            Liceul Teoretic „Lucian Blaga” Reghin
+          </p>
+        </div>
+
+        <span class="role-badge" id="roleBadge">
+          Administrator
+        </span>
+      </div>
+    </header>
+
+    <main>
+
+      <section class="welcome">
+        <h2>Bine ai venit!</h2>
+        <p>
+          De aici vei putea administra
+          principalele funcționalități ale
+          platformei Consiliului Elevilor.
+        </p>
+      </section>
+
+      <div class="cards">
+
+        <div class="card">
+          <div class="card-icon">💬</div>
+          <h3>Q&A</h3>
+          <p>
+            Gestionează întrebările și
+            răspunsurile adresate Consiliului.
+          </p>
+          <button disabled>
+            În curând
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">💡</div>
+          <h3>Sugestii</h3>
+          <p>
+            Consultă propunerile elevilor
+            și gestionează sugestiile.
+          </p>
+          <button disabled>
+            În curând
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-icon">📅</div>
+          <h3>Calendar</h3>
+          <p>
+            Adaugă, modifică și organizează
+            evenimentele CȘE.
+          </p>
+          <button disabled>
+            În curând
+          </button>
+        </div>
+
+        <div class="card" id="adminCard">
+          <div class="card-icon">👥</div>
+          <h3>Administratori</h3>
+          <p>
+            Gestionează conturile care au
+            acces la panoul administrativ.
+          </p>
+          <button disabled>
+            În curând
+          </button>
+        </div>
+
+      </div>
+
+      <button class="logout" id="logoutButton">
+        Deconectare
+      </button>
+
+      <p class="status">
+        Dashboard CȘE – Versiunea 1.0
+      </p>
+
+    </main>
+
+    <footer>
+      © Consiliul Școlar al Elevilor
+      – Liceul Teoretic „Lucian Blaga” Reghin
+    </footer>
+
+  </div>
+
+  <script type="module">
+
+    import { createClient } from
+      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // Introdu aceleași date ca în pagina de login.
+    const SUPABASE_URL = "SUPABASE_PROJECT_URL";
+    const SUPABASE_KEY = "SUPABASE_PUBLISHABLE_KEY";
+
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    const loading = document.getElementById("loading");
+    const loadingText =
+      document.getElementById("loadingText");
+
+    const dashboard =
+      document.getElementById("dashboard");
+
+    const roleBadge =
+      document.getElementById("roleBadge");
+
+    const adminCard =
+      document.getElementById("adminCard");
+
+    const LOGIN_URL =
+      "./cse-dashboard-login.html";
+
+    function denyAccess(message) {
+      dashboard.style.display = "none";
+      loading.style.display = "flex";
+      loadingText.textContent = message;
+    }
+
+    async function checkAccess() {
+
+      try {
+        const {
+          data: { user },
+          error: userError
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          window.location.replace(LOGIN_URL);
+          return;
+        }
+
+        const { data: role, error: roleError } =
+          await supabase.rpc("cse_dashboard_role");
+
+        if (roleError) {
+          denyAccess(
+            "Nu s-au putut verifica permisiunile."
+          );
+          return;
+        }
+
+        if (
+          role !== "super_admin" &&
+          role !== "admin"
+        ) {
+          denyAccess(
+            "Acest cont nu are acces la dashboard."
+          );
+          return;
+        }
+
+        roleBadge.textContent =
+          role === "super_admin"
+            ? "Super Admin"
+            : "Administrator";
+
+        if (role !== "super_admin") {
+          adminCard.style.display = "none";
+        }
+
+        loading.style.display = "none";
+        dashboard.style.display = "block";
+
+      } catch (error) {
+        denyAccess(
+          "A apărut o eroare la verificarea accesului."
+        );
+      }
+    }
+
+    document
+      .getElementById("logoutButton")
+      .addEventListener("click", async () => {
+        try {
+          await supabase.auth.signOut();
+          window.location.replace(LOGIN_URL);
+        } catch (error) {
+          alert("Deconectarea nu a reușit.");
+        }
+      });
+
+    checkAccess();
+
+  </script>
+
+</body>
+</html>
+
