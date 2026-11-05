@@ -1,871 +1,412 @@
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CȘE Dashboard</title>
-
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #F0F7ED;
-      color: #244D68;
-    }
-
-    #loading {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 25px;
-      text-align: center;
-    }
-
-    #dashboard {
-      display: none;
-    }
-
-    header {
-      background: #244D68;
-      color: white;
-      padding: 22px;
-    }
-
-    .header-content {
-      max-width: 1100px;
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 25px;
-    }
-
-    header p {
-      margin: 7px 0 0;
-      font-size: 13px;
-      opacity: 0.85;
-    }
-
-    .role-badge {
-      background: #9ACD79;
-      color: #244D68;
-      border-radius: 30px;
-      padding: 9px 15px;
-      font-size: 13px;
-      font-weight: bold;
-    }
-
-    main {
-      max-width: 1100px;
-      margin: 35px auto;
-      padding: 0 20px;
-    }
-
-    .welcome {
-      margin-bottom: 30px;
-    }
-
-    .welcome h2 {
-      margin-bottom: 8px;
-    }
-
-    .welcome p {
-      color: #62727B;
-      line-height: 1.6;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      border: 1px solid #DDE8D9;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.04);
-    }
-
-    .card-icon {
-      font-size: 30px;
-      margin-bottom: 15px;
-    }
-
-    .card h3 {
-      margin: 0 0 10px;
-    }
-
-    .card p {
-      color: #64747D;
-      font-size: 14px;
-      line-height: 1.6;
-      min-height: 45px;
-    }
-
-    .card button {
-      background: #377C36;
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    .card button:hover {
-      background: #2C632B;
-    }
-
-    .card button:disabled {
-      background: #9AA8A0;
-      cursor: not-allowed;
-    }
-
-    /* Q&A */
-
-    #qaSection {
-      display: none;
-      margin-top: 35px;
-    }
-
-    .qa-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .qa-header h2 {
-      margin: 0;
-    }
-
-    .qa-close-button {
-      background: #244D68;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 11px 17px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .qa-close-button:hover {
-      background: #17364B;
-    }
-
-    #qaContent {
-      margin-top: 25px;
-    }
-
-    /* STATISTICI Q&A */
-
-    .qa-stats {
-      display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 25px;
-    }
-
-    .qa-stat {
-      background: #F0F7ED;
-      border: 1px solid #DDE8D9;
-      border-radius: 12px;
-      padding: 17px;
-    }
-
-    .qa-stat span {
-      display: block;
-      color: #62727B;
-      font-size: 13px;
-      margin-bottom: 9px;
-    }
-
-    .qa-stat strong {
-      font-size: 27px;
-      color: #244D68;
-    }
-
-    /* FILTRE Q&A */
-
-    .qa-filters {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 25px;
-    }
-
-    .qa-filters button {
-      background: #E5EFE1;
-      color: #244D68;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 15px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .qa-filters button:hover {
-      background: #D3E6CC;
-    }
-
-    .qa-filters button.active {
-      background: #377C36;
-      color: white;
-    }
-
-    /* ÎNTREBĂRI */
-
-    .qa-question-card {
-      background: white;
-      border: 1px solid #DDE8D9;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 15px;
-    }
-
-    .qa-question-card h3 {
-      margin: 0 0 12px;
-      color: #244D68;
-    }
-
-    .qa-question-text {
-      color: #344B58;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-
-    .qa-question-details {
-      color: #71818A;
-      font-size: 13px;
-      line-height: 1.7;
-      margin-top: 15px;
-    }
-
-    .qa-status {
-      display: inline-block;
-      border-radius: 20px;
-      padding: 6px 11px;
-      background: #E5EFE1;
-      color: #244D68;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .qa-empty {
-      padding: 25px;
-      text-align: center;
-      color: #62727B;
-      background: #F0F7ED;
-      border-radius: 10px;
-    }
-
-    .logout {
-      margin-top: 35px;
-      background: #244D68;
-      color: white;
-      border: none;
-      padding: 13px 25px;
-      border-radius: 9px;
-      cursor: pointer;
-    }
-
-    .status {
-      margin-top: 25px;
-      color: #64747D;
-      font-size: 13px;
-    }
-
-    footer {
-      text-align: center;
-      padding: 30px;
-      color: #74847B;
-      font-size: 12px;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 21px;
-      }
-
-      main {
-        margin-top: 25px;
-      }
-
-      .card {
-        padding: 20px;
-      }
-
-      .qa-header {
-        align-items: flex-start;
-      }
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #F0F7ED; color: #244D68; }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+    #loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 25px; text-align: center; }
+    #dashboard { display: none; }
+    header { background: #244D68; color: white; padding: 22px; }
+    .header-content { max-width: 1100px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
+    header h1 { margin: 0; font-size: 25px; }
+    header p { margin: 7px 0 0; font-size: 13px; opacity: .85; }
+    .role-badge { background: #9ACD79; color: #244D68; border-radius: 30px; padding: 9px 15px; font-size: 13px; font-weight: bold; }
+    main { max-width: 1100px; margin: 35px auto; padding: 0 20px; }
+    .welcome { margin-bottom: 30px; }
+    .welcome h2 { margin-bottom: 8px; }
+    .welcome p, .card > p { color: #62727B; line-height: 1.6; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+    .card { background: white; border-radius: 15px; padding: 25px; border: 1px solid #DDE8D9; box-shadow: 0 5px 20px rgba(0,0,0,.04); }
+    .card-icon { font-size: 30px; margin-bottom: 15px; }
+    .card h3 { margin: 0 0 10px; }
+    .cards .card p { font-size: 14px; min-height: 45px; }
+    .primary-button, .cards button { background: #377C36; color: white; border: 0; padding: 12px 18px; border-radius: 8px; font-size: 14px; }
+    .cards button { width: 100%; }
+    .primary-button:hover, .cards button:not(:disabled):hover { background: #2C632B; }
+    .cards button:disabled { background: #9AA8A0; }
+    #qaSection { display: none; margin-top: 35px; }
+    .qa-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .qa-header h2 { margin: 0; }
+    .secondary-button { background: #244D68; color: white; border: 0; border-radius: 8px; padding: 11px 17px; }
+    .secondary-button:hover { background: #17364B; }
+    #qaContent { margin-top: 25px; }
+    .qa-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 25px; }
+    .qa-stat { background: #F0F7ED; border: 1px solid #DDE8D9; border-radius: 12px; padding: 17px; }
+    .qa-stat span { display: block; color: #62727B; font-size: 13px; margin-bottom: 9px; }
+    .qa-stat strong { font-size: 27px; }
+    .qa-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
+    .qa-filters button { background: #E5EFE1; color: #244D68; border: 0; border-radius: 8px; padding: 10px 15px; font-size: 13px; }
+    .qa-filters button.active { background: #377C36; color: white; }
+    .qa-question-card { background: white; border: 1px solid #DDE8D9; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+    .qa-question-card h3 { margin: 0 0 12px; }
+    .qa-question-text, .qa-answer-text { color: #344B58; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .qa-question-details { color: #71818A; font-size: 13px; line-height: 1.8; margin-top: 12px; }
+    .qa-status { display: inline-block; border-radius: 20px; padding: 6px 11px; background: #E5EFE1; font-size: 12px; font-weight: bold; }
+    .qa-answer-label { display: block; margin: 18px 0 8px; font-weight: bold; font-size: 14px; }
+    .qa-answer-input { display: block; width: 100%; min-height: 105px; resize: vertical; padding: 12px; border: 1px solid #BACFC1; border-radius: 8px; color: #244D68; background: #fff; }
+    .qa-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
+    .qa-actions button { border: 0; border-radius: 8px; padding: 11px 14px; color: white; background: #377C36; }
+    .qa-actions .reject { background: #A43F3F; }
+    .qa-actions .withdraw { background: #9B661C; }
+    .qa-actions .republish { background: #244D68; }
+    .qa-empty { padding: 25px; text-align: center; color: #62727B; background: #F0F7ED; border-radius: 10px; }
+    .qa-message { margin: 15px 0; padding: 12px 15px; border-radius: 8px; background: #E5EFE1; color: #244D68; }
+    .qa-message.error { background: #FBEAEA; color: #922E2E; }
+    .logout { margin-top: 35px; background: #244D68; color: white; border: 0; padding: 13px 25px; border-radius: 9px; }
+    .status { margin-top: 25px; color: #64747D; font-size: 13px; }
+    footer { text-align: center; padding: 30px; color: #74847B; font-size: 12px; }
+    dialog { width: min(460px, calc(100% - 30px)); border: 0; border-radius: 15px; padding: 25px; box-shadow: 0 20px 80px #0003; color: #244D68; }
+    dialog::backdrop { background: #1026379c; }
+    .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+    @media (max-width: 600px) { header h1 { font-size: 21px; } main { margin-top: 25px; } .card { padding: 20px; } }
   </style>
 </head>
-
 <body>
-
-  <div id="loading">
-    <p id="loadingText">
-      Se verifică accesul administrativ...
-    </p>
-  </div>
-
+  <div id="loading"><p id="loadingText">Se verifică accesul administrativ...</p></div>
   <div id="dashboard">
-
-    <header>
-      <div class="header-content">
-        <div>
-          <h1>🛡️ CȘE Dashboard</h1>
-          <p>
-            Liceul Teoretic „Lucian Blaga” Reghin
-          </p>
-        </div>
-
-        <span class="role-badge" id="roleBadge">
-          Administrator
-        </span>
-      </div>
-    </header>
-
+    <header><div class="header-content">
+      <div><h1>🛡️ CȘE Dashboard</h1><p>Liceul Teoretic „Lucian Blaga” Reghin</p></div>
+      <span class="role-badge" id="roleBadge">Administrator</span>
+    </div></header>
     <main>
-
-      <section class="welcome">
-        <h2>Bine ai venit!</h2>
-        <p>
-          De aici poți administra principalele
-          funcționalități ale platformei
-          Consiliului Elevilor.
-        </p>
-      </section>
-
+      <section class="welcome"><h2>Bine ai venit!</h2><p>De aici poți administra principalele funcționalități ale platformei Consiliului Elevilor.</p></section>
       <div class="cards">
-
-        <!-- Q&A -->
-
-        <div class="card">
-          <div class="card-icon">💬</div>
-          <h3>Q&A</h3>
-          <p>
-            Gestionează întrebările și
-            răspunsurile adresate Consiliului.
-          </p>
-          <button id="openQAButton">
-            Deschide Q&A
-          </button>
-        </div>
-
-        <!-- SUGESTII -->
-
-        <div class="card">
-          <div class="card-icon">💡</div>
-          <h3>Sugestii</h3>
-          <p>
-            Consultă propunerile elevilor
-            și gestionează sugestiile.
-          </p>
-          <button disabled>
-            În curând
-          </button>
-        </div>
-
-        <!-- CALENDAR -->
-
-        <div class="card">
-          <div class="card-icon">📅</div>
-          <h3>Calendar</h3>
-          <p>
-            Adaugă, modifică și organizează
-            evenimentele CȘE.
-          </p>
-          <button disabled>
-            În curând
-          </button>
-        </div>
-
-        <!-- ADMINISTRATORI -->
-
-        <div class="card" id="adminCard">
-          <div class="card-icon">👥</div>
-          <h3>Administratori</h3>
-          <p>
-            Gestionează conturile care au
-            acces la panoul administrativ.
-          </p>
-          <button disabled>
-            În curând
-          </button>
-        </div>
-
+        <div class="card"><div class="card-icon">💬</div><h3>Q&A</h3><p>Gestionează întrebările și răspunsurile adresate Consiliului.</p><button id="openQAButton">Deschide Q&A</button></div>
+        <div class="card"><div class="card-icon">💡</div><h3>Sugestii</h3><p>Consultă propunerile elevilor și gestionează sugestiile.</p><button disabled>În curând</button></div>
+        <div class="card"><div class="card-icon">📅</div><h3>Calendar</h3><p>Adaugă, modifică și organizează evenimentele CȘE.</p><button disabled>În curând</button></div>
+        <div class="card" id="adminCard"><div class="card-icon">👥</div><h3>Administratori</h3><p>Gestionează conturile care au acces la panoul administrativ.</p><button disabled>În curând</button></div>
       </div>
-
-      <!-- MODUL Q&A -->
-
       <section id="qaSection">
-
         <div class="card">
-
-          <div class="qa-header">
-            <h2>💬 Administrare Q&A</h2>
-
-            <button
-              id="closeQAButton"
-              class="qa-close-button"
-            >
-              Închide
-            </button>
-          </div>
-
-          <p>
-            Consultă întrebările adresate
-            Consiliului Școlar al Elevilor.
-          </p>
-
+          <div class="qa-header"><h2>💬 Administrare Q&A</h2><button id="closeQAButton" class="secondary-button">Închide</button></div>
+          <p>Consultă întrebările și gestionează răspunsurile Consiliului Școlar al Elevilor.</p>
           <div id="qaContent">
-
             <div id="qaStats" class="qa-stats"></div>
-
             <div id="qaFilters" class="qa-filters">
-              <button class="active" data-filter="all">
-                Toate
-              </button>
-
-              <button data-filter="pending">
-                În așteptare
-              </button>
-
-              <button data-filter="published">
-                Publicate
-              </button>
-
-              <button data-filter="rejected">
-                Respinse
-              </button>
-
-              <button data-filter="withdrawn">
-                Retrase
-              </button>
+              <button class="active" data-filter="all">Toate</button>
+              <button data-filter="pending">În așteptare</button>
+              <button data-filter="published">Publicate</button>
+              <button data-filter="rejected">Respinse</button>
+              <button data-filter="withdrawn">Retrase</button>
             </div>
-
-            <div id="qaQuestions">
-              Apasă „Deschide Q&A” pentru a încărca întrebările.
-            </div>
-
+            <div id="qaMessage" role="status" aria-live="polite"></div>
+            <div id="qaQuestions">Apasă „Deschide Q&A” pentru a încărca întrebările.</div>
           </div>
-
         </div>
-
       </section>
-
-      <!-- DECONECTARE -->
-
-      <button class="logout" id="logoutButton">
-        Deconectare
-      </button>
-
-      <p class="status">
-        Dashboard CȘE – Versiunea 1.2
-      </p>
-
+      <button class="logout" id="logoutButton">Deconectare</button>
+      <p class="status">Dashboard CȘE – Versiunea 1.3</p>
     </main>
-
-    <footer>
-      © Consiliul Școlar al Elevilor
-      – Liceul Teoretic „Lucian Blaga” Reghin
-    </footer>
-
+    <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
-
+  <dialog id="confirmDialog" aria-labelledby="confirmTitle">
+    <h2 id="confirmTitle">Confirmă acțiunea</h2>
+    <p id="confirmDescription"></p>
+    <div class="dialog-actions">
+      <button type="button" class="secondary-button" id="cancelAction">Anulează</button>
+      <button type="button" class="primary-button" id="confirmAction">Confirmă</button>
+    </div>
+  </dialog>
   <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    import { createClient } from
-      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+    // Date publice de conectare, identice cu pagina de login.
+    const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const LOGIN_URL = "./cse-dashboard-login.html";
 
-    const SUPABASE_URL =
-      "https://ilrcoxzqqvmjhlufytsd.supabase.co";
-
-    const SUPABASE_KEY =
-      "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
-
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-
-    const loading =
-      document.getElementById("loading");
-
-    const loadingText =
-      document.getElementById("loadingText");
-
-    const dashboard =
-      document.getElementById("dashboard");
-
-    const roleBadge =
-      document.getElementById("roleBadge");
-
-    const adminCard =
-      document.getElementById("adminCard");
-
-    const openQAButton =
-      document.getElementById("openQAButton");
-
-    const closeQAButton =
-      document.getElementById("closeQAButton");
-
-    const qaSection =
-      document.getElementById("qaSection");
-
-    const LOGIN_URL =
-      "./cse-dashboard-login.html";
-
+    const $ = id => document.getElementById(id);
+    const loading = $("loading");
+    const dashboard = $("dashboard");
+    const qaSection = $("qaSection");
+    const confirmDialog = $("confirmDialog");
+    let currentUser = null;
     let qaQuestions = [];
     let qaFilter = "all";
+    let qaBusy = false;
+    let qaLoaded = false;
+    let confirmCallback = null;
+    let adminNames = new Map();
 
-    // VERIFICAREA ACCESULUI
+    const statusNames = {
+      pending: "În așteptare", published: "Publicată",
+      rejected: "Respinsă", withdrawn: "Retrasă"
+    };
 
     function denyAccess(message) {
       dashboard.style.display = "none";
       loading.style.display = "flex";
-      loadingText.textContent = message;
+      $("loadingText").textContent = message;
     }
 
     async function checkAccess() {
-
       try {
-        const {
-          data: { user },
-          error: userError
-        } = await supabase.auth.getUser();
-
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) {
           window.location.replace(LOGIN_URL);
           return;
         }
-
-        const {
-          data: role,
-          error: roleError
-        } = await supabase.rpc(
-          "cse_dashboard_role"
-        );
-
-        if (roleError) {
-          denyAccess(
-            "Nu s-au putut verifica permisiunile."
-          );
+        const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+        if (roleError || !["admin", "super_admin"].includes(role)) {
+          denyAccess("Acest cont nu are acces la dashboard.");
           return;
         }
-
-        if (
-          role !== "super_admin" &&
-          role !== "admin"
-        ) {
-          denyAccess(
-            "Acest cont nu are acces la dashboard."
-          );
-          return;
-        }
-
-        roleBadge.textContent =
-          role === "super_admin"
-            ? "Super Admin"
-            : "Administrator";
-
-        if (role !== "super_admin") {
-          adminCard.style.display = "none";
-        }
-
+        currentUser = user;
+        $("roleBadge").textContent = role === "super_admin" ? "Super Admin" : "Administrator";
+        if (role !== "super_admin") $("adminCard").style.display = "none";
         loading.style.display = "none";
         dashboard.style.display = "block";
-
       } catch (error) {
-        console.error(error);
-
-        denyAccess(
-          "A apărut o eroare la verificarea accesului."
-        );
+        console.error("Eroare de autentificare:", error);
+        denyAccess("A apărut o eroare la verificarea accesului.");
       }
     }
 
-    // ÎNCĂRCAREA ÎNTREBĂRILOR
+    function showMessage(message, isError = false) {
+      const target = $("qaMessage");
+      target.textContent = message;
+      target.className = message ? `qa-message${isError ? " error" : ""}` : "";
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? "—" : date.toLocaleString("ro-RO");
+    }
+
+    function makeElement(tag, text, className) {
+      const element = document.createElement(tag);
+      if (text !== undefined && text !== null) element.textContent = String(text);
+      if (className) element.className = className;
+      return element;
+    }
+
+    async function loadAdminNames() {
+      // Dacă tabelul profiles nu permite această citire, Q&A funcționează în continuare.
+      const { data, error } = await supabase.from("profiles").select("id, display_name");
+      if (!error) adminNames = new Map((data || []).map(p => [p.id, p.display_name]));
+    }
 
     async function loadQAQuestions() {
-
-      const container =
-        document.getElementById("qaQuestions");
-
-      container.textContent =
-        "Se încarcă întrebările...";
-
-      const { data, error } = await supabase
-        .from("questions")
-        .select(
-          "id, question_text, category, status, visibility, created_at"
-        )
-        .order("created_at", {
-          ascending: false
-        });
-
-      if (error) {
-        container.textContent =
-          "Eroare la încărcare: " + error.message;
-        return;
+      if (qaBusy) return;
+      qaBusy = true;
+      $("qaQuestions").textContent = "Se încarcă întrebările...";
+      showMessage("");
+      try {
+        // Nu solicităm private_code_hash sau alte câmpuri de autentificare privată.
+        const { data, error } = await supabase.from("questions")
+          .select("id, question_text, category, status, visibility, is_anonymous, student_name, student_class, answer_text, answered_by, created_at, answered_at")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        qaQuestions = data || [];
+        qaLoaded = true;
+        renderQA();
+        // Numele administratorilor sunt doar un detaliu opțional de afișare.
+        await loadAdminNames();
+        renderQA();
+      } catch (error) {
+        console.error("Eroare la citirea Q&A:", error);
+        showMessage("Nu s-au putut încărca întrebările. Verifică permisiunile Supabase.", true);
+        $("qaQuestions").replaceChildren();
+      } finally {
+        qaBusy = false;
       }
-
-      qaQuestions = data || [];
-
-      renderQA();
     }
-
-    // AFIȘAREA STATISTICILOR ȘI ÎNTREBĂRILOR
 
     function renderQA() {
-
-      const stats =
-        document.getElementById("qaStats");
-
-      const container =
-        document.getElementById("qaQuestions");
-
-      const statuses = [
-        ["Toate", qaQuestions.length],
-        [
-          "În așteptare",
-          qaQuestions.filter(
-            q => q.status === "pending"
-          ).length
-        ],
-        [
-          "Publicate",
-          qaQuestions.filter(
-            q => q.status === "published"
-          ).length
-        ],
-        [
-          "Respinse",
-          qaQuestions.filter(
-            q => q.status === "rejected"
-          ).length
-        ],
-        [
-          "Retrase",
-          qaQuestions.filter(
-            q => q.status === "withdrawn"
-          ).length
-        ]
-      ];
-
+      const stats = $("qaStats");
       stats.replaceChildren();
-
-      statuses.forEach(([label, count]) => {
-
-        const item =
-          document.createElement("div");
-
-        item.className = "qa-stat";
-
-        const labelElement =
-          document.createElement("span");
-
-        labelElement.textContent = label;
-
-        const countElement =
-          document.createElement("strong");
-
-        countElement.textContent = count;
-
-        item.append(
-          labelElement,
-          countElement
-        );
-
-        stats.appendChild(item);
-      });
-
-      const filtered = qaFilter === "all"
-        ? qaQuestions
-        : qaQuestions.filter(
-            q => q.status === qaFilter
-          );
-
+      const groups = [
+        ["Toate", qaQuestions.length],
+        ["În așteptare", qaQuestions.filter(q => q.status === "pending").length],
+        ["Publicate", qaQuestions.filter(q => q.status === "published").length],
+        ["Respinse", qaQuestions.filter(q => q.status === "rejected").length],
+        ["Retrase", qaQuestions.filter(q => q.status === "withdrawn").length]
+      ];
+      for (const [label, count] of groups) {
+        const box = makeElement("div", undefined, "qa-stat");
+        box.append(makeElement("span", label), makeElement("strong", count));
+        stats.append(box);
+      }
+      const questions = qaFilter === "all" ? qaQuestions : qaQuestions.filter(q => q.status === qaFilter);
+      const container = $("qaQuestions");
       container.replaceChildren();
-
-      if (filtered.length === 0) {
-
-        const empty =
-          document.createElement("div");
-
-        empty.className = "qa-empty";
-
-        empty.textContent =
-          "Nu există întrebări în această categorie.";
-
-        container.appendChild(empty);
+      if (!questions.length) {
+        container.append(makeElement("div", "Nu există întrebări în această categorie.", "qa-empty"));
         return;
       }
-
-      filtered.forEach(question => {
-
-        const card =
-          document.createElement("div");
-
-        card.className = "qa-question-card";
-
-        const title =
-          document.createElement("h3");
-
-        title.textContent =
-          question.category || "Fără categorie";
-
-        const text =
-          document.createElement("p");
-
-        text.className = "qa-question-text";
-        text.textContent = question.question_text;
-
-        const status =
-          document.createElement("span");
-
-        status.className = "qa-status";
-
-        const statusNames = {
-          pending: "În așteptare",
-          published: "Publicată",
-          rejected: "Respinsă",
-          withdrawn: "Retrasă"
-        };
-
-        status.textContent =
-          statusNames[question.status] ||
-          question.status;
-
-        const details =
-          document.createElement("p");
-
-        details.className =
-          "qa-question-details";
-
-        const date = question.created_at
-          ? new Date(
-              question.created_at
-            ).toLocaleString("ro-RO")
-          : "Necunoscută";
-
-        details.textContent =
-          "Vizibilitate: " +
-          (
-            question.visibility === "private"
-              ? "Privată"
-              : "Publică"
-          ) +
-          " · Trimisă la: " +
-          date;
-
-        card.append(
-          title,
-          text,
-          status,
-          details
-        );
-
-        container.appendChild(card);
-      });
+      for (const question of questions) container.append(createQuestionCard(question));
     }
 
-    // FILTRE
+    function createQuestionCard(q) {
+      const card = makeElement("article", undefined, "qa-question-card");
+      card.append(makeElement("h3", q.category || "Fără categorie"));
+      card.append(makeElement("p", q.question_text, "qa-question-text"));
+      card.append(makeElement("span", statusNames[q.status] || q.status, "qa-status"));
 
-    document
-      .querySelectorAll("#qaFilters button")
-      .forEach(button => {
-
-        button.addEventListener("click", () => {
-
-          document
-            .querySelectorAll("#qaFilters button")
-            .forEach(btn => {
-              btn.classList.remove("active");
-            });
-
-          button.classList.add("active");
-
-          qaFilter = button.dataset.filter;
-
-          renderQA();
-        });
-      });
-
-    // DESCHIDERE Q&A
-
-    openQAButton.addEventListener(
-      "click",
-      async () => {
-
-        qaSection.style.display = "block";
-
-        qaSection.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-
-        await loadQAQuestions();
+      const details = makeElement("div", undefined, "qa-question-details");
+      const author = q.is_anonymous ? "Anonim" : [q.student_name, q.student_class].filter(Boolean).join(" · ") || "Elev neidentificat";
+      const visibility = q.visibility === "private" ? "Privată" : "Publică";
+      details.append(makeElement("div", `Autor: ${author}`));
+      details.append(makeElement("div", `Vizibilitate: ${visibility}`));
+      details.append(makeElement("div", `Trimisă la: ${formatDate(q.created_at)}`));
+      if (q.answered_at) details.append(makeElement("div", `Ultima administrare: ${formatDate(q.answered_at)}`));
+      if (q.answered_by) {
+        const name = adminNames.get(q.answered_by) || "Administrator (nume indisponibil)";
+        details.append(makeElement("div", `Procesată de: ${name}`));
       }
-    );
+      card.append(details);
 
-    // ÎNCHIDERE Q&A
-
-    closeQAButton.addEventListener(
-      "click",
-      () => {
-
-        qaSection.style.display = "none";
-
-        openQAButton.scrollIntoView({
-          behavior: "smooth",
-          block: "center"
-        });
+      if (q.answer_text) {
+        card.append(makeElement("strong", "Răspuns salvat:"));
+        card.append(makeElement("p", q.answer_text, "qa-answer-text"));
       }
-    );
 
-    // DECONECTARE
+      if (q.status === "pending") {
+        const label = makeElement("label", "Scrie răspunsul:", "qa-answer-label");
+        const input = makeElement("textarea", undefined, "qa-answer-input");
+        input.placeholder = "Introdu răspunsul Consiliului Elevilor...";
+        input.maxLength = 10000;
+        const inputId = `answer-${q.id}`;
+        input.id = inputId;
+        label.htmlFor = inputId;
+        input.value = q.answer_text || "";
+        card.append(label, input);
+        const actions = makeElement("div", undefined, "qa-actions");
+        actions.append(actionButton("Publică răspunsul", "", () => requestAction("publish", q, input.value)));
+        actions.append(actionButton("Respinge", "reject", () => requestAction("reject", q)));
+        card.append(actions);
+      } else if (q.status === "published" && q.visibility === "public") {
+        const actions = makeElement("div", undefined, "qa-actions");
+        actions.append(actionButton("Retrage întrebarea", "withdraw", () => requestAction("withdraw", q)));
+        card.append(actions);
+      } else if (q.status === "withdrawn" && q.answer_text?.trim()) {
+        const actions = makeElement("div", undefined, "qa-actions");
+        actions.append(actionButton("Republică întrebarea", "republish", () => requestAction("republish", q)));
+        card.append(actions);
+      }
+      return card;
+    }
 
-    document
-      .getElementById("logoutButton")
-      .addEventListener("click", async () => {
+    function actionButton(label, className, handler) {
+      const button = makeElement("button", label, className);
+      button.type = "button";
+      button.disabled = qaBusy;
+      button.addEventListener("click", handler);
+      return button;
+    }
 
-        try {
-          await supabase.auth.signOut();
+    function requestAction(action, question, answerInput = "") {
+      if (qaBusy || !currentUser) return;
+      const actions = {
+        publish: ["Publică răspunsul", "Răspunsul va deveni vizibil conform regulilor platformei."],
+        reject: ["Respinge întrebarea", "Întrebarea va fi marcată ca respinsă."],
+        withdraw: ["Retrage întrebarea", "Întrebarea publicată va fi retrasă."],
+        republish: ["Republică întrebarea", "Întrebarea retrasă va fi publicată din nou, cu răspunsul salvat."]
+      };
+      if (!actions[action]) return;
+      const answer = answerInput.trim();
+      if (action === "publish" && !answer) {
+        showMessage("Scrie un răspuns înainte de publicare.", true);
+        return;
+      }
+      $("confirmTitle").textContent = actions[action][0];
+      $("confirmDescription").textContent = actions[action][1];
+      confirmCallback = () => executeAction(action, question, answer);
+      confirmDialog.showModal();
+    }
 
-          window.location.replace(LOGIN_URL);
-
-        } catch (error) {
-          alert("Deconectarea nu a reușit.");
+    async function executeAction(action, question, answer) {
+      if (qaBusy || !currentUser) return;
+      qaBusy = true;
+      showMessage("");
+      const now = new Date().toISOString();
+      const changes = { answered_by: currentUser.id, answered_at: now };
+      if (action === "publish") {
+        changes.status = "published";
+        changes.answer_text = answer;
+      } else if (action === "reject") {
+        changes.status = "rejected";
+      } else if (action === "withdraw") {
+        changes.status = "withdrawn";
+      } else if (action === "republish") {
+        changes.status = "published";
+      } else {
+        qaBusy = false;
+        return;
+      }
+      const expectedStatus = action === "publish" || action === "reject" ? "pending" : action === "withdraw" ? "published" : "withdrawn";
+      try {
+        // Revalidăm accesul chiar înaintea modificării.
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+        if (userError || !user || user.id !== currentUser.id || roleError || !["admin", "super_admin"].includes(role)) {
+          throw new Error("Sesiunea sau drepturile de acces nu mai sunt valide.");
         }
-      });
+        const { data, error } = await supabase.from("questions")
+          .update(changes)
+          .eq("id", question.id)
+          .eq("status", expectedStatus)
+          .select("id");
+        if (error) throw error;
+        if (!data || data.length !== 1) {
+          throw new Error("Întrebarea a fost modificată între timp sau nu ai permisiunea necesară.");
+        }
+        qaBusy = false;
+        await loadQAQuestions();
+        showMessage("Acțiunea a fost salvată cu succes.");
+      } catch (error) {
+        console.error("Eroare la modificarea întrebării:", error);
+        showMessage(error.message || "Modificarea nu a reușit.", true);
+        qaBusy = false;
+      }
+    }
 
-    // PORNIRE DASHBOARD
+    $("qaFilters").querySelectorAll("button").forEach(button => {
+      button.addEventListener("click", () => {
+        qaFilter = button.dataset.filter;
+        $("qaFilters").querySelectorAll("button").forEach(b => b.classList.toggle("active", b === button));
+        if (qaLoaded) renderQA();
+      });
+    });
+
+    $("openQAButton").addEventListener("click", async () => {
+      qaSection.style.display = "block";
+      qaSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      await loadQAQuestions();
+    });
+
+    $("closeQAButton").addEventListener("click", () => {
+      qaSection.style.display = "none";
+      $("openQAButton").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    $("cancelAction").addEventListener("click", () => confirmDialog.close());
+    $("confirmAction").addEventListener("click", () => {
+      const callback = confirmCallback;
+      confirmCallback = null;
+      confirmDialog.close();
+      if (callback) callback();
+    });
+    confirmDialog.addEventListener("close", () => { confirmCallback = null; });
+
+    $("logoutButton").addEventListener("click", async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert("Deconectarea nu a reușit.");
+        return;
+      }
+      window.location.replace(LOGIN_URL);
+    });
 
     checkAccess();
-
   </script>
-
 </body>
 </html>
