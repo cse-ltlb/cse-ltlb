@@ -138,6 +138,49 @@
       cursor: not-allowed;
     }
 
+    /* SECȚIUNEA Q&A */
+
+    #qaSection {
+      display: none;
+      margin-top: 35px;
+    }
+
+    .qa-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .qa-header h2 {
+      margin: 0;
+    }
+
+    .qa-close-button {
+      background: #244D68;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 17px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .qa-close-button:hover {
+      background: #17364B;
+    }
+
+    #qaContent {
+      margin-top: 25px;
+      padding: 20px;
+      background: #F0F7ED;
+      border: 1px dashed #9ACD79;
+      border-radius: 10px;
+      color: #62727B;
+      line-height: 1.6;
+    }
+
     .logout {
       margin-top: 35px;
       background: #244D68;
@@ -168,6 +211,14 @@
 
       main {
         margin-top: 25px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .qa-header {
+        align-items: flex-start;
       }
     }
   </style>
@@ -211,6 +262,8 @@
 
       <div class="cards">
 
+        <!-- Q&A -->
+
         <div class="card">
           <div class="card-icon">💬</div>
           <h3>Q&A</h3>
@@ -218,10 +271,12 @@
             Gestionează întrebările și
             răspunsurile adresate Consiliului.
           </p>
-          <button disabled>
-            În curând
+          <button id="openQAButton">
+            Deschide Q&A
           </button>
         </div>
+
+        <!-- SUGESTII -->
 
         <div class="card">
           <div class="card-icon">💡</div>
@@ -235,6 +290,8 @@
           </button>
         </div>
 
+        <!-- CALENDAR -->
+
         <div class="card">
           <div class="card-icon">📅</div>
           <h3>Calendar</h3>
@@ -246,6 +303,8 @@
             În curând
           </button>
         </div>
+
+        <!-- ADMINISTRATORI -->
 
         <div class="card" id="adminCard">
           <div class="card-icon">👥</div>
@@ -261,12 +320,44 @@
 
       </div>
 
+      <!-- MODULUL Q&A -->
+
+      <section id="qaSection">
+
+        <div class="card">
+
+          <div class="qa-header">
+            <h2>💬 Administrare Q&A</h2>
+
+            <button
+              id="closeQAButton"
+              class="qa-close-button"
+            >
+              Închide
+            </button>
+          </div>
+
+          <p>
+            Gestionează întrebările adresate
+            Consiliului Școlar al Elevilor.
+          </p>
+
+          <div id="qaContent">
+            Modulul Q&A va fi încărcat aici.
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- DECONECTARE -->
+
       <button class="logout" id="logoutButton">
         Deconectare
       </button>
 
       <p class="status">
-        Dashboard CȘE – Versiunea 1.0
+        Dashboard CȘE – Versiunea 1.1
       </p>
 
     </main>
@@ -283,16 +374,20 @@
     import { createClient } from
       "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // Introdu aceleași date ca în pagina de login.
-    const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
+    const SUPABASE_URL =
+      "https://ilrcoxzqqvmjhlufytsd.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
 
     const supabase = createClient(
-     SUPABASE_URL,
-    SUPABASE_KEY
+      SUPABASE_URL,
+      SUPABASE_KEY
     );
 
-    const loading = document.getElementById("loading");
+    const loading =
+      document.getElementById("loading");
+
     const loadingText =
       document.getElementById("loadingText");
 
@@ -305,6 +400,15 @@
     const adminCard =
       document.getElementById("adminCard");
 
+    const openQAButton =
+      document.getElementById("openQAButton");
+
+    const closeQAButton =
+      document.getElementById("closeQAButton");
+
+    const qaSection =
+      document.getElementById("qaSection");
+
     const LOGIN_URL =
       "./cse-dashboard-login.html";
 
@@ -313,6 +417,8 @@
       loading.style.display = "flex";
       loadingText.textContent = message;
     }
+
+    // VERIFICAREA ACCESULUI
 
     async function checkAccess() {
 
@@ -327,8 +433,12 @@
           return;
         }
 
-        const { data: role, error: roleError } =
-          await supabase.rpc("cse_dashboard_role");
+        const {
+          data: role,
+          error: roleError
+        } = await supabase.rpc(
+          "cse_dashboard_role"
+        );
 
         if (roleError) {
           denyAccess(
@@ -360,11 +470,43 @@
         dashboard.style.display = "block";
 
       } catch (error) {
+        console.error(error);
+
         denyAccess(
           "A apărut o eroare la verificarea accesului."
         );
       }
     }
+
+    // DESCHIDERE Q&A
+
+    openQAButton.addEventListener(
+      "click",
+      () => {
+        qaSection.style.display = "block";
+
+        qaSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
+    );
+
+    // ÎNCHIDERE Q&A
+
+    closeQAButton.addEventListener(
+      "click",
+      () => {
+        qaSection.style.display = "none";
+
+        openQAButton.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
+    );
+
+    // DECONECTARE
 
     document
       .getElementById("logoutButton")
@@ -377,10 +519,11 @@
         }
       });
 
+    // PORNIRE DASHBOARD
+
     checkAccess();
 
   </script>
 
 </body>
 </html>
-
