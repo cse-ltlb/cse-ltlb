@@ -7,7 +7,7 @@
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: Arial, sans-serif; background: #F0F7ED; color: #244D68; }
-    button, textarea { font: inherit; }
+    button, textarea, input, select { font: inherit; }
     button { cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: .55; }
     #loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 25px; text-align: center; }
@@ -30,38 +30,53 @@
     .cards button { width: 100%; }
     .primary-button:hover, .cards button:not(:disabled):hover { background: #2C632B; }
     .cards button:disabled { background: #9AA8A0; }
-    #qaSection, #suggestionsSection { display: none; margin-top: 35px; }
-    .qa-header, .suggestions-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .qa-header h2, .suggestions-header h2 { margin: 0; }
+    #qaSection, #suggestionsSection, #calendarSection { display: none; margin-top: 35px; }
+    .qa-header, .suggestions-header, .calendar-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .qa-header h2, .suggestions-header h2, .calendar-header h2 { margin: 0; }
     .secondary-button { background: #244D68; color: white; border: 0; border-radius: 8px; padding: 11px 17px; }
     .secondary-button:hover { background: #17364B; }
-    #qaContent, #suggestionsContent { margin-top: 25px; }
-    .qa-stats, .suggestions-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 25px; }
-    .qa-stat, .suggestions-stat { background: #F0F7ED; border: 1px solid #DDE8D9; border-radius: 12px; padding: 17px; }
-    .qa-stat span, .suggestions-stat span { display: block; color: #62727B; font-size: 13px; margin-bottom: 9px; }
-    .qa-stat strong, .suggestions-stat strong { font-size: 27px; }
-    .qa-filters, .suggestions-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
+    #qaContent, #suggestionsContent, #calendarContent { margin-top: 25px; }
+    .qa-stats, .suggestions-stats, .calendar-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 25px; }
+    .qa-stat, .suggestions-stat, .calendar-stat { background: #F0F7ED; border: 1px solid #DDE8D9; border-radius: 12px; padding: 17px; }
+    .qa-stat span, .suggestions-stat span, .calendar-stat span { display: block; color: #62727B; font-size: 13px; margin-bottom: 9px; }
+    .qa-stat strong, .suggestions-stat strong, .calendar-stat strong { font-size: 27px; }
+    .qa-filters, .suggestions-filters, .calendar-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 25px; }
     .qa-filters button, .suggestions-filters button { background: #E5EFE1; color: #244D68; border: 0; border-radius: 8px; padding: 10px 15px; font-size: 13px; }
     .qa-filters button.active, .suggestions-filters button.active { background: #377C36; color: white; }
-    .qa-question-card, .suggestion-card { background: white; border: 1px solid #DDE8D9; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
-    .qa-question-card h3, .suggestion-card h3 { margin: 0 0 12px; }
-    .qa-question-text, .qa-answer-text, .suggestion-description { color: #344B58; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .qa-question-details, .suggestion-details { color: #71818A; font-size: 13px; line-height: 1.8; margin-top: 12px; }
+    .qa-question-card, .suggestion-card, .calendar-event-card { background: white; border: 1px solid #DDE8D9; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
+    .qa-question-card h3, .suggestion-card h3, .calendar-event-card h3 { margin: 0 0 12px; }
+    .qa-question-text, .qa-answer-text, .suggestion-description, .calendar-description { color: #344B58; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .qa-question-details, .suggestion-details, .calendar-details { color: #71818A; font-size: 13px; line-height: 1.8; margin-top: 12px; }
     .qa-status { display: inline-block; border-radius: 20px; padding: 6px 11px; background: #E5EFE1; font-size: 12px; font-weight: bold; }
     .qa-answer-label { display: block; margin: 18px 0 8px; font-weight: bold; font-size: 14px; }
     .qa-answer-input { display: block; width: 100%; min-height: 105px; resize: vertical; padding: 12px; border: 1px solid #BACFC1; border-radius: 8px; color: #244D68; background: #fff; }
-    .qa-actions, .suggestion-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
-    .qa-actions button, .suggestion-actions button { border: 0; border-radius: 8px; padding: 11px 14px; color: white; background: #377C36; }
-    .qa-actions .reject, .suggestion-actions .reject { background: #A43F3F; }
+    .qa-actions, .suggestion-actions, .calendar-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
+    .qa-actions button, .suggestion-actions button, .calendar-actions button { border: 0; border-radius: 8px; padding: 11px 14px; color: white; background: #377C36; }
+    .qa-actions .reject, .suggestion-actions .reject, .calendar-actions .reject { background: #A43F3F; }
     .qa-actions .withdraw { background: #9B661C; }
     .qa-actions .republish { background: #244D68; }
-    .qa-empty, .suggestions-empty { padding: 25px; text-align: center; color: #62727B; background: #F0F7ED; border-radius: 10px; }
-    .qa-message, .suggestions-message { margin: 15px 0; padding: 12px 15px; border-radius: 8px; background: #E5EFE1; color: #244D68; }
-    .qa-message.error, .suggestions-message.error { background: #FBEAEA; color: #922E2E; }
+    .qa-empty, .suggestions-empty, .calendar-empty { padding: 25px; text-align: center; color: #62727B; background: #F0F7ED; border-radius: 10px; }
+    .qa-message, .suggestions-message, .calendar-message { margin: 15px 0; padding: 12px 15px; border-radius: 8px; background: #E5EFE1; color: #244D68; }
+    .qa-message.error, .suggestions-message.error, .calendar-message.error { background: #FBEAEA; color: #922E2E; }
     .suggestion-actions select { padding: 10px; border: 1px solid #BACFC1; border-radius: 8px; background: white; color: #244D68; max-width: 100%; }
     .suggestions-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
     .suggestions-toolbar button { background: #244D68; color: white; border: 0; padding: 10px 14px; border-radius: 8px; }
     .suggestion-votes { font-weight: bold; color: #377C36; }
+    .calendar-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:15px 0 20px; }
+    .calendar-toolbar input, .calendar-toolbar select { padding:10px; border:1px solid #BACFC1; border-radius:8px; max-width:100%; }
+    .calendar-toolbar input { flex:1; min-width:180px; }
+    .calendar-form { display:none; margin:20px 0; padding:20px; border:1px solid #DDE8D9; border-radius:12px; background:#F8FBF6; }
+    .calendar-form.open { display:block; }
+    .calendar-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+    .calendar-form label { display:flex; flex-direction:column; gap:6px; font-size:13px; font-weight:bold; margin-bottom:14px; }
+    .calendar-form input, .calendar-form select, .calendar-form textarea { width:100%; padding:11px; border:1px solid #BACFC1; border-radius:8px; background:white; color:#244D68; }
+    .calendar-form textarea { min-height:110px; resize:vertical; }
+    .calendar-image { width:min(100%,380px); max-height:230px; object-fit:contain; border-radius:10px; margin:10px 0; display:block; }
+    .calendar-event-card .calendar-image { width:min(100%,300px); max-height:170px; object-fit:cover; }
+    .calendar-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:15px; }
+    .calendar-actions button.alt { background:#244D68; }
+    .calendar-actions button.reject { background:#A43F3F; }
+    @media (max-width:600px) { .calendar-form-grid { grid-template-columns:1fr; } }
     .logout { margin-top: 35px; background: #244D68; color: white; border: 0; padding: 13px 25px; border-radius: 9px; }
     .status { margin-top: 25px; color: #64747D; font-size: 13px; }
     footer { text-align: center; padding: 30px; color: #74847B; font-size: 12px; }
@@ -83,7 +98,7 @@
       <div class="cards">
         <div class="card"><div class="card-icon">💬</div><h3>Q&A</h3><p>Gestionează întrebările și răspunsurile adresate Consiliului.</p><button id="openQAButton">Deschide Q&A</button></div>
         <div class="card"><div class="card-icon">💡</div><h3>Sugestii</h3><p>Consultă propunerile elevilor și gestionează sugestiile.</p><button id="openSuggestionsButton">Deschide Sugestii</button></div>
-        <div class="card"><div class="card-icon">📅</div><h3>Calendar</h3><p>Adaugă, modifică și organizează evenimentele CȘE.</p><button disabled>În curând</button></div>
+        <div class="card"><div class="card-icon">📅</div><h3>Calendar</h3><p>Adaugă, modifică și organizează evenimentele CȘE.</p><button id="openCalendarButton">Deschide Calendar</button></div>
         <div class="card" id="adminCard"><div class="card-icon">👥</div><h3>Administratori</h3><p>Gestionează conturile care au acces la panoul administrativ.</p><button disabled>În curând</button></div>
       </div>
       <section id="qaSection">
@@ -130,8 +145,45 @@
           </div>
         </div>
       </section>
+      <section id="calendarSection">
+        <div class="card">
+          <div class="calendar-header"><h2>📅 Administrare Calendar</h2><button id="closeCalendarButton" class="secondary-button" type="button">Închide</button></div>
+          <p>Adaugă, editează și organizează proiectele și evenimentele. Cele ascunse rămân vizibile numai administratorilor.</p>
+          <div id="calendarContent">
+            <div id="calendarStats" class="calendar-stats"></div>
+            <div class="calendar-toolbar">
+              <button id="addCalendarButton" class="primary-button" type="button">+ Adaugă proiect</button>
+              <input id="calendarSearch" type="search" placeholder="Caută după titlu..." aria-label="Caută evenimente">
+              <select id="calendarVisibility" aria-label="Filtrează după vizibilitate">
+                <option value="all">Toate proiectele</option><option value="public">Publicate</option><option value="hidden">Ascunse</option>
+              </select>
+              <button id="refreshCalendarButton" class="secondary-button" type="button">Reîncarcă</button>
+            </div>
+            <form id="calendarForm" class="calendar-form">
+              <h3 id="calendarFormTitle">Adaugă proiect</h3>
+              <label>Titlul proiectului *<input id="calTitle" maxlength="150" required></label>
+              <label>Descriere<textarea id="calDescription" maxlength="5000"></textarea></label>
+              <div class="calendar-form-grid">
+                <label>Data începerii *<input id="calDate" type="date" required></label>
+                <label>Data încheierii *<input id="calEndDate" type="date" required></label>
+                <label>Ora începerii<input id="calStart" type="time"></label>
+                <label>Ora încheierii<input id="calEnd" type="time"></label>
+                <label>Categoria<select id="calCategory"><option>Proiect</option><option>Eveniment</option><option>Voluntariat</option><option>Educație</option><option>Concurs</option><option>Campanie</option><option>Altele</option></select></label>
+                <label>Locația<input id="calLocation" maxlength="200"></label>
+              </div>
+              <label>Vizibilitate<select id="calPublic"><option value="true">Publicat – vizibil elevilor</option><option value="false">Ascuns – doar administratori</option></select></label>
+              <label>Fotografia proiectului (JPG, PNG, WebP, maximum 5 MB)<input id="calImage" type="file" accept="image/jpeg,image/png,image/webp"></label>
+              <img id="calPreview" class="calendar-image" alt="Previzualizare fotografie" hidden>
+              <button id="calRemoveImage" class="secondary-button" type="button" hidden>Elimină fotografia</button>
+              <div class="calendar-actions"><button id="calSave" class="primary-button" type="submit">Salvează proiectul</button><button id="calCancel" class="secondary-button" type="button">Anulează</button></div>
+            </form>
+            <div id="calendarMessage" role="status" aria-live="polite"></div>
+            <div id="calendarList">Apasă „Deschide Calendar” pentru a încărca proiectele.</div>
+          </div>
+        </div>
+      </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.4</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.5</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -562,6 +614,244 @@
       }
     }
 
+    // MODUL CALENDAR — compatibil cu pagina publică și tabelul cse_events.
+    const IMAGE_BUCKET = "project-images";
+    let calendarEvents = [];
+    let calendarBusy = false;
+    let calendarEditingId = null;
+    let calendarExistingImage = null;
+    let calendarRemoveImage = false;
+    let calendarPreviewUrl = null;
+
+    function calendarMessage(message, error = false) {
+      const target = $("calendarMessage");
+      target.textContent = message;
+      target.className = message ? `calendar-message${error ? " error" : ""}` : "";
+    }
+    function calendarDate(value) { return value ? value.split("-").reverse().join(".") : "—"; }
+    function calendarEnd(e) { return e.end_date || e.event_date; }
+    function calendarToday() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+    function calendarStage(e) {
+      const now = calendarToday();
+      return e.event_date > now ? "Viitor" : calendarEnd(e) < now ? "Finalizat" : "În desfășurare";
+    }
+    function calendarValidImage(url) {
+      try { return new URL(url).protocol === "https:"; } catch { return false; }
+    }
+    async function calendarCheckAccess() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+      if (userError || !user || user.id !== currentUser?.id || roleError || !["admin", "super_admin"].includes(role)) {
+        throw new Error("Sesiunea sau drepturile de acces nu mai sunt valide.");
+      }
+    }
+    async function loadCalendar() {
+      if (calendarBusy) return;
+      calendarBusy = true;
+      $("calendarList").textContent = "Se încarcă proiectele...";
+      calendarMessage("");
+      try {
+        await calendarCheckAccess();
+        const { data, error } = await supabase.from("cse_events")
+          .select("id,title,description,event_date,end_date,start_time,end_time,location,category,image_url,is_public,created_at,updated_at")
+          .order("event_date", { ascending: false });
+        if (error) throw error;
+        calendarEvents = data || [];
+        renderCalendarAdmin();
+      } catch (error) {
+        $("calendarList").replaceChildren();
+        calendarMessage(error.message || "Nu s-au putut încărca evenimentele.", true);
+      } finally { calendarBusy = false; }
+    }
+    function renderCalendarAdmin() {
+      const stats = $("calendarStats");
+      stats.replaceChildren();
+      for (const [label, value] of [
+        ["Toate",calendarEvents.length],
+        ["Publicate",calendarEvents.filter(e=>e.is_public).length],
+        ["Ascunse",calendarEvents.filter(e=>!e.is_public).length],
+        ["Viitoare",calendarEvents.filter(e=>calendarStage(e)==="Viitor").length]
+      ]) {
+        const el = makeElement("div", undefined, "calendar-stat");
+        el.append(makeElement("span",label),makeElement("strong",value));
+        stats.append(el);
+      }
+      const search = $("calendarSearch").value.trim().toLocaleLowerCase("ro-RO");
+      const visibility = $("calendarVisibility").value;
+      const list = $("calendarList");
+      list.replaceChildren();
+      const filtered = calendarEvents.filter(e =>
+        (!search || e.title.toLocaleLowerCase("ro-RO").includes(search)) &&
+        (visibility === "all" || (visibility === "public" ? e.is_public : !e.is_public))
+      );
+      if (!filtered.length) { list.append(makeElement("p","Nu există proiecte în această categorie.","calendar-empty")); return; }
+      for (const e of filtered) {
+        const card = makeElement("article",undefined,"calendar-event-card");
+        card.append(makeElement("h3",e.title));
+        const details = makeElement("div",undefined,"calendar-details");
+        details.append(makeElement("div",`${calendarDate(e.event_date)}${calendarEnd(e)!==e.event_date ? " – "+calendarDate(calendarEnd(e)) : ""}${e.start_time ? " · "+e.start_time.slice(0,5) : ""}${e.end_time ? " – "+e.end_time.slice(0,5) : ""}`));
+        details.append(makeElement("div",`Categorie: ${e.category || "Proiect"} · ${calendarStage(e)}`));
+        details.append(makeElement("div",`Vizibilitate: ${e.is_public ? "Publicat" : "Ascuns"}`));
+        if (e.location) details.append(makeElement("div",`📍 ${e.location}`));
+        card.append(details);
+        if (e.description) card.append(makeElement("p",e.description,"calendar-description"));
+        if (calendarValidImage(e.image_url)) {
+          const img = makeElement("img",undefined,"calendar-image");
+          img.src = e.image_url; img.alt = `Imagine proiect: ${e.title}`; img.loading = "lazy";
+          card.append(img);
+        }
+        const actions = makeElement("div",undefined,"calendar-actions");
+        const edit = makeElement("button","Editează","alt");
+        edit.type="button"; edit.addEventListener("click",()=>openCalendarForm(e));
+        const toggle = makeElement("button",e.is_public ? "Ascunde" : "Publică din nou", "alt");
+        toggle.type="button"; toggle.addEventListener("click",()=>calendarConfirmVisibility(e));
+        const del = makeElement("button","Șterge","reject");
+        del.type="button"; del.addEventListener("click",()=>calendarConfirmDelete(e));
+        actions.append(edit,toggle,del); card.append(actions); list.append(card);
+      }
+    }
+    function calendarReleasePreview() {
+      if (calendarPreviewUrl) URL.revokeObjectURL(calendarPreviewUrl);
+      calendarPreviewUrl = null;
+    }
+    function calendarRefreshPreview() {
+      calendarReleasePreview();
+      const file = $("calImage").files[0];
+      const preview = $("calPreview");
+      if (file) {
+        calendarPreviewUrl = URL.createObjectURL(file);
+        preview.src = calendarPreviewUrl; preview.hidden = false;
+      } else if (calendarExistingImage && !calendarRemoveImage && calendarValidImage(calendarExistingImage)) {
+        preview.src = calendarExistingImage; preview.hidden = false;
+      } else { preview.removeAttribute("src"); preview.hidden = true; }
+      $("calRemoveImage").hidden = !file && (!calendarExistingImage || calendarRemoveImage);
+    }
+    function openCalendarForm(e = null) {
+      if (calendarBusy) return;
+      calendarEditingId = e?.id || null;
+      calendarExistingImage = e?.image_url || null;
+      calendarRemoveImage = false;
+      $("calendarFormTitle").textContent = e ? "Editează proiectul" : "Adaugă proiect";
+      $("calTitle").value = e?.title || "";
+      $("calDescription").value = e?.description || "";
+      $("calDate").value = e?.event_date || calendarToday();
+      $("calEndDate").value = e ? calendarEnd(e) : calendarToday();
+      $("calStart").value = e?.start_time?.slice(0,5) || "";
+      $("calEnd").value = e?.end_time?.slice(0,5) || "";
+      $("calCategory").value = e?.category || "Proiect";
+      if (!$("calCategory").value) {
+        const opt = new Option(e.category,e.category); $("calCategory").add(opt); $("calCategory").value=e.category;
+      }
+      $("calLocation").value = e?.location || "";
+      $("calPublic").value = String(e?.is_public !== false);
+      $("calImage").value = "";
+      calendarRefreshPreview();
+      $("calendarForm").classList.add("open");
+      $("calendarForm").scrollIntoView({behavior:"smooth",block:"start"});
+    }
+    function closeCalendarForm() {
+      $("calendarForm").classList.remove("open");
+      $("calImage").value = "";
+      calendarReleasePreview();
+      calendarEditingId = null;
+    }
+    async function calendarUploadImage(file) {
+      const extensions = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
+      if (!extensions[file.type]) throw new Error("Sunt acceptate doar JPG, PNG și WebP.");
+      if (file.size > 5*1024*1024) throw new Error("Fotografia poate avea maximum 5 MB.");
+      const path = `${crypto.randomUUID()}.${extensions[file.type]}`;
+      const { error } = await supabase.storage.from(IMAGE_BUCKET).upload(path,file,{contentType:file.type,upsert:false});
+      if (error) throw error;
+      const { data } = supabase.storage.from(IMAGE_BUCKET).getPublicUrl(path);
+      return {path,url:data.publicUrl};
+    }
+    function calendarConfirm(title,description,callback) {
+      if (calendarBusy || confirmDialog.open) return;
+      $("confirmTitle").textContent=title;
+      $("confirmDescription").textContent=description;
+      confirmCallback=callback;
+      confirmDialog.showModal();
+    }
+    function calendarConfirmVisibility(e) {
+      calendarConfirm(e.is_public ? "Ascunde proiectul" : "Publică proiectul",
+        e.is_public ? `„${e.title}” va dispărea de pe site, dar va rămâne în arhivă.` : `„${e.title}” va deveni vizibil elevilor.`,
+        async()=>{
+          if (calendarBusy) return;
+          calendarBusy=true;
+          try {
+            await calendarCheckAccess();
+            const {data,error}=await supabase.from("cse_events").update({is_public:!e.is_public}).eq("id",e.id).eq("is_public",e.is_public).select("id");
+            if(error) throw error;
+            if(data?.length!==1) throw new Error("Evenimentul a fost modificat între timp sau accesul a fost refuzat.");
+            calendarBusy=false; await loadCalendar(); calendarMessage("Vizibilitatea a fost actualizată.");
+          } catch(error) {calendarBusy=false;calendarMessage(error.message,true);}
+        });
+    }
+    function calendarConfirmDelete(e) {
+      calendarConfirm("Ștergi definitiv proiectul?",`„${e.title}” va fi eliminat definitiv. Pentru a-l păstra, folosește „Ascunde”.`,
+        async()=>{
+          if(calendarBusy)return;
+          calendarBusy=true;
+          try {
+            await calendarCheckAccess();
+            const {data,error}=await supabase.from("cse_events").delete().eq("id",e.id).select("id");
+            if(error)throw error;
+            if(data?.length!==1)throw new Error("Ștergerea nu a fost permisă.");
+            calendarBusy=false; await loadCalendar(); calendarMessage("Proiect șters definitiv.");
+          }catch(error){calendarBusy=false;calendarMessage(error.message,true);}
+        });
+    }
+    $("calendarForm").addEventListener("submit",async event=>{
+      event.preventDefault();
+      if(calendarBusy)return;
+      const date=$("calDate").value, endDate=$("calEndDate").value;
+      const start=$("calStart").value || null, end=$("calEnd").value || null;
+      if(!date || !endDate || endDate<date){calendarMessage("Data încheierii nu poate fi înaintea începerii.",true);return;}
+      if(start && end && end<start){calendarMessage("Ora încheierii nu poate fi înaintea începerii.",true);return;}
+      const payload={title:$("calTitle").value.trim(),description:$("calDescription").value.trim(),event_date:date,end_date:endDate,start_time:start,end_time:end,location:$("calLocation").value.trim()||null,category:$("calCategory").value,is_public:$("calPublic").value==="true",image_url:calendarRemoveImage?null:calendarExistingImage};
+      if(!payload.title){calendarMessage("Introdu titlul proiectului.",true);return;}
+      calendarBusy=true;$("calSave").disabled=true;
+      calendarMessage("Se salvează proiectul...");
+      let uploadedPath=null;
+      try{
+        await calendarCheckAccess();
+        const file=$("calImage").files[0];
+        if(file){calendarMessage("Se încarcă fotografia...");const uploaded=await calendarUploadImage(file);uploadedPath=uploaded.path;payload.image_url=uploaded.url;}
+        const result=calendarEditingId
+          ? await supabase.from("cse_events").update(payload).eq("id",calendarEditingId).select("id")
+          : await supabase.from("cse_events").insert(payload).select("id");
+        if(result.error)throw result.error;
+        if(result.data?.length!==1)throw new Error("Nu s-a salvat proiectul. Verifică permisiunile.");
+        closeCalendarForm();calendarBusy=false;
+        await loadCalendar();calendarMessage("Proiectul a fost salvat cu succes.");
+      }catch(error){
+        if(uploadedPath){const {error:cleanupError}=await supabase.storage.from(IMAGE_BUCKET).remove([uploadedPath]);if(cleanupError)console.warn("Imaginea nouă nu a putut fi eliminată după eroare:",cleanupError);}
+        calendarMessage(error.message || "Salvarea nu a reușit.",true);
+      }finally{calendarBusy=false;$("calSave").disabled=false;}
+    });
+    $("calImage").addEventListener("change",calendarRefreshPreview);
+    $("calRemoveImage").addEventListener("click",()=>{$("calImage").value="";calendarRemoveImage=true;calendarRefreshPreview();});
+    $("calCancel").addEventListener("click",closeCalendarForm);
+    $("addCalendarButton").addEventListener("click",()=>openCalendarForm());
+    $("calendarSearch").addEventListener("input",renderCalendarAdmin);
+    $("calendarVisibility").addEventListener("change",renderCalendarAdmin);
+    $("refreshCalendarButton").addEventListener("click",loadCalendar);
+    $("openCalendarButton").addEventListener("click",async()=>{
+      qaSection.style.display="none";
+      $("suggestionsSection").style.display="none";
+      $("calendarSection").style.display="block";
+      $("calendarSection").scrollIntoView({behavior:"smooth",block:"start"});
+      await loadCalendar();
+    });
+    $("closeCalendarButton").addEventListener("click",()=>{
+      $("calendarSection").style.display="none";
+      closeCalendarForm();
+      $("openCalendarButton").scrollIntoView({behavior:"smooth",block:"center"});
+    });
+
     $("suggestionsFilters").querySelectorAll("button").forEach(button => {
       button.addEventListener("click", () => {
         suggestionsFilter = button.dataset.filter;
@@ -576,6 +866,7 @@
     $("refreshSuggestionsButton").addEventListener("click", loadSuggestions);
     $("openSuggestionsButton").addEventListener("click", async () => {
       qaSection.style.display = "none";
+      $("calendarSection").style.display = "none";
       $("suggestionsSection").style.display = "block";
       $("suggestionsSection").scrollIntoView({ behavior: "smooth", block: "start" });
       await loadSuggestions();
@@ -595,6 +886,7 @@
 
     $("openQAButton").addEventListener("click", async () => {
       $("suggestionsSection").style.display = "none";
+      $("calendarSection").style.display = "none";
       qaSection.style.display = "block";
       qaSection.scrollIntoView({ behavior: "smooth", block: "start" });
       await loadQAQuestions();
