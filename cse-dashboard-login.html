@@ -1,3 +1,4 @@
+https://ilrcoxzqqvmjhlufytsd.supabase.co
 
 <!DOCTYPE html>
 <html lang="ro">
@@ -5,7 +6,8 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
-  <title>CȘE Admin – Autentificare</title> 
+
+  <title>CȘE Admin – Autentificare</title>
 
   <style>
     * {
@@ -26,15 +28,21 @@
     .login-box {
       width: 100%;
       max-width: 420px;
-      background: white;
+      background: #FFFFFF;
       padding: 35px;
       border-radius: 18px;
       text-align: center;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+    }
+
+    .logo {
+      font-size: 38px;
+      margin-bottom: 10px;
     }
 
     h1 {
       color: #244D68;
-      margin-bottom: 8px;
+      margin: 0 0 8px;
     }
 
     .subtitle {
@@ -52,19 +60,20 @@
       font-size: 15px;
     }
 
+    input:focus {
+      outline: none;
+      border-color: #377C36;
+      box-shadow: 0 0 0 3px #F0F7ED;
+    }
+
     button {
       width: 100%;
       padding: 14px;
-      background: #377C36;
-      color: white;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
-    }
-
-    button:hover {
-      background: #2b632a;
+      transition: background 0.2s;
     }
 
     button:disabled {
@@ -72,10 +81,37 @@
       cursor: wait;
     }
 
+    .login-button {
+      background: #377C36;
+      color: #FFFFFF;
+      font-weight: bold;
+    }
+
+    .login-button:hover {
+      background: #2b632a;
+    }
+
+    .resend-button {
+      margin-top: 12px;
+      background: #244D68;
+      color: #FFFFFF;
+    }
+
+    .resend-button:hover {
+      background: #193b51;
+    }
+
     #message {
       margin-top: 18px;
       font-size: 14px;
       min-height: 20px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #777;
     }
   </style>
 </head>
@@ -83,6 +119,9 @@
 <body>
 
   <div class="login-box">
+
+    <div class="logo">🛡️</div>
+
     <h1>CȘE Admin</h1>
 
     <p class="subtitle">
@@ -90,6 +129,7 @@
     </p>
 
     <form id="loginForm">
+
       <input
         type="email"
         id="email"
@@ -106,38 +146,71 @@
         required
       >
 
-      <button type="submit" id="loginButton">
+      <button
+        type="submit"
+        id="loginButton"
+        class="login-button"
+      >
         Conectare
       </button>
+
     </form>
 
+    <button
+      type="button"
+      id="resendConfirmation"
+      class="resend-button"
+    >
+      Retrimite emailul de confirmare
+    </button>
+
     <p id="message" role="status"></p>
+
+    <p class="footer">
+      Acces rezervat administratorilor autorizați
+    </p>
+
   </div>
 
   <script type="module">
+
     import { createClient } from
       "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
+    // CONFIGURARE SUPABASE
     const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
-    const SUPABASE_KEY = "Ssb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
+    const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
 
     const supabase = createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
 
+    // ELEMENTE HTML
     const form = document.getElementById("loginForm");
     const message = document.getElementById("message");
-    const button = document.getElementById("loginButton");
+    const loginButton = document.getElementById("loginButton");
+    const resendButton =
+      document.getElementById("resendConfirmation");
 
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    function showMessage(text, color = "#244D68") {
+      message.textContent = text;
+      message.style.color = color;
+    }
+
+    // AUTENTIFICARE
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      button.disabled = true;
-      message.textContent = "Se verifică autentificarea...";
+      loginButton.disabled = true;
 
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+      showMessage("Se verifică autentificarea...");
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
 
       try {
         const { error: loginError } =
@@ -147,46 +220,126 @@
           });
 
         if (loginError) {
-          message.textContent =
-            "Autentificarea nu a reușit.";
+          if (
+            loginError.message
+              .toLowerCase()
+              .includes("email not confirmed")
+          ) {
+            showMessage(
+              "Adresa de email nu este confirmată. " +
+              "Folosește butonul de mai jos.",
+              "#B45309"
+            );
+          } else {
+            showMessage(
+              "Autentificarea nu a reușit. " +
+              "Verifică emailul și parola.",
+              "#B91C1C"
+            );
+          }
+
           return;
         }
 
-        const { data, error: roleError } =
+        // VERIFICAREA ROLULUI
+        const { data: role, error: roleError } =
           await supabase.rpc("cse_dashboard_role");
 
         if (roleError) {
           await supabase.auth.signOut();
-          message.textContent =
-            "Nu s-au putut verifica permisiunile.";
+
+          showMessage(
+            "Nu s-au putut verifica permisiunile.",
+            "#B91C1C"
+          );
+
           return;
         }
 
         if (
-          data !== "super_admin" &&
-          data !== "admin"
+          role !== "super_admin" &&
+          role !== "admin"
         ) {
           await supabase.auth.signOut();
-          message.textContent =
-            "Acest cont nu are acces administrativ.";
+
+          showMessage(
+            "Acest cont nu are acces administrativ.",
+            "#B91C1C"
+          );
+
           return;
         }
 
-        message.style.color = "#377C36";
-        message.textContent =
-          "Autentificare reușită!";
+        showMessage(
+          "Autentificare reușită! Rol: " + role,
+          "#377C36"
+        );
 
-        // Vom adăuga redirecționarea
-        // după ce construim dashboardul.
+        // Redirecționarea către dashboard
+        // va fi adăugată în etapa următoare.
 
       } catch (error) {
-        message.textContent =
-          "A apărut o eroare de conexiune.";
+        showMessage(
+          "A apărut o eroare de conexiune.",
+          "#B91C1C"
+        );
       } finally {
-        button.disabled = false;
+        loginButton.disabled = false;
       }
     });
+
+    // RETRIMITERE EMAIL CONFIRMARE
+    resendButton.addEventListener("click", async () => {
+
+      const email = emailInput.value.trim();
+
+      if (!email || !emailInput.checkValidity()) {
+        showMessage(
+          "Introdu mai întâi o adresă de email validă.",
+          "#B45309"
+        );
+        return;
+      }
+
+      resendButton.disabled = true;
+
+      showMessage(
+        "Se solicită retrimiterea emailului..."
+      );
+
+      try {
+        const { error } = await supabase.auth.resend({
+          type: "signup",
+          email: email
+        });
+
+        if (error) {
+          showMessage(
+            "Nu s-a putut trimite emailul: " +
+            error.message,
+            "#B91C1C"
+          );
+        } else {
+          showMessage(
+            "Dacă adresa este eligibilă, vei primi " +
+            "un email de confirmare. " +
+            "Verifică Inbox și Spam.",
+            "#377C36"
+          );
+        }
+
+      } catch (error) {
+        showMessage(
+          "A apărut o eroare de conexiune.",
+          "#B91C1C"
+        );
+      } finally {
+        resendButton.disabled = false;
+      }
+    });
+
   </script>
 
 </body>
 </html>
+
