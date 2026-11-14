@@ -1,345 +1,90 @@
-https://ilrcoxzqqvmjhlufytsd.supabase.co
-
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
-
-  <title>CȘE Admin – Autentificare</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Arial, sans-serif;
-      background: #244D68;
-      padding: 20px;
-    }
-
-    .login-box {
-      width: 100%;
-      max-width: 420px;
-      background: #FFFFFF;
-      padding: 35px;
-      border-radius: 18px;
-      text-align: center;
-      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
-    }
-
-    .logo {
-      font-size: 38px;
-      margin-bottom: 10px;
-    }
-
-    h1 {
-      color: #244D68;
-      margin: 0 0 8px;
-    }
-
-    .subtitle {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 30px;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #377C36;
-      box-shadow: 0 0 0 3px #F0F7ED;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    .login-button {
-      background: #377C36;
-      color: #FFFFFF;
-      font-weight: bold;
-    }
-
-    .login-button:hover {
-      background: #2b632a;
-    }
-
-    .resend-button {
-      margin-top: 12px;
-      background: #244D68;
-      color: #FFFFFF;
-    }
-
-    .resend-button:hover {
-      background: #193b51;
-    }
-
-    #message {
-      margin-top: 18px;
-      font-size: 14px;
-      min-height: 20px;
-      line-height: 1.5;
-    }
-
-    .footer {
-      margin-top: 25px;
-      font-size: 12px;
-      color: #777;
-    }
-  </style>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CȘE Admin – Autentificare</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;background:#244D68;padding:20px}.login-box{width:100%;max-width:440px;background:#fff;padding:35px;border-radius:18px;text-align:center;box-shadow:0 10px 35px #0002}.logo{font-size:38px;margin-bottom:10px}h1{color:#244D68;margin:0 0 8px}.subtitle{color:#666;font-size:14px;margin-bottom:30px}input{width:100%;padding:14px;margin-bottom:15px;border:1px solid #ccc;border-radius:8px;font-size:15px}input:focus{outline:none;border-color:#377C36;box-shadow:0 0 0 3px #F0F7ED}button{width:100%;padding:14px;border:0;border-radius:8px;font-size:15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.login-button{background:#377C36;color:white;font-weight:bold}.resend-button{margin-top:12px;background:#244D68;color:#fff}#message{margin-top:18px;font-size:14px;min-height:20px;line-height:1.5}.footer{margin-top:25px;font-size:12px;color:#777}.hidden{display:none!important}.info{font-size:14px;color:#526b78;line-height:1.6}
+</style>
 </head>
-
 <body>
-
-  <div class="login-box">
-
-    <div class="logo">🛡️</div>
-
-    <h1>CȘE Admin</h1>
-
-    <p class="subtitle">
-      Liceul Teoretic „Lucian Blaga” Reghin
-    </p>
-
-    <form id="loginForm">
-
-      <input
-        type="email"
-        id="email"
-        placeholder="Adresa de email"
-        autocomplete="email"
-        required
-      >
-
-      <input
-        type="password"
-        id="password"
-        placeholder="Parola"
-        autocomplete="current-password"
-        required
-      >
-
-      <button
-        type="submit"
-        id="loginButton"
-        class="login-button"
-      >
-        Conectare
-      </button>
-
-    </form>
-
-    <button
-      type="button"
-      id="resendConfirmation"
-      class="resend-button"
-    >
-      Retrimite emailul de confirmare
-    </button>
-
-    <p id="message" role="status"></p>
-
-    <p class="footer">
-      Acces rezervat administratorilor autorizați
-    </p>
-
-  </div>
-
-  <script type="module">
-
-    import { createClient } from
-      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-    // CONFIGURARE SUPABASE
-    const SUPABASE_URL = "https://ilrcoxzqqvmjhlufytsd.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F";
-
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-
-    // ELEMENTE HTML
-    const form = document.getElementById("loginForm");
-    const message = document.getElementById("message");
-    const loginButton = document.getElementById("loginButton");
-    const resendButton =
-      document.getElementById("resendConfirmation");
-
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-
-    function showMessage(text, color = "#244D68") {
-      message.textContent = text;
-      message.style.color = color;
-    }
-
-    // AUTENTIFICARE
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      loginButton.disabled = true;
-
-      showMessage("Se verifică autentificarea...");
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
-      try {
-        const { error: loginError } =
-          await supabase.auth.signInWithPassword({
-            email,
-            password
-          });
-
-        if (loginError) {
-          if (
-            loginError.message
-              .toLowerCase()
-              .includes("email not confirmed")
-          ) {
-            showMessage(
-              "Adresa de email nu este confirmată. " +
-              "Folosește butonul de mai jos.",
-              "#B45309"
-            );
-          } else {
-            showMessage(
-              "Autentificarea nu a reușit. " +
-              "Verifică emailul și parola.",
-              "#B91C1C"
-            );
-          }
-
-          return;
-        }
-
-        // VERIFICAREA ROLULUI
-        const { data: role, error: roleError } =
-          await supabase.rpc("cse_dashboard_role");
-
-        if (roleError) {
-          await supabase.auth.signOut();
-
-          showMessage(
-            "Nu s-au putut verifica permisiunile.",
-            "#B91C1C"
-          );
-
-          return;
-        }
-
-        if (
-          role !== "super_admin" &&
-          role !== "admin"
-        ) {
-          await supabase.auth.signOut();
-
-          showMessage(
-            "Acest cont nu are acces administrativ.",
-            "#B91C1C"
-          );
-
-          return;
-        }
-
-        showMessage(
-          "Autentificare reușită! Rol: " + role,
-          "#377C36"
-        );
-window.location.replace("./cse-dashboard.html");
-        // Redirecționarea către dashboard
-        // va fi adăugată în etapa următoare.
-
-      } catch (error) {
-        showMessage(
-          "A apărut o eroare de conexiune.",
-          "#B91C1C"
-        );
-      } finally {
-        loginButton.disabled = false;
-      }
-    });
-
-    // RETRIMITERE EMAIL CONFIRMARE
-    resendButton.addEventListener("click", async () => {
-
-      const email = emailInput.value.trim();
-
-      if (!email || !emailInput.checkValidity()) {
-        showMessage(
-          "Introdu mai întâi o adresă de email validă.",
-          "#B45309"
-        );
-        return;
-      }
-
-      resendButton.disabled = true;
-
-      showMessage(
-        "Se solicită retrimiterea emailului..."
-      );
-
-      try {
-        const { error } = await supabase.auth.resend({
-          type: "signup",
-          email: email
-        });
-
-        if (error) {
-          showMessage(
-            "Nu s-a putut trimite emailul: " +
-            error.message,
-            "#B91C1C"
-          );
-        } else {
-          showMessage(
-            "Dacă adresa este eligibilă, vei primi " +
-            "un email de confirmare. " +
-            "Verifică Inbox și Spam.",
-            "#377C36"
-          );
-        }
-
-      } catch (error) {
-        showMessage(
-          "A apărut o eroare de conexiune.",
-          "#B91C1C"
-        );
-      } finally {
-        resendButton.disabled = false;
-      }
-    });
-
-  </script>
-
+<div class="login-box">
+<div class="logo">🛡️</div><h1>CȘE Admin</h1><p class="subtitle">Liceul Teoretic „Lucian Blaga” Reghin</p>
+<form id="loginForm"><input type="email" id="email" placeholder="Adresa de e-mail" autocomplete="email" required><input type="password" id="password" placeholder="Parola" autocomplete="current-password" required><button type="submit" id="loginButton" class="login-button">Conectare</button></form>
+<button type="button" id="resendConfirmation" class="resend-button">Retrimite e-mailul de confirmare</button>
+<form id="invitationForm" class="hidden"><p class="info">Invitația a fost deschisă. Alege o parolă pentru contul tău CȘE.</p><input type="password" id="newPassword" autocomplete="new-password" minlength="8" placeholder="Parolă nouă (minimum 8 caractere)" required><input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" placeholder="Confirmă parola" required><button type="submit" id="activateButton" class="login-button">Salvează parola</button></form>
+<p id="message" role="status" aria-live="polite"></p><p class="footer">Acces rezervat administratorilor autorizați</p>
+</div>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const supabase=createClient("https://ilrcoxzqqvmjhlufytsd.supabase.co","sb_publishable_cHVoHM2bX2RP0G64Embhyw_gHIDmy2F");
+const $=id=>document.getElementById(id);
+const showMessage=(text,error=false)=>{$("message").textContent=text;$("message").style.color=error?"#B91C1C":"#244D68"};
+const dashboardUrl="./cse-dashboard.html";
+let invitationSession=false;
+async function checkRoleAndRedirect(){
+ const {data:{user},error:userError}=await supabase.auth.getUser();
+ if(userError||!user)throw new Error("Sesiunea nu este validă.");
+ const {data:role,error:roleError}=await supabase.rpc("cse_dashboard_role");
+ if(roleError)throw new Error("Nu s-au putut verifica permisiunile.");
+ if(!["admin","super_admin"].includes(role))throw new Error("Contul nu are încă acces administrativ. Contactează Super Admin.");
+ window.location.replace(dashboardUrl);
+}
+function showInvitation(){invitationSession=true;$("loginForm").classList.add("hidden");$("resendConfirmation").classList.add("hidden");$("invitationForm").classList.remove("hidden");}
+async function processInvitation(){
+ const params=new URLSearchParams(location.search);
+ const hash=new URLSearchParams(location.hash.replace(/^#/,""));
+ const type=params.get("type")||hash.get("type");
+ const tokenHash=params.get("token_hash");
+ const code=params.get("code");
+ const accessToken=hash.get("access_token"),refreshToken=hash.get("refresh_token");
+ const looksLikeInvite=type==="invite"||!!tokenHash||!!code||!!accessToken;
+ if(!looksLikeInvite)return;
+ showMessage("Se verifică invitația...");
+ try{
+  let result;
+  if(tokenHash&&type==="invite")result=await supabase.auth.verifyOtp({token_hash:tokenHash,type:"invite"});
+  else if(code)result=await supabase.auth.exchangeCodeForSession(code);
+  else if(accessToken&&refreshToken)result=await supabase.auth.setSession({access_token:accessToken,refresh_token:refreshToken});
+  else result=await supabase.auth.getSession();
+  if(result.error)throw result.error;
+  const {data:{user},error}=await supabase.auth.getUser();
+  if(error||!user)throw new Error("Linkul de invitație nu a creat o sesiune validă.");
+  history.replaceState(null,"",location.pathname);
+  showInvitation();showMessage("Invitația a fost verificată. Setează parola pentru a continua.");
+ }catch(error){showMessage("Invitația nu a putut fi verificată: "+(error.message||"link invalid sau expirat"),true);}
+}
+$("loginForm").addEventListener("submit",async event=>{
+ event.preventDefault();$("loginButton").disabled=true;showMessage("Se verifică autentificarea...");
+ try{
+  const {error}=await supabase.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+  if(error)throw error;
+  await checkRoleAndRedirect();
+ }catch(error){showMessage(error.message?.toLowerCase().includes("email not confirmed")?"Adresa de e-mail nu este confirmată. Folosește butonul de retrimitere.":(error.message||"Autentificarea nu a reușit."),true)}
+ finally{$("loginButton").disabled=false;}
+});
+$("invitationForm").addEventListener("submit",async event=>{
+ event.preventDefault();if(!invitationSession)return;
+ const password=$("newPassword").value;
+ if(password!==$("confirmPassword").value){showMessage("Parolele nu coincid.",true);return;}
+ $("activateButton").disabled=true;showMessage("Se salvează parola...");
+ try{
+  const {error}=await supabase.auth.updateUser({password});if(error)throw error;
+  showMessage("Parola a fost salvată. Se verifică accesul...");
+  await checkRoleAndRedirect();
+ }catch(error){showMessage(error.message||"Nu s-a putut finaliza activarea.",true)}
+ finally{$("activateButton").disabled=false;}
+});
+$("resendConfirmation").addEventListener("click",async()=>{
+ const email=$("email").value.trim();if(!email||!$("email").checkValidity()){showMessage("Introdu o adresă de e-mail validă.",true);return;}
+ $("resendConfirmation").disabled=true;showMessage("Se solicită retrimiterea e-mailului...");
+ try{
+  const {error}=await supabase.auth.resend({type:"signup",email});if(error)throw error;
+  showMessage("Dacă adresa este eligibilă, vei primi un e-mail. Verifică Inbox și Spam.");
+ }catch(error){showMessage(error.message||"Eroare de conexiune.",true)}
+ finally{$("resendConfirmation").disabled=false;}
+});
+await processInvitation();
+</script>
 </body>
 </html>
-
