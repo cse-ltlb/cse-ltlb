@@ -12,7 +12,7 @@
 <div class="logo">🛡️</div><h1>CȘE Admin</h1><p class="subtitle">Liceul Teoretic „Lucian Blaga” Reghin</p>
 <form id="loginForm"><input type="email" id="email" placeholder="Adresa de e-mail" autocomplete="email" required><input type="password" id="password" placeholder="Parola" autocomplete="current-password" required><button type="submit" id="loginButton" class="login-button">Conectare</button></form>
 <button type="button" id="resendConfirmation" class="resend-button">Retrimite e-mailul de confirmare</button>
-<form id="invitationForm" class="hidden"><p class="info">Invitația a fost deschisă. Alege o parolă pentru contul tău CȘE.</p><input type="password" id="newPassword" autocomplete="new-password" minlength="8" placeholder="Parolă nouă (minimum 8 caractere)" required><input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" placeholder="Confirmă parola" required><button type="submit" id="activateButton" class="login-button">Salvează parola</button></form>
+<form id="invitationForm" class="hidden"><p class="info">Invitația a fost deschisă. Alege o parolă pentru contul tău CȘE.</p><input type="password" id="newPassword" autocomplete="new-password" minlength="8" placeholder="Parolă nouă (minimum 8 caractere)" required><input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" placeholder="Confirmă parola" required><button type="submit" id="activateButton" class="login-button">Salvează parola și acceptă invitația</button></form>
 <p id="message" role="status" aria-live="polite"></p><p class="footer">Acces rezervat administratorilor autorizați</p>
 </div>
 <script type="module">
@@ -50,8 +50,10 @@ async function processInvitation(){
   if(result.error)throw result.error;
   const {data:{user},error}=await supabase.auth.getUser();
   if(error||!user)throw new Error("Linkul de invitație nu a creat o sesiune validă.");
+  // Nu afișăm formularul decât dacă există o invitație în așteptare pentru utilizator.
+  // Verificarea decisivă și acordarea rolului au loc în funcția SQL securizată.
   history.replaceState(null,"",location.pathname);
-  showInvitation();showMessage("Invitația a fost verificată. Setează parola pentru a continua.");
+  showInvitation();showMessage("Sesiunea a fost verificată. Setează parola pentru a accepta invitația.");
  }catch(error){showMessage("Invitația nu a putut fi verificată: "+(error.message||"link invalid sau expirat"),true);}
 }
 $("loginForm").addEventListener("submit",async event=>{
@@ -69,8 +71,13 @@ $("invitationForm").addEventListener("submit",async event=>{
  if(password!==$("confirmPassword").value){showMessage("Parolele nu coincid.",true);return;}
  $("activateButton").disabled=true;showMessage("Se salvează parola...");
  try{
-  const {error}=await supabase.auth.updateUser({password});if(error)throw error;
-  showMessage("Parola a fost salvată. Se verifică accesul...");
+  const {error:passwordError}=await supabase.auth.updateUser({password});
+  if(passwordError)throw passwordError;
+  showMessage("Parola a fost salvată. Se acceptă invitația...");
+  const {data:accepted,error:acceptError}=await supabase.rpc("accept_cse_admin_invitation");
+  if(acceptError)throw new Error("Invitația nu a putut fi acceptată: "+acceptError.message);
+  if(accepted!==true)throw new Error("Nu există o invitație activă pentru acest cont. Contactează Super Admin.");
+  showMessage("Invitația a fost acceptată. Se deschide dashboardul...");
   await checkRoleAndRedirect();
  }catch(error){showMessage(error.message||"Nu s-a putut finaliza activarea.",true)}
  finally{$("activateButton").disabled=false;}
