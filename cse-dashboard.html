@@ -30,7 +30,7 @@
     .cards button { width: 100%; }
     .primary-button:hover, .cards button:not(:disabled):hover { background: #2C632B; }
     .cards button:disabled { background: #9AA8A0; }
-    #qaSection, #suggestionsSection, #calendarSection, #administratorsSection { display: none; margin-top: 35px; }
+    #qaSection, #suggestionsSection, #calendarSection, #administratorsSection, #studentsSection { display: none; margin-top: 35px; }
     .qa-header, .suggestions-header, .calendar-header, .administrators-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
     .qa-header h2, .suggestions-header h2, .calendar-header h2, .administrators-header h2 { margin: 0; }
     .secondary-button { background: #244D68; color: white; border: 0; border-radius: 8px; padding: 11px 17px; }
@@ -91,6 +91,14 @@
     .admin-management-item button {background:#FFF;color:#9D2F2F;border:1px solid #DCA7A7;padding:10px 13px;border-radius:8px;cursor:pointer}
     .admin-management-item button:disabled {opacity:.5;cursor:not-allowed}
     #adminManagementMessage {margin-top:12px;color:#244D68}
+    .student-filters { display:flex;flex-wrap:wrap;gap:10px;margin:20px 0; }
+    .student-filters button {border:0;border-radius:8px;padding:10px 14px;background:#E5EFE1;color:#244D68}
+    .student-filters button.active {background:#377C36;color:white}
+    .student-item {padding:17px;border:1px solid #DDE8D9;border-radius:12px;margin:12px 0;background:#F8FBF7;overflow-wrap:anywhere}
+    .student-item small {display:block;color:#62727B;line-height:1.8;margin-top:6px}
+    .student-actions {display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .student-actions button {border:0;border-radius:8px;padding:10px 15px;background:#377C36;color:white}
+    .student-actions button.reject {background:#A43F3F}
     .logout { margin-top: 35px; background: #244D68; color: white; border: 0; padding: 13px 25px; border-radius: 9px; }
     .status { margin-top: 25px; color: #64747D; font-size: 13px; }
     footer { text-align: center; padding: 30px; color: #74847B; font-size: 12px; }
@@ -113,6 +121,7 @@
         <div class="card"><div class="card-icon">💬</div><h3>Q&A</h3><p>Gestionează întrebările și răspunsurile adresate Consiliului.</p><button id="openQAButton">Deschide Q&A</button></div>
         <div class="card"><div class="card-icon">💡</div><h3>Sugestii</h3><p>Consultă propunerile elevilor și gestionează sugestiile.</p><button id="openSuggestionsButton">Deschide Sugestii</button></div>
         <div class="card"><div class="card-icon">📅</div><h3>Calendar</h3><p>Adaugă, modifică și organizează evenimentele CȘE.</p><button id="openCalendarButton">Deschide Calendar</button></div>
+        <div class="card"><div class="card-icon">🎓</div><h3>Conturi elevi</h3><p>Verifică, aprobă și respinge conturile elevilor.</p><button id="openStudentsButton" type="button">Deschide Conturi elevi</button></div>
         <div class="card" id="adminCard"><div class="card-icon">👥</div><h3>Administratori</h3><p>Gestionează conturile care au acces la panoul administrativ.</p><button id="openAdministratorsButton" type="button">Deschide Administratori</button></div>
       </div>
       <section id="qaSection">
@@ -196,6 +205,21 @@
           </div>
         </div>
       </section>
+      <section id="studentsSection">
+        <div class="card">
+          <div class="qa-header"><h2>🎓 Conturi elevi</h2><button id="closeStudentsButton" class="secondary-button" type="button">Închide</button></div>
+          <p>Conturile pot fi aprobate numai după confirmarea adresei de e-mail. Admin și Super Admin au aceleași drepturi în acest modul.</p>
+          <div id="studentFilters" class="student-filters">
+            <button type="button" class="active" data-status="all">Toate</button>
+            <button type="button" data-status="pending">În așteptare</button>
+            <button type="button" data-status="approved">Aprobate</button>
+            <button type="button" data-status="rejected">Respinse</button>
+          </div>
+          <button id="refreshStudentsButton" type="button" class="secondary-button">Reîncarcă lista</button>
+          <p id="studentsMessage" role="status" aria-live="polite"></p>
+          <div id="studentsList"></div>
+        </div>
+      </section>
       <section id="administratorsSection">
         <div class="card">
           <div class="administrators-header"><h2>👥 Administratori</h2><button id="closeAdministratorsButton" class="secondary-button" type="button">Închide</button></div>
@@ -220,7 +244,7 @@
         </div>
       </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.8</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.9</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -882,6 +906,7 @@
     $("refreshCalendarButton").addEventListener("click",loadCalendar);
     $("openCalendarButton").addEventListener("click",async()=>{
       qaSection.style.display="none";
+      $("studentsSection").style.display = "none";
       $("administratorsSection").style.display="none";
       $("suggestionsSection").style.display="none";
       $("calendarSection").style.display="block";
@@ -892,6 +917,132 @@
       $("calendarSection").style.display="none";
       closeCalendarForm();
       $("openCalendarButton").scrollIntoView({behavior:"smooth",block:"center"});
+    });
+
+    // MODUL CONTURI ELEVI — folosește exclusiv RPC-urile administrative existente.
+    let studentAccounts = [];
+    let studentFilter = "all";
+    let studentsBusy = false;
+    function studentsMessage(message, error = false) {
+      const el = $("studentsMessage");
+      el.textContent = message;
+      el.style.color = error ? "#922E2E" : "#244D68";
+    }
+    async function checkStudentAdminAccess() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+      if (userError || !user || user.id !== currentUser?.id ||
+          roleError || !["admin", "super_admin"].includes(role)) {
+        throw new Error("Nu mai ai acces administrativ.");
+      }
+    }
+    async function loadStudentAccounts() {
+      if (studentsBusy) return;
+      studentsBusy = true;
+      $("refreshStudentsButton").disabled = true;
+      studentsMessage("Se încarcă lista elevilor...");
+      try {
+        await checkStudentAdminAccess();
+        const { data, error } = await supabase.rpc("admin_get_student_accounts");
+        if (error) throw error;
+        studentAccounts = data || [];
+        renderStudentAccounts();
+        studentsMessage(`${studentAccounts.length} conturi de elev găsite.`);
+      } catch (error) {
+        $("studentsList").replaceChildren();
+        studentsMessage(error.message || "Nu s-au putut încărca elevii.", true);
+      } finally {
+        studentsBusy = false;
+        $("refreshStudentsButton").disabled = false;
+      }
+    }
+    function renderStudentAccounts() {
+      const list = $("studentsList");
+      list.replaceChildren();
+      const visible = studentAccounts.filter(s => studentFilter === "all" || s.approval_status === studentFilter);
+      if (!visible.length) {
+        list.append(makeElement("p", "Nu există elevi în această categorie."));
+        return;
+      }
+      for (const s of visible) {
+        const item = makeElement("article", undefined, "student-item");
+        item.append(makeElement("strong", s.display_name || "Elev fără nume"));
+        const status = {pending:"În așteptare",approved:"Aprobat",rejected:"Respins"};
+        const details = makeElement("small",
+          `Clasă: ${s.class_name || "—"} · E-mail: ${s.email || "—"}\n` +
+          `Confirmare e-mail: ${s.email_confirmed ? "Da" : "Nu"} · ` +
+          `Stare: ${status[s.approval_status] || s.approval_status || "—"} · ` +
+          `Creat: ${formatDate(s.created_at)}`);
+        details.style.whiteSpace = "pre-line";
+        item.append(details);
+        const actions = makeElement("div", undefined, "student-actions");
+        if (s.approval_status !== "approved") {
+          const approve = makeElement("button", "Aprobă");
+          approve.type = "button";
+          approve.disabled = !s.email_confirmed || studentsBusy;
+          if (!s.email_confirmed) approve.title = "Elevul trebuie să confirme adresa de e-mail";
+          approve.addEventListener("click", () => confirmStudentApproval(s, true));
+          actions.append(approve);
+        }
+        if (s.approval_status !== "rejected") {
+          const reject = makeElement("button", "Respinge", "reject");
+          reject.type = "button";
+          reject.disabled = studentsBusy;
+          reject.addEventListener("click", () => confirmStudentApproval(s, false));
+          actions.append(reject);
+        }
+        item.append(actions);
+        list.append(item);
+      }
+    }
+    function confirmStudentApproval(student, approved) {
+      if (studentsBusy || confirmDialog.open) return;
+      if (approved && !student.email_confirmed) {
+        studentsMessage("Elevul trebuie să confirme e-mailul înainte de aprobare.", true);
+        return;
+      }
+      $("confirmTitle").textContent = approved ? "Aprobă contul elevului" : "Respinge contul elevului";
+      $("confirmDescription").textContent =
+        `${approved ? "Aprobi" : "Respingi"} contul „${student.display_name || student.email || "Elev"}”?`;
+      confirmCallback = () => saveStudentApproval(student.id, approved);
+      confirmDialog.showModal();
+    }
+    async function saveStudentApproval(userId, approved) {
+      if (studentsBusy) return;
+      studentsBusy = true;
+      studentsMessage("Se salvează decizia...");
+      try {
+        await checkStudentAdminAccess();
+        const { data, error } = await supabase.rpc("admin_set_student_approval", {
+          p_user_id: userId, p_approved: approved
+        });
+        if (error) throw error;
+        studentsBusy = false;
+        await loadStudentAccounts();
+        studentsMessage(typeof data === "string" ? data : approved ? "Cont aprobat." : "Cont respins.");
+      } catch (error) {
+        studentsBusy = false;
+        studentsMessage(error.message || "Nu s-a putut salva decizia.", true);
+      }
+    }
+    $("studentFilters").querySelectorAll("button").forEach(button => {
+      button.addEventListener("click", () => {
+        studentFilter = button.dataset.status;
+        $("studentFilters").querySelectorAll("button").forEach(b => b.classList.toggle("active", b === button));
+        renderStudentAccounts();
+      });
+    });
+    $("refreshStudentsButton").addEventListener("click", loadStudentAccounts);
+    $("openStudentsButton").addEventListener("click", async () => {
+      ["qaSection", "suggestionsSection", "calendarSection", "administratorsSection"]
+        .forEach(id => $(id).style.display = "none");
+      $("studentsSection").style.display = "block";
+      $("studentsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+      await loadStudentAccounts();
+    });
+    $("closeStudentsButton").addEventListener("click", () => {
+      $("studentsSection").style.display = "none";
+      $("openStudentsButton").scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
     // MODUL ADMINISTRATORI — invitațiile sunt procesate de Edge Function,
@@ -1012,8 +1163,10 @@
         return;
       }
       qaSection.style.display = "none";
+      $("studentsSection").style.display = "none";
       $("suggestionsSection").style.display = "none";
       $("calendarSection").style.display = "none";
+      $("studentsSection").style.display = "none";
       $("administratorsSection").style.display = "block";
       await loadAdminManagement();
       $("administratorsSection").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1089,8 +1242,10 @@
     $("refreshSuggestionsButton").addEventListener("click", loadSuggestions);
     $("openSuggestionsButton").addEventListener("click", async () => {
       qaSection.style.display = "none";
+      $("studentsSection").style.display = "none";
       $("administratorsSection").style.display = "none";
       $("calendarSection").style.display = "none";
+      $("studentsSection").style.display = "none";
       $("suggestionsSection").style.display = "block";
       $("suggestionsSection").scrollIntoView({ behavior: "smooth", block: "start" });
       await loadSuggestions();
@@ -1112,6 +1267,7 @@
       $("suggestionsSection").style.display = "none";
       $("calendarSection").style.display = "none";
       $("administratorsSection").style.display = "none";
+      $("studentsSection").style.display = "none";
       qaSection.style.display = "block";
       qaSection.scrollIntoView({ behavior: "smooth", block: "start" });
       await loadQAQuestions();
@@ -1119,6 +1275,7 @@
 
     $("closeQAButton").addEventListener("click", () => {
       qaSection.style.display = "none";
+      $("studentsSection").style.display = "none";
       $("openQAButton").scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
