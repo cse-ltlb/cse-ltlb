@@ -30,9 +30,9 @@
     .cards button { width: 100%; }
     .primary-button:hover, .cards button:not(:disabled):hover { background: #2C632B; }
     .cards button:disabled { background: #9AA8A0; }
-    #qaSection, #suggestionsSection, #calendarSection { display: none; margin-top: 35px; }
-    .qa-header, .suggestions-header, .calendar-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
-    .qa-header h2, .suggestions-header h2, .calendar-header h2 { margin: 0; }
+    #qaSection, #suggestionsSection, #calendarSection, #administratorsSection { display: none; margin-top: 35px; }
+    .qa-header, .suggestions-header, .calendar-header, .administrators-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+    .qa-header h2, .suggestions-header h2, .calendar-header h2, .administrators-header h2 { margin: 0; }
     .secondary-button { background: #244D68; color: white; border: 0; border-radius: 8px; padding: 11px 17px; }
     .secondary-button:hover { background: #17364B; }
     #qaContent, #suggestionsContent, #calendarContent { margin-top: 25px; }
@@ -77,6 +77,12 @@
     .calendar-actions button.alt { background:#244D68; }
     .calendar-actions button.reject { background:#A43F3F; }
     @media (max-width:600px) { .calendar-form-grid { grid-template-columns:1fr; } }
+    .admin-invite-form { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin-top:20px; }
+    .admin-invite-form label { flex:1; min-width:220px; display:flex; flex-direction:column; gap:8px; font-weight:bold; font-size:14px; }
+    .admin-invite-form input { padding:12px; border:1px solid #BACFC1; border-radius:8px; width:100%; }
+    .admin-invite-message { margin-top:16px; padding:12px; border-radius:8px; background:#E5EFE1; }
+    .admin-invite-message.error { background:#FBEAEA; color:#922E2E; }
+    .admin-invite-note { font-size:13px; color:#62727B; line-height:1.6; }
     .logout { margin-top: 35px; background: #244D68; color: white; border: 0; padding: 13px 25px; border-radius: 9px; }
     .status { margin-top: 25px; color: #64747D; font-size: 13px; }
     footer { text-align: center; padding: 30px; color: #74847B; font-size: 12px; }
@@ -99,7 +105,7 @@
         <div class="card"><div class="card-icon">💬</div><h3>Q&A</h3><p>Gestionează întrebările și răspunsurile adresate Consiliului.</p><button id="openQAButton">Deschide Q&A</button></div>
         <div class="card"><div class="card-icon">💡</div><h3>Sugestii</h3><p>Consultă propunerile elevilor și gestionează sugestiile.</p><button id="openSuggestionsButton">Deschide Sugestii</button></div>
         <div class="card"><div class="card-icon">📅</div><h3>Calendar</h3><p>Adaugă, modifică și organizează evenimentele CȘE.</p><button id="openCalendarButton">Deschide Calendar</button></div>
-        <div class="card" id="adminCard"><div class="card-icon">👥</div><h3>Administratori</h3><p>Gestionează conturile care au acces la panoul administrativ.</p><button disabled>În curând</button></div>
+        <div class="card" id="adminCard"><div class="card-icon">👥</div><h3>Administratori</h3><p>Gestionează conturile care au acces la panoul administrativ.</p><button id="openAdministratorsButton" type="button">Deschide Administratori</button></div>
       </div>
       <section id="qaSection">
         <div class="card">
@@ -182,8 +188,23 @@
           </div>
         </div>
       </section>
+      <section id="administratorsSection">
+        <div class="card">
+          <div class="administrators-header"><h2>👥 Administratori</h2><button id="closeAdministratorsButton" class="secondary-button" type="button">Închide</button></div>
+          <p>Trimite invitații pentru acces la dashboard. Numai Super Admin poate utiliza acest modul.</p>
+          <form id="adminInviteForm" class="admin-invite-form">
+            <label for="adminInviteEmail">Adresa de e-mail a viitorului administrator
+              <input id="adminInviteEmail" type="email" autocomplete="email" maxlength="254" placeholder="exemplu@domeniu.ro" required>
+            </label>
+            <button id="adminInviteButton" class="primary-button" type="submit">Trimite invitația</button>
+          </form>
+          <div id="adminInviteMessage" role="status" aria-live="polite"></div>
+          <p class="admin-invite-note">Invitația este înregistrată în Supabase. Rolul de administrator nu se acordă la trimiterea invitației. Nu trimite încă invitații reale până la finalizarea și verificarea fluxului de activare, inclusiv pentru conturile existente.</p>
+          <p class="admin-invite-note">Vizualizarea invitațiilor, revocarea accesului și gestionarea conturilor existente vor fi disponibile după configurarea funcțiilor securizate pentru aceste operațiuni.</p>
+        </div>
+      </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.5</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.6</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -210,6 +231,8 @@
     const qaSection = $("qaSection");
     const confirmDialog = $("confirmDialog");
     let currentUser = null;
+    let currentRole = null;
+    let adminInviteBusy = false;
     let qaQuestions = [];
     let qaFilter = "all";
     let qaBusy = false;
@@ -248,6 +271,7 @@
           return;
         }
         currentUser = user;
+        currentRole = role;
         $("roleBadge").textContent = role === "super_admin" ? "Super Admin" : "Administrator";
         if (role !== "super_admin") $("adminCard").style.display = "none";
         loading.style.display = "none";
@@ -841,6 +865,7 @@
     $("refreshCalendarButton").addEventListener("click",loadCalendar);
     $("openCalendarButton").addEventListener("click",async()=>{
       qaSection.style.display="none";
+      $("administratorsSection").style.display="none";
       $("suggestionsSection").style.display="none";
       $("calendarSection").style.display="block";
       $("calendarSection").scrollIntoView({behavior:"smooth",block:"start"});
@@ -850,6 +875,47 @@
       $("calendarSection").style.display="none";
       closeCalendarForm();
       $("openCalendarButton").scrollIntoView({behavior:"smooth",block:"center"});
+    });
+
+    // MODUL ADMINISTRATORI — invitațiile sunt procesate de Edge Function,
+    // care verifică pe server rolul super_admin.
+    function adminInviteMessage(message, isError = false) {
+      const target = $("adminInviteMessage");
+      target.textContent = message;
+      target.className = message ? `admin-invite-message${isError ? " error" : ""}` : "";
+    }
+
+    $("openAdministratorsButton").addEventListener("click", async () => {
+      if (currentRole !== "super_admin") return;
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+      if (userError || !user || user.id !== currentUser?.id || roleError || role !== "super_admin") {
+        adminInviteMessage("Nu mai ai drepturi de Super Admin.", true);
+        return;
+      }
+      qaSection.style.display = "none";
+      $("suggestionsSection").style.display = "none";
+      $("calendarSection").style.display = "none";
+      $("administratorsSection").style.display = "block";
+      $("administratorsSection").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    $("closeAdministratorsButton").addEventListener("click", () => {
+      $("administratorsSection").style.display = "none";
+      $("openAdministratorsButton").scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+
+    $("adminInviteForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (adminInviteBusy || currentRole !== "super_admin") return;
+      const email = $("adminInviteEmail").value.trim().toLowerCase();
+      if (!email || !$("adminInviteEmail").checkValidity()) {
+        adminInviteMessage("Introdu o adresă de e-mail validă.", true);
+        return;
+      }
+      // Temporar blocăm trimiterea efectivă până când fluxul de activare
+      // și cazurile conturilor existente sunt verificate complet.
+      adminInviteMessage("Formularul este pregătit. Trimiterea invitațiilor va fi activată după verificarea completă a fluxului de activare.");
     });
 
     $("suggestionsFilters").querySelectorAll("button").forEach(button => {
@@ -866,6 +932,7 @@
     $("refreshSuggestionsButton").addEventListener("click", loadSuggestions);
     $("openSuggestionsButton").addEventListener("click", async () => {
       qaSection.style.display = "none";
+      $("administratorsSection").style.display = "none";
       $("calendarSection").style.display = "none";
       $("suggestionsSection").style.display = "block";
       $("suggestionsSection").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -887,6 +954,7 @@
     $("openQAButton").addEventListener("click", async () => {
       $("suggestionsSection").style.display = "none";
       $("calendarSection").style.display = "none";
+      $("administratorsSection").style.display = "none";
       qaSection.style.display = "block";
       qaSection.scrollIntoView({ behavior: "smooth", block: "start" });
       await loadQAQuestions();
