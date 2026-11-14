@@ -83,6 +83,14 @@
     .admin-invite-message { margin-top:16px; padding:12px; border-radius:8px; background:#E5EFE1; }
     .admin-invite-message.error { background:#FBEAEA; color:#922E2E; }
     .admin-invite-note { font-size:13px; color:#62727B; line-height:1.6; }
+    .admin-management-toolbar {display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-top:28px}
+    .admin-management-list {display:grid;gap:10px;margin:12px 0 24px}
+    .admin-management-item {display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:15px;border:1px solid #D5E4D5;border-radius:10px;background:#F8FBF7}
+    .admin-management-item strong {overflow-wrap:anywhere}
+    .admin-management-item small {display:block;margin-top:5px;color:#62727B}
+    .admin-management-item button {background:#FFF;color:#9D2F2F;border:1px solid #DCA7A7;padding:10px 13px;border-radius:8px;cursor:pointer}
+    .admin-management-item button:disabled {opacity:.5;cursor:not-allowed}
+    #adminManagementMessage {margin-top:12px;color:#244D68}
     .logout { margin-top: 35px; background: #244D68; color: white; border: 0; padding: 13px 25px; border-radius: 9px; }
     .status { margin-top: 25px; color: #64747D; font-size: 13px; }
     footer { text-align: center; padding: 30px; color: #74847B; font-size: 12px; }
@@ -200,11 +208,19 @@
           </form>
           <div id="adminInviteMessage" role="status" aria-live="polite"></div>
           <p class="admin-invite-note">Invitația este înregistrată în Supabase. Rolul de administrator nu se acordă la trimiterea invitației. Pentru testare, folosește mai întâi o adresă secundară care nu are deja cont în proiect. Conturile existente necesită un flux separat de invitare.</p>
-          <p class="admin-invite-note">Vizualizarea invitațiilor, revocarea accesului și gestionarea conturilor existente vor fi disponibile după configurarea funcțiilor securizate pentru aceste operațiuni.</p>
+          <div class="admin-management-toolbar">
+            <h3>Administratori activi</h3>
+            <button id="refreshAdminsButton" type="button" class="secondary-button">Reîncarcă listele</button>
+          </div>
+          <div id="adminManagementMessage" role="status" aria-live="polite"></div>
+          <div id="activeAdminsList" class="admin-management-list">Deschide modulul pentru a încărca lista.</div>
+          <h3>Invitații</h3>
+          <div id="pendingInvitationsList" class="admin-management-list">Invitațiile vor apărea aici.</div>
+          <p class="admin-invite-note">Revocarea unui administrator îi elimină accesul la dashboard, fără a șterge contul. Revocarea unei invitații blochează activarea rolului prin acea invitație.</p>
         </div>
       </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.7</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.8</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -233,6 +249,7 @@
     let currentUser = null;
     let currentRole = null;
     let adminInviteBusy = false;
+    let adminManageBusy = false;
     let qaQuestions = [];
     let qaFilter = "all";
     let qaBusy = false;
@@ -885,6 +902,107 @@
       target.className = message ? `admin-invite-message${isError ? " error" : ""}` : "";
     }
 
+    // Lista și operațiile de revocare trec exclusiv prin Edge Function
+    // manage-cse-admins; browserul nu primește cheia service_role.
+    function managementMessage(message, isError = false) {
+      const el = $("adminManagementMessage");
+      el.textContent = message;
+      el.style.color = isError ? "#922E2E" : "#244D68";
+    }
+    async function manageAdmins(action, extra = {}) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) throw new Error("Sesiunea a expirat. Autentifică-te din nou.");
+      const { data, error } = await supabase.functions.invoke("manage-cse-admins", {
+        body: { action, ...extra },
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      });
+      if (error) {
+        let details;
+        try { details = await error.context?.json(); } catch (_) {}
+        throw new Error(details?.error || error.message || "Operația nu a reușit.");
+      }
+      if (!data?.success) throw new Error(data?.error || "Serverul nu a confirmat operația.");
+      return data;
+    }
+    function addManagementItem(container, primary, secondary, buttonLabel, onAction, disabled = false) {
+      const item = document.createElement("div");
+      item.className = "admin-management-item";
+      const detail = document.createElement("div");
+      const strong = document.createElement("strong");
+      strong.textContent = primary;
+      const small = document.createElement("small");
+      small.textContent = secondary;
+      detail.append(strong, small);
+      item.append(detail);
+      if (buttonLabel) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = buttonLabel;
+        button.disabled = disabled;
+        button.addEventListener("click", onAction);
+        item.append(button);
+      }
+      container.append(item);
+    }
+    async function loadAdminManagement() {
+      if (adminManageBusy) return;
+      adminManageBusy = true;
+      $("refreshAdminsButton").disabled = true;
+      managementMessage("Se încarcă administratorii și invitațiile...");
+      try {
+        const data = await manageAdmins("list");
+        const active = $("activeAdminsList");
+        const invites = $("pendingInvitationsList");
+        active.replaceChildren();
+        invites.replaceChildren();
+        const admins = data.admins || [];
+        const invitations = data.invitations || [];
+        if (!admins.length) active.textContent = "Nu există administratori înregistrați.";
+        for (const admin of admins) {
+          const isProtected = admin.role !== "admin" || admin.user_id === currentUser?.id;
+          addManagementItem(active, admin.email || `Cont ${admin.user_id.slice(0,8)}…`,
+            `${admin.role === "super_admin" ? "Super Admin" : "Administrator"} · Din ${formatDate(admin.created_at)}`,
+            isProtected ? null : "Revocă accesul", async () => {
+              if (!confirm(`Revoci accesul administrativ pentru ${admin.email || admin.user_id}? Contul nu va fi șters.`)) return;
+              await runAdminAction("revoke_admin", { user_id: admin.user_id });
+            });
+        }
+        if (!invitations.length) invites.textContent = "Nu există invitații înregistrate.";
+        for (const invite of invitations) {
+          const statuses = { pending: "În așteptare", accepted: "Acceptată", revoked: "Revocată" };
+          addManagementItem(invites, invite.email,
+            `${statuses[invite.status] || invite.status} · ${formatDate(invite.created_at)}`,
+            invite.status === "pending" ? "Revocă invitația" : null, async () => {
+              if (!confirm(`Revoci invitația pentru ${invite.email}?`)) return;
+              await runAdminAction("revoke_invitation", { invitation_id: invite.id });
+            });
+        }
+        managementMessage(`${admins.length} administratori · ${invitations.filter(i => i.status === "pending").length} invitații în așteptare.`);
+      } catch (error) {
+        console.error("Eroare la încărcarea administratorilor:", error);
+        managementMessage(error.message || "Nu s-au putut încărca datele.", true);
+      } finally {
+        adminManageBusy = false;
+        $("refreshAdminsButton").disabled = false;
+      }
+    }
+    async function runAdminAction(action, payload) {
+      if (adminManageBusy) return;
+      adminManageBusy = true;
+      managementMessage("Se procesează cererea...");
+      try {
+        const data = await manageAdmins(action, payload);
+        managementMessage(data.message || "Operația a fost efectuată.");
+      } catch (error) {
+        managementMessage(error.message || "Operația a eșuat.", true);
+        adminManageBusy = false;
+        return;
+      }
+      adminManageBusy = false;
+      await loadAdminManagement();
+    }
+    $("refreshAdminsButton").addEventListener("click", loadAdminManagement);
+
     $("openAdministratorsButton").addEventListener("click", async () => {
       if (currentRole !== "super_admin") return;
       const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -897,6 +1015,7 @@
       $("suggestionsSection").style.display = "none";
       $("calendarSection").style.display = "none";
       $("administratorsSection").style.display = "block";
+      await loadAdminManagement();
       $("administratorsSection").scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
@@ -946,6 +1065,7 @@
         }
         $("adminInviteEmail").value = "";
         adminInviteMessage(data.message || "Invitația a fost trimisă și înregistrată.");
+        await loadAdminManagement();
       } catch (error) {
         console.error("Eroare la trimiterea invitației:", error);
         adminInviteMessage(error.message || "Nu s-a putut trimite invitația.", true);
