@@ -5,14 +5,16 @@
 <title>CȘE Admin – Autentificare</title>
 <style>
 *{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif;background:#244D68;padding:20px}.login-box{width:100%;max-width:440px;background:#fff;padding:35px;border-radius:18px;text-align:center;box-shadow:0 10px 35px #0002}.logo{font-size:38px;margin-bottom:10px}h1{color:#244D68;margin:0 0 8px}.subtitle{color:#666;font-size:14px;margin-bottom:30px}input{width:100%;padding:14px;margin-bottom:15px;border:1px solid #ccc;border-radius:8px;font-size:15px}input:focus{outline:none;border-color:#377C36;box-shadow:0 0 0 3px #F0F7ED}button{width:100%;padding:14px;border:0;border-radius:8px;font-size:15px;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.login-button{background:#377C36;color:white;font-weight:bold}.resend-button{margin-top:12px;background:#244D68;color:#fff}#message{margin-top:18px;font-size:14px;min-height:20px;line-height:1.5}.footer{margin-top:25px;font-size:12px;color:#777}.hidden{display:none!important}.info{font-size:14px;color:#526b78;line-height:1.6}
+/* Câmpurile cu parolă permit afișarea temporară a textului introdus. */
+.password-wrap{position:relative;margin-bottom:15px}.password-wrap input{margin-bottom:0;padding-right:100px}.password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:auto;padding:8px 9px;background:#F0F7ED;color:#244D68;font-size:12px;font-weight:bold;border:1px solid #d4e6ce;border-radius:6px;cursor:pointer}.password-toggle:focus-visible{outline:2px solid #377C36;outline-offset:2px}
 </style>
 </head>
 <body>
 <div class="login-box">
 <div class="logo">🛡️</div><h1>CȘE Admin</h1><p class="subtitle">Liceul Teoretic „Lucian Blaga” Reghin</p>
-<form id="loginForm"><input type="email" id="email" placeholder="Adresa de e-mail" autocomplete="email" required><input type="password" id="password" placeholder="Parola" autocomplete="current-password" required><button type="submit" id="loginButton" class="login-button">Conectare</button></form>
+<form id="loginForm"><input type="email" id="email" placeholder="Adresa de e-mail" autocomplete="email" required><div class="password-wrap"><input type="password" id="password" placeholder="Parola" autocomplete="current-password" required><button type="button" class="password-toggle" data-password-target="password" aria-label="Afișează parola" aria-pressed="false">👁 Arată</button></div><button type="submit" id="loginButton" class="login-button">Conectare</button></form>
 <button type="button" id="resendConfirmation" class="resend-button">Retrimite e-mailul de confirmare</button>
-<form id="invitationForm" class="hidden"><p class="info">Invitația a fost deschisă. Alege o parolă pentru contul tău CȘE.</p><input type="password" id="newPassword" autocomplete="new-password" minlength="8" placeholder="Parolă nouă (minimum 8 caractere)" required><input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" placeholder="Confirmă parola" required><button type="submit" id="activateButton" class="login-button">Salvează parola și acceptă invitația</button></form>
+<form id="invitationForm" class="hidden"><p class="info">Invitația a fost deschisă. Alege o parolă pentru contul tău CȘE.</p><div class="password-wrap"><input type="password" id="newPassword" autocomplete="new-password" minlength="8" placeholder="Parolă nouă (minimum 8 caractere)" required><button type="button" class="password-toggle" data-password-target="newPassword" aria-label="Afișează parola nouă" aria-pressed="false">👁 Arată</button></div><div class="password-wrap"><input type="password" id="confirmPassword" autocomplete="new-password" minlength="8" placeholder="Confirmă parola" required><button type="button" class="password-toggle" data-password-target="confirmPassword" aria-label="Afișează confirmarea parolei" aria-pressed="false">👁 Arată</button></div><button type="submit" id="activateButton" class="login-button">Salvează parola și acceptă invitația</button></form>
 <p id="message" role="status" aria-live="polite"></p><p class="footer">Acces rezervat administratorilor autorizați</p>
 </div>
 <script type="module">
@@ -22,6 +24,17 @@ const $=id=>document.getElementById(id);
 const showMessage=(text,error=false)=>{$("message").textContent=text;$("message").style.color=error?"#B91C1C":"#244D68"};
 const dashboardUrl="./cse-dashboard.html";
 let invitationSession=false;
+// Butoanele schimbă numai vizibilitatea textului; nu citesc, nu salvează și nu transmit parola.
+document.querySelectorAll("[data-password-target]").forEach(button=>{
+ button.addEventListener("click",()=>{
+  const field=$(button.dataset.passwordTarget);
+  const visible=field.type==="password";
+  field.type=visible?"text":"password";
+  button.textContent=visible?"🙈 Ascunde":"👁 Arată";
+  button.setAttribute("aria-pressed",String(visible));
+  button.setAttribute("aria-label",visible?"Ascunde parola":"Afișează parola");
+ });
+});
 async function checkRoleAndRedirect(){
  const {data:{user},error:userError}=await supabase.auth.getUser();
  if(userError||!user)throw new Error("Sesiunea nu este validă.");
