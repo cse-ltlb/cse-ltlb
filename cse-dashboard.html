@@ -199,12 +199,12 @@
             <button id="adminInviteButton" class="primary-button" type="submit">Trimite invitația</button>
           </form>
           <div id="adminInviteMessage" role="status" aria-live="polite"></div>
-          <p class="admin-invite-note">Invitația este înregistrată în Supabase. Rolul de administrator nu se acordă la trimiterea invitației. Nu trimite încă invitații reale până la finalizarea și verificarea fluxului de activare, inclusiv pentru conturile existente.</p>
+          <p class="admin-invite-note">Invitația este înregistrată în Supabase. Rolul de administrator nu se acordă la trimiterea invitației. Pentru testare, folosește mai întâi o adresă secundară care nu are deja cont în proiect. Conturile existente necesită un flux separat de invitare.</p>
           <p class="admin-invite-note">Vizualizarea invitațiilor, revocarea accesului și gestionarea conturilor existente vor fi disponibile după configurarea funcțiilor securizate pentru aceste operațiuni.</p>
         </div>
       </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.6</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.7</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -913,9 +913,46 @@
         adminInviteMessage("Introdu o adresă de e-mail validă.", true);
         return;
       }
-      // Temporar blocăm trimiterea efectivă până când fluxul de activare
-      // și cazurile conturilor existente sunt verificate complet.
-      adminInviteMessage("Formularul este pregătit. Trimiterea invitațiilor va fi activată după verificarea completă a fluxului de activare.");
+      adminInviteBusy = true;
+      const button = $("adminInviteButton");
+      button.disabled = true;
+      adminInviteMessage("Se trimite invitația...");
+      try {
+        // Confirmăm identitatea și rolul înainte de apel. Funcția Edge
+        // verifică independent rolul super_admin pe server.
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user || user.id !== currentUser?.id) {
+          throw new Error("Sesiunea a expirat. Autentifică-te din nou.");
+        }
+        const { data: role, error: roleError } = await supabase.rpc("cse_dashboard_role");
+        if (roleError || role !== "super_admin") {
+          throw new Error("Nu mai ai drepturi de Super Admin.");
+        }
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !session?.access_token) {
+          throw new Error("Nu există o sesiune validă. Autentifică-te din nou.");
+        }
+        const { data, error } = await supabase.functions.invoke("invite-cse-admin", {
+          body: { email },
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (error) {
+          let details = null;
+          try { details = await error.context?.json(); } catch (_) { /* răspuns fără JSON */ }
+          throw new Error(details?.error || data?.error || error.message || "Trimiterea invitației a eșuat.");
+        }
+        if (!data?.success) {
+          throw new Error(data?.error || "Serverul nu a confirmat trimiterea invitației.");
+        }
+        $("adminInviteEmail").value = "";
+        adminInviteMessage(data.message || "Invitația a fost trimisă și înregistrată.");
+      } catch (error) {
+        console.error("Eroare la trimiterea invitației:", error);
+        adminInviteMessage(error.message || "Nu s-a putut trimite invitația.", true);
+      } finally {
+        adminInviteBusy = false;
+        button.disabled = false;
+      }
     });
 
     $("suggestionsFilters").querySelectorAll("button").forEach(button => {
