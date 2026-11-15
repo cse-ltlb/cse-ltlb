@@ -957,7 +957,6 @@
         const { data, error } = await supabase.rpc("admin_get_student_accounts");
         if (error) throw error;
         studentAccounts = data || [];
-        renderStudentAccounts();
         studentsMessage(`${studentAccounts.length} conturi de elev găsite.`);
       } catch (error) {
         $("studentsList").replaceChildren();
@@ -965,6 +964,9 @@
       } finally {
         studentsBusy = false;
         $("refreshStudentsButton").disabled = false;
+        // Construim butoanele numai după încheierea încărcării,
+        // altfel rămân dezactivate până la o nouă filtrare.
+        renderStudentAccounts();
       }
     }
     function renderStudentAccounts() {
@@ -1021,6 +1023,8 @@
     async function saveStudentApproval(userId, approved) {
       if (studentsBusy) return;
       studentsBusy = true;
+      // Dezactivare temporară doar cât timp se salvează decizia.
+      $("studentsList").querySelectorAll("button").forEach(button => button.disabled = true);
       studentsMessage("Se salvează decizia...");
       try {
         await checkStudentAdminAccess();
@@ -1033,6 +1037,7 @@
         studentsMessage(typeof data === "string" ? data : approved ? "Cont aprobat." : "Cont respins.");
       } catch (error) {
         studentsBusy = false;
+        renderStudentAccounts();
         studentsMessage(error.message || "Nu s-a putut salva decizia.", true);
       }
     }
@@ -1049,7 +1054,10 @@
         .forEach(id => $(id).style.display = "none");
       $("studentsSection").style.display = "block";
       $("studentsSection").scrollIntoView({ behavior: "smooth", block: "start" });
-      await loadStudentAccounts();
+      // La redeschidere afișăm instant lista deja încărcată;
+      // reîncărcarea manuală rămâne disponibilă.
+      if (studentAccounts.length) renderStudentAccounts();
+      else await loadStudentAccounts();
     });
     $("closeStudentsButton").addEventListener("click", () => {
       $("studentsSection").style.display = "none";
