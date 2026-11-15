@@ -493,12 +493,6 @@ let existingImageUrl = null;
 let removeExistingImage = false;
 let previewObjectUrl = null;
 
-const ADMIN_ROLES = [
-  "president",
-  "vice_president",
-  "admin"
-];
-
 function status(message, error = false) {
   const el = $("status");
   el.textContent = message;
@@ -788,24 +782,20 @@ async function refreshAuth() {
   } else {
     $("loginSection").classList.add("hidden");
 
-    const result = await db
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+    const { data: role, error: roleError } = await db.rpc("cse_dashboard_role");
 
-    if (result.error) {
+    if (roleError) {
       $("authInfo").textContent =
         "Nu am putut verifica rolul contului.";
-      status(result.error.message, true);
-    } else if (ADMIN_ROLES.includes(result.data?.role)) {
+      status(roleError.message, true);
+    } else if (["admin", "super_admin"].includes(role)) {
       isAdmin = true;
       $("authInfo").textContent =
         "Autentificat ca administrator CȘE.";
       $("adminSection").classList.remove("hidden");
     } else {
       $("authInfo").textContent =
-        "Cont de elev. Poți vizualiza proiectele publice.";
+        "Contul nu are drepturi de administrator. Poți vizualiza proiectele publice.";
     }
   }
 
