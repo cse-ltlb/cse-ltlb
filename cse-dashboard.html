@@ -53,8 +53,8 @@
     .qa-actions, .suggestion-actions, .calendar-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 13px; }
     .qa-actions button, .suggestion-actions button, .calendar-actions button { border: 0; border-radius: 8px; padding: 11px 14px; color: white; background: #377C36; }
     .qa-actions .reject, .suggestion-actions .reject, .calendar-actions .reject { background: #A43F3F; }
-    .qa-actions .withdraw { background: #9B661C; }
-    .qa-actions .republish { background: #244D68; }
+    .qa-actions .withdraw, .suggestion-actions .withdraw { background: #9B661C; }
+    .qa-actions .republish, .suggestion-actions .republish { background: #244D68; }
     .qa-empty, .suggestions-empty, .calendar-empty { padding: 25px; text-align: center; color: #62727B; background: #F0F7ED; border-radius: 10px; }
     .qa-message, .suggestions-message, .calendar-message { margin: 15px 0; padding: 12px 15px; border-radius: 8px; background: #E5EFE1; color: #244D68; }
     .qa-message.error, .suggestions-message.error, .calendar-message.error { background: #FBEAEA; color: #922E2E; }
@@ -153,6 +153,7 @@
               <button data-filter="pending">În așteptare</button>
               <button data-filter="approved">Aprobate</button>
               <button data-filter="rejected">Respinse</button>
+              <button data-filter="withdrawn">Retrase</button>
             </div>
             <div class="suggestions-toolbar">
               <label for="suggestionsSort">Ordonare:</label>
@@ -244,7 +245,7 @@
         </div>
       </section>
       <button class="logout" id="logoutButton">Deconectare</button>
-      <p class="status">Dashboard CȘE – Versiunea 1.9.1</p>
+      <p class="status">Dashboard CȘE – Versiunea 1.9.2</p>
     </main>
     <footer>© Consiliul Școlar al Elevilor – Liceul Teoretic „Lucian Blaga” Reghin</footer>
   </div>
@@ -452,7 +453,8 @@
     function actionButton(label, className, handler) {
       const button = makeElement("button", label, className);
       button.type = "button";
-      button.disabled = qaBusy;
+      // Acțiunile se verifică la click; nu blocăm permanent butoanele în timpul randării.
+      button.disabled = false;
       button.addEventListener("click", handler);
       return button;
     }
@@ -525,7 +527,7 @@
 
 
     // MODUL SUGESTII — nu modifică tabelul suggestion_votes.
-    const approvalLabels = { pending: "În așteptare", approved: "Aprobată", rejected: "Respinsă" };
+    const approvalLabels = { pending: "În așteptare", approved: "Aprobată", rejected: "Respinsă", withdrawn: "Retrasă" };
     const progressLabels = { in_analysis: "În analiză", in_implementation: "În implementare", implemented: "Implementată" };
 
     function showSuggestionsMessage(message, isError = false) {
@@ -575,6 +577,7 @@
         ["În așteptare", suggestions.filter(s => s.approval_status === "pending").length],
         ["Aprobate", suggestions.filter(s => s.approval_status === "approved").length],
         ["Respinse", suggestions.filter(s => s.approval_status === "rejected").length],
+        ["Retrase", suggestions.filter(s => s.approval_status === "withdrawn").length],
         ["Voturi totale*", rankingsAvailable ? suggestions.reduce((sum, s) => sum + Number(suggestionRankings.get(s.id)?.total_votes || 0), 0) : "—"]
       ];
       for (const [label, count] of groups) {
@@ -629,6 +632,10 @@
         select.value = s.progress_status || "in_analysis";
         const save = actionButton("Salvează progresul", "", () => requestSuggestionAction("progress", s, select.value));
         actions.append(select, save);
+        actions.append(actionButton("Retrage de pe site", "withdraw", () => requestSuggestionAction("withdraw", s)));
+      }
+      if (s.approval_status === "withdrawn") {
+        actions.append(actionButton("Repostează", "republish", () => requestSuggestionAction("republish", s)));
       }
       if (actions.childElementCount) card.append(actions);
       return card;
@@ -639,7 +646,9 @@
       const descriptions = {
         approve: ["Aprobă sugestia", "Sugestia va deveni aprobată și publicată."],
         reject: ["Respinge sugestia", "Sugestia va fi marcată ca respinsă."],
-        progress: ["Actualizează progresul", `Noul progres va fi: ${progressLabels[newProgress] || "necunoscut"}.`]
+        progress: ["Actualizează progresul", `Noul progres va fi: ${progressLabels[newProgress] || "necunoscut"}.`],
+        withdraw: ["Retrage sugestia", "Sugestia va fi retrasă din publicare, dar va rămâne salvată împreună cu voturile sale."],
+        republish: ["Repostează sugestia", "Sugestia va fi aprobată și publicată din nou, păstrând voturile și progresul."]
       };
       if (!descriptions[action] || (action === "progress" && !Object.hasOwn(progressLabels, newProgress))) return;
       $("confirmTitle").textContent = descriptions[action][0];
@@ -656,6 +665,8 @@
       if (action === "approve") Object.assign(changes, { approval_status: "approved", status: "published" });
       else if (action === "reject") Object.assign(changes, { approval_status: "rejected", status: "rejected" });
       else if (action === "progress") changes.progress_status = newProgress;
+      else if (action === "withdraw") Object.assign(changes, { approval_status: "withdrawn", status: "pending" });
+      else if (action === "republish") Object.assign(changes, { approval_status: "approved", status: "published" });
       else { suggestionsBusy = false; return; }
       try {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -664,7 +675,7 @@
           throw new Error("Sesiunea sau drepturile de acces nu mai sunt valide.");
         }
         let query = supabase.from("suggestions").update(changes).eq("id", s.id)
-          .eq("approval_status", action === "progress" ? "approved" : "pending");
+          .eq("approval_status", ["progress", "withdraw"].includes(action) ? "approved" : action === "republish" ? "withdrawn" : "pending");
         if (action === "progress") query = query.eq("progress_status", s.progress_status);
         const { data, error } = await query.select("id");
         if (error) throw error;
