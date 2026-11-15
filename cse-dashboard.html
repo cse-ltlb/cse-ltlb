@@ -127,13 +127,16 @@
       <section id="qaSection">
         <div class="card">
           <div class="qa-header"><h2>💬 Administrare Q&A</h2><button id="closeQAButton" class="secondary-button">Închide</button></div>
-          <p>Consultă întrebările și gestionează răspunsurile Consiliului Școlar al Elevilor.</p>
+          <p>Întrebările <strong>publice</strong> pot apărea pe site după publicare; cele <strong>private</strong> se verifică doar prin cod. „Anonim” descrie autorul, nu vizibilitatea întrebării.</p>
           <div id="qaContent">
             <div id="qaStats" class="qa-stats"></div>
             <div id="qaFilters" class="qa-filters">
               <button class="active" data-filter="all">Toate</button>
               <button data-filter="pending">În așteptare</button>
-              <button data-filter="published">Publicate</button>
+              <button data-filter="published">Publicate (toate)</button>
+              <button data-filter="public_site">Publicate pe site</button>
+              <button data-filter="private_answered">Răspunsuri private</button>
+              <button data-filter="anonymous">Trimise anonim</button>
               <button data-filter="rejected">Respinse</button>
               <button data-filter="withdrawn">Retrase</button>
             </div>
@@ -382,6 +385,9 @@
         ["Toate", qaQuestions.length],
         ["În așteptare", qaQuestions.filter(q => q.status === "pending").length],
         ["Publicate", qaQuestions.filter(q => q.status === "published").length],
+        ["Pe site", qaQuestions.filter(q => q.status === "published" && q.visibility === "public").length],
+        ["Private soluționate", qaQuestions.filter(q => q.status === "published" && q.visibility === "private").length],
+        ["Trimise anonim", qaQuestions.filter(q => q.is_anonymous).length],
         ["Respinse", qaQuestions.filter(q => q.status === "rejected").length],
         ["Retrase", qaQuestions.filter(q => q.status === "withdrawn").length]
       ];
@@ -390,7 +396,13 @@
         box.append(makeElement("span", label), makeElement("strong", count));
         stats.append(box);
       }
-      const questions = qaFilter === "all" ? qaQuestions : qaQuestions.filter(q => q.status === qaFilter);
+      const questions = qaQuestions.filter(q => {
+        if (qaFilter === "all") return true;
+        if (qaFilter === "public_site") return q.status === "published" && q.visibility === "public";
+        if (qaFilter === "private_answered") return q.status === "published" && q.visibility === "private";
+        if (qaFilter === "anonymous") return q.is_anonymous;
+        return q.status === qaFilter;
+      });
       const container = $("qaQuestions");
       container.replaceChildren();
       if (!questions.length) {
@@ -419,34 +431,29 @@
       }
       card.append(details);
 
-      if (q.answer_text) {
-        card.append(makeElement("strong", "Răspuns salvat:"));
-        card.append(makeElement("p", q.answer_text, "qa-answer-text"));
-      }
-
+      const label = makeElement("label", "Răspunsul CȘE (poate fi editat):", "qa-answer-label");
+      const input = makeElement("textarea", undefined, "qa-answer-input");
+      input.placeholder = "Scrie sau modifică răspunsul...";
+      input.maxLength = 10000;
+      input.id = `answer-${q.id}`;
+      label.htmlFor = input.id;
+      input.value = q.answer_text || "";
+      card.append(label, input);
+      const actions = makeElement("div", undefined, "qa-actions");
       if (q.status === "pending") {
-        const label = makeElement("label", "Scrie răspunsul:", "qa-answer-label");
-        const input = makeElement("textarea", undefined, "qa-answer-input");
-        input.placeholder = "Introdu răspunsul Consiliului Elevilor...";
-        input.maxLength = 10000;
-        const inputId = `answer-${q.id}`;
-        input.id = inputId;
-        label.htmlFor = inputId;
-        input.value = q.answer_text || "";
-        card.append(label, input);
-        const actions = makeElement("div", undefined, "qa-actions");
-        actions.append(actionButton("Publică răspunsul", "", () => requestAction("publish", q, input.value)));
+        actions.append(actionButton(q.visibility === "private" ? "Trimite răspunsul privat" : "Publică răspunsul pe site", "", () => requestAction("publish", q, input.value)));
         actions.append(actionButton("Respinge", "reject", () => requestAction("reject", q)));
-        card.append(actions);
-      } else if (q.status === "published" && q.visibility === "public") {
-        const actions = makeElement("div", undefined, "qa-actions");
-        actions.append(actionButton("Retrage întrebarea", "withdraw", () => requestAction("withdraw", q)));
-        card.append(actions);
-      } else if (q.status === "withdrawn" && q.answer_text?.trim()) {
-        const actions = makeElement("div", undefined, "qa-actions");
-        actions.append(actionButton("Republică întrebarea", "republish", () => requestAction("republish", q)));
-        card.append(actions);
+      } else {
+        actions.append(actionButton("Salvează modificările răspunsului", "", () => requestAction("edit", q, input.value)));
+        if (q.status === "published") {
+          actions.append(actionButton(q.visibility === "private" ? "Retrage răspunsul privat" : "Retrage de pe site", "withdraw", () => requestAction("withdraw", q)));
+        } else if (q.status === "withdrawn") {
+          actions.append(actionButton(q.visibility === "private" ? "Reactivează răspunsul privat" : "Repostează pe site", "republish", () => requestAction("republish", q, input.value)));
+        } else if (q.status === "rejected") {
+          actions.append(actionButton("Reacceptă întrebarea", "republish", () => requestAction("reaccept", q, input.value)));
+        }
       }
+      if (actions.childElementCount) card.append(actions);
       return card;
     }
 
@@ -462,14 +469,16 @@
     function requestAction(action, question, answerInput = "") {
       if (qaBusy || !currentUser) return;
       const actions = {
-        publish: ["Publică răspunsul", "Răspunsul va deveni vizibil conform regulilor platformei."],
+        publish: ["Trimite răspunsul", question.visibility === "private" ? "Răspunsul va fi disponibil numai prin verificarea codului privat." : "Întrebarea și răspunsul vor apărea pe site."],
         reject: ["Respinge întrebarea", "Întrebarea va fi marcată ca respinsă."],
         withdraw: ["Retrage întrebarea", "Întrebarea publicată va fi retrasă."],
-        republish: ["Republică întrebarea", "Întrebarea retrasă va fi publicată din nou, cu răspunsul salvat."]
+        republish: ["Reactivează întrebarea", "Răspunsul va fi disponibil din nou conform vizibilității inițiale."],
+        reaccept: ["Reacceptă întrebarea", "Întrebarea respinsă va fi aprobată și răspunsul va fi disponibil conform vizibilității inițiale."],
+        edit: ["Salvează răspunsul", "Răspunsul existent va fi actualizat fără schimbarea statusului întrebării."]
       };
       if (!actions[action]) return;
       const answer = answerInput.trim();
-      if (action === "publish" && !answer) {
+      if (["publish", "republish", "reaccept"].includes(action) && !answer) {
         showMessage("Scrie un răspuns înainte de publicare.", true);
         return;
       }
@@ -492,13 +501,16 @@
         changes.status = "rejected";
       } else if (action === "withdraw") {
         changes.status = "withdrawn";
-      } else if (action === "republish") {
+      } else if (action === "republish" || action === "reaccept") {
         changes.status = "published";
+        changes.answer_text = answer;
+      } else if (action === "edit") {
+        changes.answer_text = answer;
       } else {
         qaBusy = false;
         return;
       }
-      const expectedStatus = action === "publish" || action === "reject" ? "pending" : action === "withdraw" ? "published" : "withdrawn";
+      const expectedStatus = ["publish", "reject"].includes(action) ? "pending" : action === "withdraw" ? "published" : action === "reaccept" ? "rejected" : action === "edit" ? question.status : "withdrawn";
       try {
         // Revalidăm accesul chiar înaintea modificării.
         const { data: { user }, error: userError } = await supabase.auth.getUser();
