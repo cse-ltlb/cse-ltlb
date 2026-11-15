@@ -267,6 +267,30 @@ body.modal-open { overflow:hidden; }
   .day { min-height:43px; }
   .form-grid { grid-template-columns:1fr; }
 }
+
+/* Detaliile zilei selectate */
+.day { transition: transform .15s ease, box-shadow .15s ease; }
+.day:hover { transform:translateY(-2px); box-shadow:0 3px 10px #244d6820; }
+.day:focus-visible { outline:3px solid var(--green); outline-offset:2px; }
+.day-events-backdrop {
+  position:fixed; inset:0; z-index:2000; background:rgba(12,29,41,.72);
+  display:flex; justify-content:center; align-items:center; padding:18px;
+}
+.day-events-dialog {
+  width:min(900px,100%); max-height:min(88vh,900px); overflow-y:auto;
+  background:var(--bg); border-radius:22px; box-shadow:0 24px 90px #071b2c66;
+  padding:clamp(18px,3vw,30px);
+}
+.day-events-header { display:flex; align-items:flex-start; justify-content:space-between; gap:15px; margin-bottom:18px; }
+.day-events-header h2 { margin:5px 0 6px; color:var(--blue); font-size:clamp(21px,4vw,29px); }
+.day-events-header p { margin:0; }
+.day-events-close { background:white; border:1px solid #d5e2df; font-size:23px; line-height:1; flex-shrink:0; }
+.day-events-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr)); gap:16px; }
+.day-events-grid .event-card { margin:0; background:white; padding:20px; box-shadow:0 4px 18px #244d6810; }
+.day-events-grid .event-image { max-height:320px; object-fit:contain; }
+.day-events-empty { background:white; border-radius:14px; padding:24px; text-align:center; }
+@media(max-width:600px) { .day-events-backdrop { padding:8px; } .day-events-dialog { max-height:94vh; border-radius:16px; } }
+
 </style>
 </head>
 
@@ -445,6 +469,22 @@ body.modal-open { overflow:hidden; }
   </section>
 </main>
 
+
+<!-- Fereastra publică: toate activitățile unei zile -->
+<div id="dayEventsBackdrop" class="day-events-backdrop hidden">
+  <section class="day-events-dialog" role="dialog" aria-modal="true" aria-labelledby="dayEventsTitle" tabindex="-1">
+    <div class="day-events-header">
+      <div>
+        <span class="date-label">CALENDAR CȘE</span>
+        <h2 id="dayEventsTitle"></h2>
+        <p id="dayEventsCount" class="muted"></p>
+      </div>
+      <button id="dayEventsClose" class="day-events-close" type="button" aria-label="Închide fereastra">✕</button>
+    </div>
+    <div id="dayEventsList" class="day-events-grid"></div>
+  </section>
+</div>
+
 <div id="modalBackdrop" class="modal-backdrop hidden">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <h2 id="modalTitle"></h2>
@@ -609,6 +649,64 @@ function addProjectDetails(card, event) {
   }
 }
 
+
+/* FEREASTRA PUBLICĂ PENTRU ACTIVITĂȚILE ZILEI */
+let dayEventsPreviousFocus = null;
+function closeDayEvents() {
+  $("dayEventsBackdrop").classList.add("hidden");
+  document.body.classList.remove("modal-open");
+  if (dayEventsPreviousFocus?.isConnected) dayEventsPreviousFocus.focus();
+}
+function openDayEvents(key) {
+  const dayEvents = events.filter(event =>
+    event.is_public === true &&
+    event.event_date <= key && endDate(event) >= key
+  ).sort((a,b) =>
+    (a.start_time || "99:99").localeCompare(b.start_time || "99:99") ||
+    a.title.localeCompare(b.title, "ro")
+  );
+  const [y,m,d] = key.split("-").map(Number);
+  $("dayEventsTitle").textContent = new Date(y,m-1,d).toLocaleDateString("ro-RO", {
+    day:"numeric", month:"long", year:"numeric"
+  });
+  $("dayEventsCount").textContent = dayEvents.length === 1
+    ? "1 activitate programată" : `${dayEvents.length} activități programate`;
+  const list = $("dayEventsList");
+  list.replaceChildren();
+  if (!dayEvents.length) {
+    list.appendChild(make("p","day-events-empty muted","Nu există activități publicate pentru această dată."));
+  } else {
+    for (const event of dayEvents) {
+      const card = make("article","event-card");
+      addProjectDetails(card,event);
+      if (event.start_time && event.end_time) {
+        card.appendChild(make("p","muted","🕒 " + event.start_time.slice(0,5) + " – " + event.end_time.slice(0,5)));
+      }
+      list.appendChild(card);
+    }
+  }
+  dayEventsPreviousFocus = document.activeElement;
+  $("dayEventsBackdrop").classList.remove("hidden");
+  document.body.classList.add("modal-open");
+  $("dayEventsClose").focus();
+}
+$("dayEventsClose").addEventListener("click",closeDayEvents);
+$("dayEventsBackdrop").addEventListener("click", e => {
+  if (e.target === $("dayEventsBackdrop")) closeDayEvents();
+});
+document.addEventListener("keydown",e => {
+  if ($("dayEventsBackdrop").classList.contains("hidden")) return;
+  if (e.key === "Escape") { e.preventDefault(); closeDayEvents(); }
+  if (e.key === "Tab") {
+    const focusable = Array.from($("dayEventsBackdrop").querySelectorAll("button,a[href],input,[tabindex]:not([tabindex='-1'])"))
+      .filter(el => !el.disabled);
+    if (!focusable.length) return;
+    const first = focusable[0], last = focusable[focusable.length-1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+});
+
 /* CALENDAR */
 
 function renderCalendar() {
@@ -653,8 +751,9 @@ function renderCalendar() {
     if (localToday() === key) button.classList.add("today");
 
     button.addEventListener("click", () => {
-      selectedDate = selectedDate === key ? null : key;
+      selectedDate = key;
       renderCalendar();
+      openDayEvents(key);
     });
 
     calendar.appendChild(button);
